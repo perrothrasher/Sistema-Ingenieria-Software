@@ -229,14 +229,14 @@
       if (rol === 'Soporte TI' || rol === 'Gerente') {
             Object.values(dropdowns).forEach(dropdown => {
               dropdown.style.pointerEvents = 'auto'; // Hacer clickeables
-              dropdown.style.color = ''; // Restaurar color
-              dropdown.style.textDecoration = ''; // Restaurar subrayado
+              dropdown.style.color = ''; // Restaurar el color
+              dropdown.style.textDecoration = ''; // Restaurar lo subrayado
             });
         } else if (rol === 'Supervisor') {
             Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'none'; // Deshabilitar clickeo
-              dropdown.style.color = 'gray'; // Cambiar color
-              dropdown.style.textDecoration = 'none'; // Eliminar subrayado
+              dropdown.style.pointerEvents = 'none'; // Deshabilitar el clickeo
+              dropdown.style.color = 'gray'; // Cambiar el color
+              dropdown.style.textDecoration = 'none'; // Eliminar lo que está subrayado
             });
         }
     }
