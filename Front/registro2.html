@@ -144,7 +144,7 @@
     const result = await response.json();
     if (response.ok) {
       alert('Registro exitoso');
-      // reiniciar el formulario
+      // Reinicia el formulario
       document.getElementById('registroForm').reset();
     } else {
       alert(result.message || 'Error al registrar');
