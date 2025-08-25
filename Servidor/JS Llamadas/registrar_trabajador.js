@@ -4,7 +4,7 @@ const connection = require('./db_conection.js');
 async function registrarTrabajador(req, res) {
   const { nombre, apellido, rut, direccion, comuna,  correo, telefono, contrasena, rol, region_id, codigo_postal, usuario } = req.body;
   try {
-    // Cifrar la contraseña.
+       // Cifrar la contraseña.
     const hashedPassword = await bcrypt.hash(contrasena, 10);
     console.log("Contraseña cifrada:", hashedPassword);
 
@@ -33,6 +33,7 @@ async function registrarTrabajador(req, res) {
         console.error('Error al insertar persona:', err);
         return res.status(500).json({ message: 'Error al registrar trabajador: ' + err.message });
       }
+      
       // Obtener el ID de la persona insertada
       console.log('Persona insertada con ID:', resultPersona.insertId);
 
