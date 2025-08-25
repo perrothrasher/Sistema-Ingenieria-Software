@@ -166,7 +166,7 @@ function eliminarCliente(req, res){
   });
 };
 
-// Exportar las funciones correctamente.
+// Exportar las funciones correctamente
 module.exports = {
   registrarCliente,
   obtenerClientes,
