@@ -76,7 +76,6 @@ button:hover {
   text-align: center;
   font-weight: bold;
 }
-
 /* NAVBAR */
 .navbar {
   background: rgba(255, 255, 255, 0.9);
@@ -118,7 +117,6 @@ button:hover {
   background-color: #e0e7ff;
   color: #1d4ed8;
 }
-
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .navbar {

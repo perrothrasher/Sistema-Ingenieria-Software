@@ -1,10 +1,10 @@
 const connection = require('./db_conection.js'); 
 
-// Ruta para registrar un cliente
+// Ruta para registrar un cliente.
 function registrarCliente(req, res){
   const { nombre, apellido, rut,  direccion, comuna, correo, telefono, region_id, codigo_postal} = req.body;
   try{
-    // Insertar la nueva ubicacion
+    // Insertar la nueva ubicacion.
     const sqlUbicacion = `
       INSERT INTO Ubicacion (direccion, ciudad, region_id, postal)
       VALUES (?, ?, ?, ?);
@@ -16,11 +16,11 @@ function registrarCliente(req, res){
         return;
       }
 
-      // Obtener el insertId de la inserción
+      // Obtener el insertId de la inserción.
       const ubicacion_id = result.insertId;
       console.log('El ID de la ubicación es:', ubicacion_id);
 
-      // Insertar la nueva persona
+      // Insertar la nueva persona.
       const sqlPersona = `
       INSERT INTO Persona (nombre, apellido, rut, telefono, correo, ubicacion_id)
       VALUES (?, ?, ?, ?, ?, ?)
@@ -31,10 +31,10 @@ function registrarCliente(req, res){
           return res.status(500).json({ message: 'Error al registrar cliente: ' + err.message });
         }
 
-        // Obtener el ID de la persona insertada
+        // Obtener el ID de la persona insertada.
         console.log('Persona insertada con ID:', resultPersona.insertId);
 
-        // Insertar el cliente
+        // Insertar el cliente.
         const sqlCliente = `
           INSERT INTO Cliente (persona_id)
           VALUES (?)
@@ -55,7 +55,7 @@ function registrarCliente(req, res){
   }
 };
 
-// Ruta para obtener todos los clientes
+// Ruta para obtener todos los clientes.
 function obtenerClientes(req, res){
   const id = req.query.id;
   const sql = `
@@ -88,17 +88,17 @@ function obtenerClientes(req, res){
     } else {
       res.status(404).json({ message: 'Cliente no encontrado' });
     }
-    //console.log('Clientes obtenidos:', results);
+    //console.log('Clientes obtenidos:', results); Aqui se imprimen los resultados en la consola del servidor
   });
 };
 
 
-// Ruta para editar un cliente
+// Ruta para editar un cliente.
 function editarClientes(req, res){
   const { id } = req.params;
   const { nombre, apellido, rut, region_id, direccion, ciudad, postal, telefono, correo } = req.body;
 
-  //console.log('Datos recibidos para actualizar cliente:', req.body); 
+  //console.log('Datos recibidos para actualizar cliente:', req.body); Aqui se imprimen los datos recibidos en la consola del servidor
   const sql = `
     UPDATE Persona p
     JOIN Cliente c ON c.persona_id = p.id
@@ -146,7 +146,7 @@ function editarClientes(req, res){
 };
 
 
-// Ruta para eliminar un cliente
+// Ruta para eliminar un cliente.
 function eliminarCliente(req, res){
   const { id } = req.params;
 
@@ -166,7 +166,7 @@ function eliminarCliente(req, res){
   });
 };
 
-// Exportar las funciones correctamente
+// Exportar las funciones correctamente.
 module.exports = {
   registrarCliente,
   obtenerClientes,

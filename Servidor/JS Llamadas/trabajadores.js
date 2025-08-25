@@ -1,7 +1,7 @@
 const connection = require('./db_conection.js'); 
 const bcrypt = require('bcryptjs');
 
-// Ruta para obtener todos los trabajadores
+// Ruta para obtener todos los trabajadores.
 function obtenerTrabajadores(req, res){
     const id = req.query.id;
     const sql = `

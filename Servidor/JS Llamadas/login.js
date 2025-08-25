@@ -1,7 +1,7 @@
 const connection = require('./db_conection.js'); 
 const bcrypt = require('bcryptjs');
 
-// Ruta de login
+// Ruta de login.
 function login(req, res){
   const { correo, contrasena } = req.body;
 
