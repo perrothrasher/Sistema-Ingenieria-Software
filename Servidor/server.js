@@ -6,7 +6,7 @@ const app = express();
 app.use(bodyParser.json());
 
 /////////////////////////////////////////////////
-const corsOptions = require('./JS Llamadas/cors_config.js'); // Configuración de CORS
+const corsOptions = require('./JS Llamadas/cors_config.js'); // Configuración de CORS.
 app.use(cors(corsOptions)); 
 const registrarTrabajador = require('./JS Llamadas/registrar_trabajador.js'); // Registrar trabajador
 const login = require('./JS Llamadas/login.js'); // Iniciar sesión
