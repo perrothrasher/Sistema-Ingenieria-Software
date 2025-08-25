@@ -1,3 +1,4 @@
+// Importar la conexión a la base de datos
 const connection = require('./db_conection.js'); 
 
 function registrarDotacion(req, res){
