@@ -1,10 +1,8 @@
 const connection = require('./db_conection.js'); 
 const bcrypt = require('bcryptjs');
-
 // Ruta de login.
 function login(req, res){
   const { correo, contrasena } = req.body;
-
   // Verificar si el correo existe en la base de datos
   connection.query(`SELECT 
                       t.id, 
