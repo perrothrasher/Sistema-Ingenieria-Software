@@ -30,7 +30,7 @@ function login(req, res){
     console.log("Resultados de la consulta:", results);
     const trabajador = results[0];
 
-    // Comparar la contraseña ingresada con la almacenada en la base de datos
+// Comparar la contraseña ingresada con la almacenada en la base de datos
     bcrypt.compare(contrasena, trabajador.contrasena, (err, isMatch) => {
       if (err) {
         return res.status(500).json({ message: 'Error al verificar la contraseña' });
