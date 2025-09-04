@@ -105,17 +105,17 @@
             }
 
             initializeEventListeners() {
-                // Click to upload
+                // Se realiza click para cargar
                 this.uploadArea.addEventListener('click', () => {
                     this.fileInput.click();
                 });
 
-                // File input change
+                // modificacion en la tabla de archivos
                 this.fileInput.addEventListener('change', (e) => {
                     this.handleFiles(e.target.files);
                 });
 
-                // Drag and drop
+                // para arrastrar y soltar
                 this.uploadArea.addEventListener('dragover', (e) => {
                     e.preventDefault();
                     this.uploadArea.classList.add('dragover');
@@ -166,16 +166,16 @@
                 this.showProgress();
                 
                 try {
-                    // Simulate upload progress
+                    // se simula el progreso de la carga
                     for (let progress = 0; progress <= 100; progress += 10) {
                         await new Promise(resolve => setTimeout(resolve, 200));
                         this.updateProgress(progress);
                     }
 
-                    // Simulate processing
+                    // simula el procesamimento
                     await new Promise(resolve => setTimeout(resolve, 1000));
 
-                    // Add to history
+                    // se añade al historial
                     const uploadRecord = {
                         id: Date.now(),
                         name: file.name,
@@ -197,7 +197,7 @@
                     this.showAlert('error', `Error al cargar el archivo "${file.name}". Por favor, verifica el formato e intenta nuevamente.`);
                 }
 
-                // Reset file input
+                // restablece la entrada del archivo
                 this.fileInput.value = '';
             }
 
@@ -244,7 +244,7 @@
 
                 this.alertContainer.insertAdjacentHTML('beforeend', alertHTML);
 
-                // Auto remove after 5 seconds
+                // elimina automaticamente posterior a 5 segundos
                 setTimeout(() => {
                     const alert = document.getElementById(`alert-${alertId}`);
                     if (alert) alert.remove();
@@ -309,7 +309,7 @@
             }
         }
 
-        // Initialize the uploader when the page loads
+        // inicializa cuando carga la pagina
         let uploader;
         document.addEventListener('DOMContentLoaded', () => {
             uploader = new HistoricalDataUploader();
