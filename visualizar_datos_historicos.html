@@ -341,6 +341,27 @@
                 this.dataTable = null;
                 
                 this.init();
+                this.loadData();
+            }
+            async loadData() {
+                try {
+                    this.showLoading(true);
+
+                    console.log('Cargando datos desde backend...');
+                    const response = await fetch('http://localhost:8090/historicos?tipo=dotacion');
+                    if (!response.ok) throw new Error('Error al cargar datos históricos');
+
+                    const result = await response.json();
+                    this.data = result.data || [];
+                    this.filteredData = [...this.data];
+
+                } catch (error) {
+                    console.error('Error al cargar datos:', error);
+                    this.showAlert('error', 'Error al cargar los datos históricos. Usando datos de ejemplo.');
+                    this.loadSampleData(); // fallback
+                } finally {
+                    this.showLoading(false);
+                }
             }
 
             async init() {

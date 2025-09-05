@@ -13,6 +13,8 @@ const login = require('./JS Llamadas/login.js'); // Iniciar sesión
 const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente } = require('./JS Llamadas/cliente.js');
 const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores } = require('./JS Llamadas/trabajadores.js'); 
 const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion } = require('./JS Llamadas/dotacion.js');
+
+const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 /////////////////////////////////////////////////
 
 // TRABAJADORES
@@ -53,6 +55,11 @@ app.get('/get-dotaciones', obtenerDotaciones);
 app.get('/get-dotaciones-edicion', obtenerDotacionesParaEdicion);
 // Ruta para editar una dotación
 app.put('/editarDotacion/:id', editarDotacion);
+/////////////////////////////////////////////////
+
+
+// HISTÓRICOS 
+app.get('/historicos', obtenerHistoricos);
 /////////////////////////////////////////////////
 
 // Iniciar servidor
