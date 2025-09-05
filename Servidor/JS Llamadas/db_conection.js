@@ -1,4 +1,8 @@
+import dotenv from 'dotenv';
 const mysql = require('mysql2');
+
+// Carga las variables de entorno desde el archivo .env
+dotenv.config();
 
 // Conexión a la BD
 const connection = mysql.createConnection({
