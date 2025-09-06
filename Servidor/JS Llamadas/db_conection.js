@@ -6,10 +6,10 @@ dotenv.config();
 
 // Conexión a la BD
 const connection = mysql.createConnection({
-  host: process.env.DB_HOST, // Host de la base de datos
-  user: process.env.DB_USER, // Usuario de la base de datos      
-  password: process.env.DB_PASSWORD, // Contraseña de la base de datos
-  database: process.env.DB_NAME // Nombre de la base de datos
+  host: process.env.DB_HOST, 
+  user: process.env.DB_USER,      
+  password: process.env.DB_PASSWORD, 
+  database: process.env.DB_NAME 
 });
 
 // Verifica si la conexión es exitosa
