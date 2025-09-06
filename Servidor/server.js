@@ -13,7 +13,7 @@ const login = require('./JS Llamadas/login.js'); // Iniciar sesión
 const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente } = require('./JS Llamadas/cliente.js');
 const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores } = require('./JS Llamadas/trabajadores.js'); 
 const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion } = require('./JS Llamadas/dotacion.js');
-
+const { conexion_Mongo } = require('./JS Llamadas/mongo_connection.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 /////////////////////////////////////////////////
 
