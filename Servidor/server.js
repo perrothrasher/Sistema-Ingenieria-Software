@@ -17,7 +17,7 @@ const { conexion_Mongo } = require('./JS Llamadas/mongo_connection.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
-
+const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
 /////////////////////////////////////////////////
 
 // TRABAJADORES
@@ -65,6 +65,7 @@ app.put('/editarDotacion/:id', editarDotacion);
 app.get('/historicos', obtenerHistoricos);
 //Ingreso manual de operaciones históricas
 app.post('/operacion-historica', registrarOperacionHistorica);
+app.put('/historicos/:tipo/:id', actualizarHistorico);   // CU19 editar histórico
 /////////////////////////////////////////////////
 
 // Iniciar servidor

@@ -15,7 +15,12 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-    
+    <!-- Exportar a Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Exportar a PDF -->
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         .metric-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -330,7 +335,55 @@
             <p class="mt-2">Cargando datos históricos...</p>
         </div>
     </div>
+    <!-- Modal CU19: Editar Dotación Histórica -->
+    <div class="modal fade" id="modalEditarDotacion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title"><i class="fas fa-pen-to-square me-2"></i>Editar registro histórico</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
 
+        <div class="modal-body">
+            <form id="formEditarDot">
+            <input type="hidden" id="ed_id">
+            <div class="mb-2">
+                <label class="form-label">Año</label>
+                <input type="number" class="form-control" id="ed_anio" min="1900" max="2100" required>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Mes</label>
+                <select class="form-select" id="ed_mes" required>
+                <option value="1">Enero</option><option value="2">Febrero</option>
+                <option value="3">Marzo</option><option value="4">Abril</option>
+                <option value="5">Mayo</option><option value="6">Junio</option>
+                <option value="7">Julio</option><option value="8">Agosto</option>
+                <option value="9">Septiembre</option><option value="10">Octubre</option>
+                <option value="11">Noviembre</option><option value="12">Diciembre</option>
+                </select>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Tipo de Contrato</label>
+                <input type="text" class="form-control" id="ed_tipo" required>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Cantidad de Personal</label>
+                <input type="number" class="form-control" id="ed_cantidad" min="0" required>
+            </div>
+            </form>
+            <div id="ed_alert" class="alert d-none mt-2"></div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button id="btnGuardarEdicion" class="btn btn-primary">
+            <i class="fas fa-save me-1"></i> Guardar cambios
+            </button>
+        </div>
+        </div>
+    </div>
+</div>
+  
     <script>
         class HistoricalDataVisualization {
             constructor() {
@@ -820,14 +873,113 @@
             });
         }
 
-        function exportToExcel() {
-            visualization.showAlert('info', 'Funcionalidad de exportación a Excel próximamente disponible');
+        // Utilidad: nombre de archivo con fecha/hora
+        function buildFilename(prefix, ext) {
+            const pad = (n)=>String(n).padStart(2,'0');
+            const d = new Date();
+            const ts = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
+            return `${prefix}_${ts}.${ext}`;
         }
 
-        function exportToPDF() {
-            visualization.showAlert('info', 'Funcionalidad de exportación a PDF próximamente disponible');
+        // Toma los datos actualmente visibles en la tabla (con filtros activos)
+        function getVisibleRows() {
+            if (!visualization?.dataTable) return [];
+            return visualization.dataTable.rows({ search: 'applied' }).data().toArray();
         }
 
+        // =============== EXCEL ===============
+        async function exportToExcel() {
+            try {
+            const rows = getVisibleRows();
+            if (!rows.length) { visualization.showAlert('error', 'No hay datos para exportar'); return; }
+
+            // Mapea columnas visibles a objetos
+            const data = rows.map(r => ({
+                'Año': r.anio,
+                'Mes': r.mes,
+                'Tipo de Contrato': r.tipo_contrato,
+                'Cantidad Personal': r.cantidad_personal,
+                'Carga Horaria': r.carga_horaria
+            }));
+
+            // Crea workbook/sheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(data);
+            // Ancho de columnas (opcional)
+            ws['!cols'] = [{wch:6},{wch:11},{wch:18},{wch:18},{wch:14}];
+            XLSX.utils.book_append_sheet(wb, ws, 'Dotacion');
+
+            XLSX.writeFile(wb, buildFilename('DatosHistoricos', 'xlsx'));
+            visualization.showAlert('success', 'Archivo Excel generado correctamente');
+            } catch (err) {
+            console.error(err);
+            visualization.showAlert('error', 'No se pudo exportar a Excel');
+            }
+        }
+
+        // =============== PDF ===============
+        async function exportToPDF() {
+            try {
+            const rows = getVisibleRows();
+            if (!rows.length) { visualization.showAlert('error', 'No hay datos para exportar'); return; }
+
+            // jsPDF en modo paisaje
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape', 'pt', 'a4');
+            const pageWidth = doc.internal.pageSize.getWidth();
+
+            // Título
+            doc.setFontSize(16);
+            doc.text('Visualización de Datos Históricos - Dotación', 40, 40);
+
+            // Inserta gráficos como imágenes (si están creados)
+            let y = 60;
+            try {
+                if (visualization?.monthlyChart) {
+                const img1 = visualization.monthlyChart.toBase64Image();
+                doc.addImage(img1, 'PNG', 40, y, pageWidth - 80, 180);
+                y += 190;
+                }
+                if (visualization?.contractChart) {
+                const img2 = visualization.contractChart.toBase64Image();
+                // Si no cabe, nueva página
+                if (y + 180 > doc.internal.pageSize.getHeight() - 60) {
+                    doc.addPage();
+                    y = 40;
+                }
+                doc.addImage(img2, 'PNG', 40, y, 360, 180);
+                y += 200;
+                }
+            } catch (e) {
+                console.warn('No se pudieron incrustar gráficos en el PDF:', e);
+            }
+
+            // Si no cabe la tabla, nueva página
+            if (y > doc.internal.pageSize.getHeight() - 160) {
+                doc.addPage();
+                y = 40;
+            }
+
+            // Tabla con autoTable
+            const body = rows.map(r => [
+                r.anio, r.mes, r.tipo_contrato, r.cantidad_personal, r.carga_horaria
+            ]);
+            doc.autoTable({
+                startY: y,
+                head: [['Año','Mes','Tipo de Contrato','Cantidad Personal','Carga Horaria']],
+                body,
+                styles: { fontSize: 9, cellPadding: 4 },
+                headStyles: { fillColor: [52,58,64] }, // oscuro
+                theme: 'striped'
+            });
+
+            doc.save(buildFilename('DatosHistoricos', 'pdf'));
+            visualization.showAlert('success', 'Archivo PDF generado correctamente');
+            } catch (err) {
+            console.error(err);
+            visualization.showAlert('error', 'No se pudo exportar a PDF');
+            }
+        }
         function viewDetails(id) {
             const record = visualization.data.find(item => item.id === id);
             if (record) {
@@ -851,5 +1003,83 @@
             window.location.href = "login.html";
         }
     </script>
+<script>
+  // === CU19: usar el botón "editar" existente de la tabla ===
+  // Mapea nombre de mes a número
+  const MES_NUM = {
+    'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,
+    'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12
+  };
+  const NUM_MES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  async function editRecord(id) {
+    try {
+      // 1) tomar registro actual desde los datos ya cargados en pantalla
+      const row = visualization.data.find(r => String(r.id) === String(id));
+      if (!row) { visualization.showAlert('error','No se encontró el registro'); return; }
+
+      // 2) precargar en modal
+      document.getElementById('ed_id').value = id;
+      document.getElementById('ed_anio').value = row.anio;
+      document.getElementById('ed_mes').value = MES_NUM[row.mes] || 1;
+      document.getElementById('ed_tipo').value = row.tipo_contrato;
+      document.getElementById('ed_cantidad').value = row.cantidad_personal;
+
+      document.getElementById('ed_alert').className = 'alert d-none';
+      const modal = new bootstrap.Modal(document.getElementById('modalEditarDotacion'));
+      modal.show();
+
+      // 3) guardar cambios → PUT /historicos/dotacion/:id
+      const onSave = async (e) => {
+        e.preventDefault();
+        const payload = {
+          anio: parseInt(document.getElementById('ed_anio').value,10),
+          mes: parseInt(document.getElementById('ed_mes').value,10),
+          area: document.getElementById('ed_tipo').value.trim(),          // mapeo: tipo_contrato -> area
+          cantidad: parseInt(document.getElementById('ed_cantidad').value,10)
+        };
+
+        try {
+          const r = await fetch(`http://localhost:8090/historicos/dotacion/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type':'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const json = await r.json();
+          if (!r.ok) throw new Error(json.message || 'Error al actualizar');
+
+          // 4) actualizar los datos en memoria y en la tabla
+          row.anio = payload.anio;
+          row.mes = NUM_MES[payload.mes] || row.mes;
+          row.tipo_contrato = payload.area;
+          row.cantidad_personal = payload.cantidad;
+
+          // refrescar DataTable sin perder estado
+          visualization.dataTable
+            .rows((idx, data) => String(data.id) === String(id))
+            .every(function(){ this.data(row); });
+          visualization.dataTable.draw(false);
+
+          visualization.updateMetrics();
+          visualization.showAlert('success', json.message || 'Registro actualizado');
+          modal.hide();
+        } catch (err) {
+          const alert = document.getElementById('ed_alert');
+          alert.className = 'alert alert-danger';
+          alert.textContent = err.message;
+        }
+      };
+
+      // evitar múltiples listeners si abre varias veces
+      const btn = document.getElementById('btnGuardarEdicion');
+      btn.replaceWith(btn.cloneNode(true));
+      document.getElementById('btnGuardarEdicion').addEventListener('click', onSave);
+
+    } catch (err) {
+      visualization.showAlert('error', err.message);
+    }
+  }
+</script>
+
 </body>
 </html>

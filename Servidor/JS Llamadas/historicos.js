@@ -64,5 +64,49 @@ async function obtenerHistoricos(req, res) {
     return res.status(500).json({ message: 'Error al obtener datos históricos: ' + err.message });
   }
 }
+// === CU19: Actualizar registro histórico (operaciones o dotación) ===
+async function actualizarHistorico(req, res) {
+  try {
+    const tipo = String(req.params.tipo || '').toLowerCase();
+    const id = parseInt(req.params.id, 10);
+    if (!['operaciones', 'dotacion'].includes(tipo)) {
+      return res.status(400).json({ message: 'Tipo inválido. Use operaciones o dotacion.' });
+    }
+    if (!id) return res.status(400).json({ message: 'Id inválido.' });
 
-module.exports = { obtenerHistoricos };
+    const body = req.body || {};
+    let sql = '', params = [], allow = [];
+
+    if (tipo === 'operaciones') {
+      allow = ['fecha', 'cliente_id', 'tipo', 'monto', 'descripcion'];
+      const sets = [];
+      allow.forEach(k => {
+        if (body[k] !== undefined) { sets.push(`${k} = ?`); params.push(body[k]); }
+      });
+      if (!sets.length) return res.status(400).json({ message: 'Nada que actualizar.' });
+      sql = `UPDATE OperacionHistorica SET ${sets.join(', ')} WHERE id = ?`;
+      params.push(id);
+    } else {
+      allow = ['mes', 'anio', 'area', 'cantidad', 'comentario'];
+      const sets = [];
+      allow.forEach(k => {
+        if (body[k] !== undefined) { sets.push(`${k} = ?`); params.push(body[k]); }
+      });
+      if (!sets.length) return res.status(400).json({ message: 'Nada que actualizar.' });
+      sql = `UPDATE DotacionHistorica SET ${sets.join(', ')} WHERE id = ?`;
+      params.push(id);
+    }
+
+    const result = await new Promise((resolve, reject) => {
+      connection.execute(sql, params, (err, r) => err ? reject(err) : resolve(r));
+    });
+
+    return res.status(200).json({ message: 'Registro histórico actualizado', affectedRows: result.affectedRows });
+  } catch (err) {
+    console.error('[CU19] Error actualizando histórico:', err);
+    return res.status(500).json({ message: 'Error al actualizar: ' + err.message });
+  }
+}
+
+module.exports = { obtenerHistoricos, actualizarHistorico };
+
