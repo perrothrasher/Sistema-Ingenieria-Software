@@ -15,6 +15,9 @@ const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores } = requir
 const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion } = require('./JS Llamadas/dotacion.js');
 const { conexion_Mongo } = require('./JS Llamadas/mongo_connection.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
+
+const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
+
 /////////////////////////////////////////////////
 
 // TRABAJADORES
@@ -60,6 +63,8 @@ app.put('/editarDotacion/:id', editarDotacion);
 
 // HISTÓRICOS 
 app.get('/historicos', obtenerHistoricos);
+//Ingreso manual de operaciones históricas
+app.post('/operacion-historica', registrarOperacionHistorica);
 /////////////////////////////////////////////////
 
 // Iniciar servidor
