@@ -622,7 +622,7 @@
       if (data.monto === '') delete data.monto;
 
       try {
-        const r = await fetch('http://localhost:8090/operacion-historica', {
+        const r = await fetch('http://localhost:8090/operacion-historica', {//debo conectarlo con historicos.js y con op_hist_manual.js?
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
