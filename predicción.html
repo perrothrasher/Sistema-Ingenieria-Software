@@ -644,9 +644,16 @@
         });
         
         let predictor;
-        document.addEventListener('DOMContentLoaded', () => {
-            predictor = new StaffPredictionSystem();
-        });
+        document.addEventListener('DOMContentLoaded', () => { predictor = new StaffPredictionSystem(); });
+    
+        window.generatePrediction = async () => {
+            console.log('[UI] Click en Nueva Predicción');
+            await predictor.proyectarMes(2025, 8);  // cambia anio/mes si quieres
+        };
+
+        // (opcional) si tienes un botón para entrenar
+        window.trainModel = () => predictor.entrenarModelo();
+        
 
         function generatePrediction() {
             predictor.startPrediction();
