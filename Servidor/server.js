@@ -18,6 +18,8 @@ const { obtenerHistoricos } = require('./JS Llamadas/historicos.js');
 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
+
+const { entrenarModelo, proyectar } = require('./JS Llamadas/prediccion.js');
 /////////////////////////////////////////////////
 
 // TRABAJADORES
@@ -68,6 +70,9 @@ app.post('/operacion-historica', registrarOperacionHistorica);
 app.put('/historicos/:tipo/:id', actualizarHistorico);   // CU19 editar histórico
 /////////////////////////////////////////////////
 
+//PREDICCIÓN
+app.post('/prediccion/entrenar', entrenarModelo);
+app.get('/prediccion/proyectar', proyectar);
 // Iniciar servidor
 /////////////////////////////////////////////////
 puerto = 8090;

@@ -335,7 +335,6 @@
                 this.renderPredictionHistory();
                 this.updateMetrics();
             }
-
             async startPrediction() {
                 if (!this.validateForm()) return;
                 
@@ -594,7 +593,56 @@
                 document.getElementById('lastPrediction').textContent = lastPrediction;
             }
         }
+            async function entrenarModelo() {
+                const r = await fetch('http://localhost:8090/prediccion/entrenar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ dataDir: '.' })   // carpeta donde están tus Excel
+                });
+                const json = await r.json();
+                predictor?.showAlert('success', 'Modelo entrenado: ' + (json?.result?.message || 'OK'));
+                console.log('ENTRENAR >>', json);
+                return json;
+            }
 
+        
+            async function proyectarMes(anio, mes) {
+            const r = await fetch(`http://localhost:8090/prediccion/proyectar?anio=${anio}&mes=${String(mes).padStart(2,'0')}`);
+            const json = await r.json();
+            console.log('PROYECTAR >>', json);
+
+            const res = json?.result?.evaluacion_siguiente;
+            if (res) {
+            
+            predictor.showResults({
+                totalStaff: res.trabajadores_necesarios ?? 0,
+                confidence: 95,                  
+                estimatedCost: (res.trabajadores_necesarios ?? 0) * 2500,
+                duration: 30,                     
+                complexity: res.estado_modelo || res.estado_regla, 
+                projectType: 'dotacion',
+                breakdown: {
+                supervisores: Math.ceil((res.trabajadores_necesarios ?? 0) * 0.15),
+                tecnicos:     Math.ceil((res.trabajadores_necesarios ?? 0) * 0.60),
+                operarios:    Math.ceil((res.trabajadores_necesarios ?? 0) * 0.25),
+                },
+                recommendations: [
+                'Ajustar turnos según carga',
+                'Revisar licencias/vacaciones del período'
+                ],
+                createdDate: new Date().toLocaleString('es-ES')
+            });
+            predictor.showAlert('success', `Proyección ${res.estado_modelo || res.estado_regla} para ${res.mes}-${res.anio}`);
+            } else {
+            predictor.showAlert('error', 'No llegó un resultado válido del backend.');
+            }
+            return json;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            predictor = new StaffPredictionSystem();
+        });
+        
         let predictor;
         document.addEventListener('DOMContentLoaded', () => {
             predictor = new StaffPredictionSystem();
