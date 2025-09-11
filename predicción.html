@@ -140,7 +140,7 @@
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
                                     <i class="fas fa-chart-bar"></i> Datos Históricos</a></li>
-                                <li><a class="dropdown-item" href="prediccion.html">
+                                <li><a class="dropdown-item" href="prediccion_dotacion.html">
                                     <i class="fas fa-crystal-ball"></i> Predicciones</a></li>
                                 <li><a class="dropdown-item" href="#" onclick="showComingSoon()">
                                     <i class="fas fa-cogs"></i> Simulaciones</a></li>
@@ -173,8 +173,7 @@
         </div>
     </div>
 
-    <!-- 🔧 Solo añadido id y clase (no se eliminó nada más) -->
-    <div class="container-fluid mt-4 prediction-area" id="predictionArea">
+    <div class="container-fluid mt-4">
         <!-- Header section adapted for prediction functionality -->
         <div class="row mb-4">
             <div class="col-12">
@@ -336,6 +335,7 @@
                 this.renderPredictionHistory();
                 this.updateMetrics();
             }
+
             async startPrediction() {
                 if (!this.validateForm()) return;
                 
@@ -594,67 +594,11 @@
                 document.getElementById('lastPrediction').textContent = lastPrediction;
             }
         }
-            async function entrenarModelo() {
-                const r = await fetch('http://localhost:8090/prediccion/entrenar', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ dataDir: '.' })   // carpeta donde están tus Excel
-                });
-                const json = await r.json();
-                predictor?.showAlert('success', 'Modelo entrenado: ' + (json?.result?.message || 'OK'));
-                console.log('ENTRENAR >>', json);
-                return json;
-            }
 
-        
-            async function proyectarMes(anio, mes) {
-            const r = await fetch(`http://localhost:8090/prediccion/proyectar?anio=${anio}&mes=${String(mes).padStart(2,'0')}`);
-            const json = await r.json();
-            console.log('PROYECTAR >>', json);
-
-            const res = json?.result?.evaluacion_siguiente;
-            if (res) {
-            
-            predictor.showResults({
-                totalStaff: res.trabajadores_necesarios ?? 0,
-                confidence: 95,                  
-                estimatedCost: (res.trabajadores_necesarios ?? 0) * 2500,
-                duration: 30,                     
-                complexity: res.estado_modelo || res.estado_regla, 
-                projectType: 'dotacion',
-                breakdown: {
-                supervisores: Math.ceil((res.trabajadores_necesarios ?? 0) * 0.15),
-                tecnicos:     Math.ceil((res.trabajadores_necesarios ?? 0) * 0.60),
-                operarios:    Math.ceil((res.trabajadores_necesarios ?? 0) * 0.25),
-                },
-                recommendations: [
-                'Ajustar turnos según carga',
-                'Revisar licencias/vacaciones del período'
-                ],
-                createdDate: new Date().toLocaleString('es-ES')
-            });
-            predictor.showAlert('success', `Proyección ${res.estado_modelo || res.estado_regla} para ${res.mes}-${res.anio}`);
-            } else {
-            predictor.showAlert('error', 'No llegó un resultado válido del backend.');
-            }
-            return json;
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => {
+        let predictor;
+        document.addEventListener('DOMContentLoaded', () => {
             predictor = new StaffPredictionSystem();
         });
-        
-        let predictor;
-        document.addEventListener('DOMContentLoaded', () => { predictor = new StaffPredictionSystem(); });
-    
-        window.generatePrediction = async () => {
-            console.log('[UI] Click en Nueva Predicción');
-            await predictor.proyectarMes(2025, 8);  // cambia anio/mes si quieres
-        };
-
-        // (opcional) si tienes un botón para entrenar
-        window.trainModel = () => predictor.entrenarModelo();
-        
 
         function generatePrediction() {
             predictor.startPrediction();
@@ -678,205 +622,5 @@
             window.location.href = "login.html";
         }
     </script>
-
-    <!-- ========= MODAL DETALLE DE PREDICCIÓN (ADICIÓN) ========= -->
-        <div class="modal fade" id="predictionDetailModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                <i class="fas fa-crystal-ball me-2 text-primary"></i>
-                Detalle de la Predicción
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                <div class="col-md-6">
-                    <div class="border rounded p-3 h-100">
-                    <h6 class="text-muted mb-2">Resumen</h6>
-                    <ul class="list-unstyled mb-0" id="modalSummary"></ul>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="border rounded p-3 h-100">
-                    <h6 class="text-muted mb-2">Distribución de Personal</h6>
-                    <ul class="list-unstyled mb-0" id="modalBreakdown"></ul>
-                    </div>
-                </div>
-                <div class="col-12">
-                    <div class="border rounded p-3">
-                    <h6 class="text-muted mb-2">Recomendaciones</h6>
-                    <ul class="mb-0" id="modalRecs"></ul>
-                    </div>
-                </div>
-                </div>
-            </div>
-            <div class="modal-footer justify-content-between">
-                <small class="text-muted" id="modalTimestamp"></small>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cerrar</button>
-            </div>
-            </div>
-        </div>
-        </div>
-        <!-- ========= /MODAL ========= -->
-
-        <!-- ========= SCRIPT DE EXTENSIÓN (NO REEMPLAZA NADA) ========= -->
-<script>
-  class StaffPredictionSystem {
-    constructor() {
-      this.progressSection = document.getElementById('progressSection');
-      this.progressBar = document.getElementById('progressBar');
-      this.progressText = document.getElementById('progressText');
-      this.progressStatus = document.getElementById('progressStatus');
-      this.alertContainer = document.getElementById('alertContainer');
-      this.predictionHistory = document.getElementById('predictionHistory');
-      this.resultsSection = document.getElementById('resultsSection');
-      this.predictionResults = document.getElementById('predictionResults');
-      this.predictions = JSON.parse(localStorage.getItem('staffPredictions') || '[]');
-      this.renderPredictionHistory?.();
-      this.updateMetrics?.();
-    }
-
-    // ==== MÉTODOS UTILITARIOS YA EXISTENTES EN TU CLASE ====
-    showAlert(type, message) {
-      const el = document.createElement('div');
-      el.className = `alert alert-${type} alert-dismissible fade show`;
-      el.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-      this.alertContainer.innerHTML = '';
-      this.alertContainer.appendChild(el);
-      setTimeout(() => { try { bootstrap.Alert.getOrCreateInstance(el).close(); } catch(e){} }, 4000);
-    }
-
-    showResults(pred) {
-      this.resultsSection.classList.remove('d-none');
-      this.predictionResults.innerHTML = `
-        <div class="result-card">
-          <h5 class="mb-2">Estado proyectado</h5>
-          <p class="mb-1"><strong>Trabajadores necesarios:</strong> ${pred.totalStaff}</p>
-          <p class="mb-1"><strong>Estado:</strong> ${String(pred.complexity).toUpperCase()}</p>
-          <p class="mb-0"><small>Generado: ${pred.createdDate}</small></p>
-        </div>`;
-      // historial mínimo
-      const hist = JSON.parse(localStorage.getItem('staffPredictions') || '[]');
-      hist.push({ date: pred.createdDate, estado: pred.complexity, req: pred.totalStaff });
-      localStorage.setItem('staffPredictions', JSON.stringify(hist));
-    }
-
-    // ======== IA: ENTRENAR Y PROYECTAR ========
-    async entrenarModelo() {
-      const r = await fetch('http://localhost:8090/prediccion/entrenar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dataDir: 'Servidor/ML/folios' }) // usa tu carpeta local de Excel
-      });
-      const json = await r.json();
-      this.showAlert('success', 'Modelo entrenado: ' + (json?.result?.message || 'OK'));
-      console.log('ENTRENAR >>', json);
-      return json;
-    }
-
-    // Si no pasas anio/mes, el backend toma el último mes disponible
-    async proyectarMes(anio = null, mes = null) {
-      const qs = [];
-      if (anio) qs.push(`anio=${anio}`);
-      if (mes)  qs.push(`mes=${String(mes).padStart(2,'0')}`);
-      const url = 'http://localhost:8090/prediccion/proyectar' + (qs.length ? `?${qs.join('&')}` : '');
-      const r = await fetch(url);
-      const json = await r.json();
-      console.log('PROYECTAR >>', json);
-
-      const res = json?.result?.evaluacion_siguiente;
-      if (res) {
-        this.showResults({
-          totalStaff: res.trabajadores_necesarios ?? 0,
-          confidence: 95,
-          estimatedCost: (res.trabajadores_necesarios ?? 0) * 2500,
-          duration: 30,
-          complexity: res.estado_modelo || res.estado_regla, // 'sobre' | 'ok' | 'sub'
-          projectType: 'dotacion',
-          breakdown: { supervisores: 0, tecnicos: 0, operarios: 0 },
-          recommendations: [],
-          createdDate: new Date().toLocaleString('es-ES')
-        });
-        this.showAlert('success', `Proyección ${res.estado_modelo || res.estado_regla} para ${res.mes}-${res.anio}`);
-      } else {
-        this.showAlert('danger', 'No llegó un resultado válido del backend.');
-      }
-      return json;
-    }
-  }
-
-  // Botón "Nueva Predicción"
-  async function generatePrediction() {
-    // Llama sin anio/mes para proyectar el siguiente mes disponible en ML/folios
-    await predictor.proyectarMes();
-  }
-
-  // (Opcional) botón separado para entrenar
-  async function trainModel() {
-    await predictor.entrenarModelo();
-  }
-  
-</script>
-<script>
-  // Forzamos a que "Nueva Predicción" use SIEMPRE el backend real
-  (function(){
-    const API_BASE = 'http://localhost:8090';
-
-    // Garantizamos una única instancia global
-    window.predictor = window.predictor || {
-      showAlert(kind,msg){
-        const c = kind==='success'?'alert-success':kind==='info'?'alert-info':kind==='warning'?'alert-warning':'alert-danger';
-        const el = document.createElement('div');
-        el.className = `alert ${c} alert-dismissible fade show`;
-        el.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
-        (document.getElementById('alertContainer')||document.body).prepend(el);
-        setTimeout(()=>{ try{bootstrap.Alert.getOrCreateInstance(el).close();}catch(_){ el.remove(); } },4000);
-      },
-      showResultsFromAPI(j){
-        const res  = j?.result?.evaluacion_siguiente;
-        const base = j?.result?.mes_base;
-        if(!res || !base){ this.showAlert('danger','Respuesta incompleta del modelo'); return; }
-        const mapa={sobre:'Sobredotación',sub:'Subdotación',ok:'Adecuado'};
-        const etiqueta = mapa[(res.estado_modelo||res.estado_regla)||''] || 'Indeterminado';
-        const cont = document.getElementById('predictionResults');
-        const sec  = document.getElementById('resultsSection');
-        if(cont){
-          const color = (res.estado_modelo||res.estado_regla)==='sobre'?'danger':(res.estado_modelo||res.estado_regla)==='sub'?'warning':'success';
-          cont.innerHTML = `
-            <div class="result-card">
-              <h5 class="mb-2">Estado proyectado: <span class="badge bg-${color}">${etiqueta}</span></h5>
-              <p class="mb-1"><strong>Trab. necesarios:</strong> ${res.trabajadores_necesarios ?? 0}</p>
-              <p class="mb-1"><strong>Producción:</strong> ${res.produccion_total ?? 0} | <strong>Reales:</strong> ${res.trabajadores_reales ?? 0}</p>
-              <p class="mb-1"><strong>Capacidad óptima (base):</strong> ${base.capacidad_optima ?? 'N/D'}</p>
-              <p class="mb-0"><small>Base: ${String(base.mes).padStart(2,'0')}-${base.anio} → Siguiente: ${String(res.mes).padStart(2,'0')}-${res.anio}</small></p>
-            </div>`;
-          sec && sec.classList.remove('d-none');
-        }
-        this.showAlert('success', `Predicción: ${etiqueta}`);
-      }
-    };
-
-    // ✅ Esta es la función que usa el botón
-    window.generatePrediction = async function(){
-      try{
-        // Sin anio/mes -> el endpoint que agregaste en server.js elegirá último período disponible
-        const r = await fetch(`${API_BASE}/prediccion/proyectar`);
-        const j = await r.json();
-        if(!r.ok){ throw new Error(j?.message||j?.error||('HTTP '+r.status)); }
-        window.predictor.showResultsFromAPI(j);
-      }catch(e){
-        // Si por la ruta alternativa (PythonShell) aún pide anio/mes, pásalos aquí:
-        // const r = await fetch(`${API_BASE}/prediccion/proyectar?anio=2025&mes=08`);
-        window.predictor.showAlert('danger', 'No se pudo generar la predicción: '+e.message);
-        console.error(e);
-      }
-    };
-
-  })();
-</script>
-
-
 </body>
 </html>

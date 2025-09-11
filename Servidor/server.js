@@ -2,7 +2,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { entrenarModelo, proyectar } = require('./JS Llamadas/prediccion.js');  
 
 const app = express();
 app.use(bodyParser.json());
@@ -20,15 +19,6 @@ const { obtenerHistoricos } = require('./JS Llamadas/historicos.js');
 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
-
-// ⚠️ Si ya tienes un router alternativo de predicción, lo conservamos
-try {
-  app.use('/', require('./JS-llamadas/prediccion'));
-} catch (_) {}
-
-const path = require('path');
-app.use(express.static(path.join(__dirname)));
-
 /////////////////////////////////////////////////
 
 // TRABAJADORES
@@ -75,15 +65,6 @@ app.get('/historicos', obtenerHistoricos);
 app.post('/operacion-historica', registrarOperacionHistorica);  // CU14 (manual)
 app.put('/historicos/:tipo/:id', actualizarHistorico);          // CU19 (editar)
 /////////////////////////////////////////////////
-
-// ✅ PREDICCIÓN IA (ENDPOINTS EXPLÍCITOS)
-/////////////////////////////////////////////////
-app.post('/prediccion/entrenar', entrenarModelo);
-app.get('/prediccion/proyectar', proyectar);
-
-// ...después (más abajo en el archivo) se mantiene:
-try { app.use('/', require('./JS-llamadas/prediccion')); } catch (_) {}
-// SERVIDOR
 
 const puerto = 8090;
 app.listen(puerto, () => {
