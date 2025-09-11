@@ -15,11 +15,14 @@ def norm(s):
     return (s.replace('á','a').replace('é','e').replace('í','i')
              .replace('ó','o').replace('ú','u').replace('ñ','n'))
 
+MESES = {
+    'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,
+    'julio':7,'agosto':8,'septiembre':9,'setiembre':9,'octubre':10,'noviembre':11,'diciembre':12
+}
+
 def month_from_spanish(name):
     name = name.strip().lower()
-    m = {'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,'julio':7,'agosto':8,
-         'septiembre':9,'setiembre':9,'octubre':10,'noviembre':11,'diciembre':12}
-    for k,v in m.items():
+    for k,v in MESES.items():
         if k in name: return v
     return None
 
@@ -37,8 +40,8 @@ def read_one(path):
 
     user_col = next((c for c in df.columns if 'usuario' in c), None)
     per_user_col = 'recuento de folio.1' if 'recuento de folio.1' in df.columns else (
-                    'recuento de folio' if 'recuento de folio' in df.columns else
-                    next((c for c in df.columns if 'folio' in c or 'folios' in c), None))
+                   'recuento de folio' if 'recuento de folio' in df.columns else
+                   next((c for c in df.columns if 'folio' in c or 'folios' in c), None))
 
     vac_cols = [c for c in df.columns if 'vacac' in c]
     lic_cols = [c for c in df.columns if 'licenc' in c]
@@ -66,8 +69,12 @@ def read_one(path):
 
 def load_all(data_dir):
     files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith('.xlsx')]
-    files = [f for f in files if 'Ventas e Ingreso por Usuario' in os.path.basename(f)]
-    if not files: raise RuntimeError('No se encontraron Excel en ' + data_dir)
+    # Acepta nombres como "Enero 2025 Ventas e Ingreso por Usuario.xlsx"
+    files = [f for f in files if 'ventas e ingreso por usuario' in os.path.basename(f).lower()]
+    if not files:  # si no coincide, toma todos los xlsx
+        files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith('.xlsx')]
+    if not files:
+        raise RuntimeError('No se encontraron Excel en ' + os.path.abspath(data_dir))
     allm = pd.concat([read_one(p) for p in sorted(files)], ignore_index=True)
     return allm
 
@@ -84,10 +91,12 @@ def capacidad_optima_por_mes(allm):
         return pd.Series({'cap': cap, 'max': int(mx), 'min': int(mn), 'activos': int(per_user['usuario'].nunique())})
     cap = allm.groupby(['anio','mes']).apply(comp).reset_index().rename(
         columns={'cap':'capacidad_optima','max':'max_f','min':'min_f','activos':'trab_activos'})
+
     agg = allm.groupby(['anio','mes']).agg(
         produccion_total=('folios_usuario','sum'),
         trabajadores_reales=('usuario', lambda s: s[~allm.loc[s.index,'vacaciones'] & ~allm.loc[s.index,'licencia']].nunique())
     ).reset_index()
+
     out = cap.merge(agg, on=['anio','mes'], how='left').sort_values(['anio','mes']).reset_index(drop=True)
     return out
 
@@ -126,14 +135,11 @@ def entrenar_guardar(dataset, out_path='model.pkl'):
     return {'ok': True, 'message': 'Modelo entrenado', 'clases': sorted(list(set(y)))}
 
 def proyectar_siguiente(monthly, anio=None, mes=None, model_path='model.pkl'):
-    # si piden un mes/año específicos, proyectar para ese (a partir del mes anterior disponible)
     monthly = monthly.sort_values(['anio','mes']).reset_index(drop=True)
     if anio is None or mes is None:
-        # usa último mes como base y proyecta el siguiente
         base = monthly.iloc[-2] if len(monthly) >= 2 else monthly.iloc[-1]
         siguiente = monthly.iloc[-1]
     else:
-        # buscar fila del mes anterior
         idx = monthly.index[(monthly['anio']==int(anio)) & (monthly['mes']==int(mes))].tolist()
         if not idx: raise RuntimeError('Mes base no encontrado')
         i = idx[0]
@@ -143,20 +149,18 @@ def proyectar_siguiente(monthly, anio=None, mes=None, model_path='model.pkl'):
     cap = base['capacidad_optima']
     prod_sig = siguiente['produccion_total']
 
-    # intentar cargar modelo, si no hay predecimos estado con regla de negocio
     estado_regla = 'Indeterminado'
+    necesarios = None
     if not pd.isna(cap) and cap > 0:
-        necesarios = math.ceil(prod_sig / cap)
-        if siguiente['trabajadores_reales'] > necesarios: estado_regla = 'sobre'
-        elif siguiente['trabajadores_reales'] < necesarios: estado_regla = 'sub'
+        necesarios = int(math.ceil(prod_sig / cap))
+        if int(siguiente['trabajadores_reales']) > necesarios: estado_regla = 'sobre'
+        elif int(siguiente['trabajadores_reales']) < necesarios: estado_regla = 'sub'
         else: estado_regla = 'ok'
-    else:
-        necesarios = None
 
     pred_modelo = None
     if os.path.exists(model_path) and RandomForestClassifier is not None:
         with open(model_path,'rb') as f: clf = pickle.load(f)
-        X = np.array([[int(base['anio']), int(base['mes']), int(cap), int(prod_sig)]], dtype=float)
+        X = np.array([[int(base['anio']), int(base['mes']), int(cap if not pd.isna(cap) else 0), int(prod_sig)]], dtype=float)
         pred_modelo = clf.predict(X)[0]
 
     return {
@@ -167,7 +171,7 @@ def proyectar_siguiente(monthly, anio=None, mes=None, model_path='model.pkl'):
             'trabajadores_reales': int(siguiente['trabajadores_reales']),
             'trabajadores_necesarios': int(necesarios) if necesarios is not None else None,
             'estado_regla': estado_regla,       # sobre | sub | ok
-            'estado_modelo': pred_modelo        # sobre | sub | ok  (si hay modelo entrenado)
+            'estado_modelo': pred_modelo        # sobre | sub | ok (si hay modelo entrenado)
         }
     }
 
@@ -186,20 +190,13 @@ def main():
 
     if args.train:
         res = entrenar_guardar(dataset, out_path='model.pkl')
-        print(json.dumps({'step':'train', 'result': res}, ensure_ascii=False))
-        return
+        print(json.dumps({'step':'train', 'result': res}, ensure_ascii=False)); return
 
     if args.predict:
         pred = proyectar_siguiente(monthly, anio=args.anio, mes=args.mes, model_path='model.pkl')
-        print(json.dumps({'step':'predict', 'result': pred}, ensure_ascii=False))
-        return
+        print(json.dumps({'step':'predict', 'result': pred}, ensure_ascii=False)); return
 
-    # si no pasan flags, devolver resumen
-    print(json.dumps({
-        'step':'summary',
-        'monthly': monthly.to_dict(orient='records'),
-        'dataset': dataset.to_dict(orient='records')
-    }, ensure_ascii=False))
+    print(json.dumps({'step':'summary'}, ensure_ascii=False))
 
 if __name__ == '__main__':
     main()
