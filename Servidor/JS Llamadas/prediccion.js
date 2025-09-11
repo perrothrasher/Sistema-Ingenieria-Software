@@ -1,7 +1,6 @@
 // Servidor/JS Llamadas/prediccion.js
 const { spawn } = require('child_process');
 const path = require('path');
-const { entrenarModelo, proyectar } = require('./JS Llamadas/prediccion.js');
 
 function pythonCmd() {
   return process.platform === 'win32' ? 'python' : 'python3';
@@ -54,8 +53,6 @@ async function proyectar(req, res) {
     res.status(500).json({ ok:false, message: e.message });
   }
 }
-const { spawn } = require('child_process');
-const path = require('path');
 
 function pythonCmd() {
   return process.platform === 'win32' ? 'python' : 'python3';

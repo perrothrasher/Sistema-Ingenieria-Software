@@ -15,9 +15,8 @@ const login = require('./JS Llamadas/login.js'); // Iniciar sesión
 const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente } = require('./JS Llamadas/cliente.js');
 const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores } = require('./JS Llamadas/trabajadores.js'); 
 const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion } = require('./JS Llamadas/dotacion.js');
-const { conexion_Mongo } = require('./JS Llamadas/mongo_connection.js');
+const { conexion_Mongo } = require('./JS Llamadas/mongo_connection.js'); // Conexión a MongoDB OK
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
-
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
 
@@ -30,6 +29,7 @@ const path = require('path');
 app.use(express.static(path.join(__dirname)));
 
 /////////////////////////////////////////////////
+
 
 // TRABAJADORES
 /////////////////////////////////////////////////
