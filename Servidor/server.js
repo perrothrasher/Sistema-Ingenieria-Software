@@ -85,9 +85,7 @@ app.get('/prediccion/proyectar', proyectar);
 // ...después (más abajo en el archivo) se mantiene:
 try { app.use('/', require('./JS-llamadas/prediccion')); } catch (_) {}
 // SERVIDOR
-// server.js (una vez)
-const path = require('path');
-app.use(express.static(path.join(__dirname)));
+
 const puerto = 8090;
 app.listen(puerto, () => {
   console.log('Servidor en ejecución en el puerto ' + puerto);
