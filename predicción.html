@@ -817,6 +817,64 @@
   async function trainModel() {
     await predictor.entrenarModelo();
   }
+  
+</script>
+<script>
+  // Forzamos a que "Nueva Predicción" use SIEMPRE el backend real
+  (function(){
+    const API_BASE = 'http://localhost:8090';
+
+    // Garantizamos una única instancia global
+    window.predictor = window.predictor || {
+      showAlert(kind,msg){
+        const c = kind==='success'?'alert-success':kind==='info'?'alert-info':kind==='warning'?'alert-warning':'alert-danger';
+        const el = document.createElement('div');
+        el.className = `alert ${c} alert-dismissible fade show`;
+        el.innerHTML = `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+        (document.getElementById('alertContainer')||document.body).prepend(el);
+        setTimeout(()=>{ try{bootstrap.Alert.getOrCreateInstance(el).close();}catch(_){ el.remove(); } },4000);
+      },
+      showResultsFromAPI(j){
+        const res  = j?.result?.evaluacion_siguiente;
+        const base = j?.result?.mes_base;
+        if(!res || !base){ this.showAlert('danger','Respuesta incompleta del modelo'); return; }
+        const mapa={sobre:'Sobredotación',sub:'Subdotación',ok:'Adecuado'};
+        const etiqueta = mapa[(res.estado_modelo||res.estado_regla)||''] || 'Indeterminado';
+        const cont = document.getElementById('predictionResults');
+        const sec  = document.getElementById('resultsSection');
+        if(cont){
+          const color = (res.estado_modelo||res.estado_regla)==='sobre'?'danger':(res.estado_modelo||res.estado_regla)==='sub'?'warning':'success';
+          cont.innerHTML = `
+            <div class="result-card">
+              <h5 class="mb-2">Estado proyectado: <span class="badge bg-${color}">${etiqueta}</span></h5>
+              <p class="mb-1"><strong>Trab. necesarios:</strong> ${res.trabajadores_necesarios ?? 0}</p>
+              <p class="mb-1"><strong>Producción:</strong> ${res.produccion_total ?? 0} | <strong>Reales:</strong> ${res.trabajadores_reales ?? 0}</p>
+              <p class="mb-1"><strong>Capacidad óptima (base):</strong> ${base.capacidad_optima ?? 'N/D'}</p>
+              <p class="mb-0"><small>Base: ${String(base.mes).padStart(2,'0')}-${base.anio} → Siguiente: ${String(res.mes).padStart(2,'0')}-${res.anio}</small></p>
+            </div>`;
+          sec && sec.classList.remove('d-none');
+        }
+        this.showAlert('success', `Predicción: ${etiqueta}`);
+      }
+    };
+
+    // ✅ Esta es la función que usa el botón
+    window.generatePrediction = async function(){
+      try{
+        // Sin anio/mes -> el endpoint que agregaste en server.js elegirá último período disponible
+        const r = await fetch(`${API_BASE}/prediccion/proyectar`);
+        const j = await r.json();
+        if(!r.ok){ throw new Error(j?.message||j?.error||('HTTP '+r.status)); }
+        window.predictor.showResultsFromAPI(j);
+      }catch(e){
+        // Si por la ruta alternativa (PythonShell) aún pide anio/mes, pásalos aquí:
+        // const r = await fetch(`${API_BASE}/prediccion/proyectar?anio=2025&mes=08`);
+        window.predictor.showAlert('danger', 'No se pudo generar la predicción: '+e.message);
+        console.error(e);
+      }
+    };
+
+  })();
 </script>
 
 

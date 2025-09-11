@@ -2,6 +2,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const { entrenarModelo, proyectar } = require('./JS Llamadas/prediccion.js');  
 
 const app = express();
 app.use(bodyParser.json());
@@ -24,6 +25,9 @@ const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
 try {
   app.use('/', require('./JS-llamadas/prediccion'));
 } catch (_) {}
+
+const path = require('path');
+app.use(express.static(path.join(__dirname)));
 
 const { entrenarModelo, proyectar } = require('./JS Llamadas/prediccion.js');
 /////////////////////////////////////////////////
@@ -77,9 +81,13 @@ app.put('/historicos/:tipo/:id', actualizarHistorico);          // CU19 (editar)
 /////////////////////////////////////////////////
 app.post('/prediccion/entrenar', entrenarModelo);
 app.get('/prediccion/proyectar', proyectar);
-/////////////////////////////////////////////////
 
+// ...después (más abajo en el archivo) se mantiene:
+try { app.use('/', require('./JS-llamadas/prediccion')); } catch (_) {}
 // SERVIDOR
+// server.js (una vez)
+const path = require('path');
+app.use(express.static(path.join(__dirname)));
 const puerto = 8090;
 app.listen(puerto, () => {
   console.log('Servidor en ejecución en el puerto ' + puerto);
