@@ -1,3 +1,4 @@
+// Servidor/server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -19,36 +20,49 @@ const { obtenerHistoricos } = require('./JS Llamadas/historicos.js');
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
 
-// ⚠️ Ya existía en tu código — lo dejo como está
-// (si ese router interno existe, seguirá funcionando)
-app.use('/', require('./JS-llamadas/prediccion'));
+// ⚠️ Si ya tienes un router alternativo de predicción, lo conservamos
+try {
+  app.use('/', require('./JS-llamadas/prediccion'));
+} catch (_) {}
 
-// 👉 Importo también el puente directo Node->Python (no rompe lo anterior)
 const { entrenarModelo, proyectar } = require('./JS Llamadas/prediccion.js');
 /////////////////////////////////////////////////
 
 // TRABAJADORES
 /////////////////////////////////////////////////
+// Ruta para registrar un trabajador
 app.post('/register', registrarTrabajador);
+// Ruta para iniciar sesión
 app.post('/login', login);
+// Ruta para obtener todos los trabajadores
 app.get('/get-trabajadores', obtenerTrabajadores);
+// Ruta para editar un trabajador
 app.put('/editarTrabajador/:id', editarTrabajadores);
+// Ruta para eliminar un trabajador
 app.delete('/eliminarTrabajador/:id', eliminarTrabajadores);
 /////////////////////////////////////////////////
 
 // CLIENTES
 /////////////////////////////////////////////////
+// Ruta para registrar un cliente
 app.post('/register-cliente', registrarCliente);
+// Ruta para obtener todos los clientes
 app.get('/get-clientes', obtenerClientes);
+// Ruta para editar un cliente
 app.put('/editarCliente/:id', editarClientes);
+// Ruta para eliminar un cliente
 app.delete('/eliminarCliente/:id', eliminarCliente);
 /////////////////////////////////////////////////
 
 // DOTACIÓN
 /////////////////////////////////////////////////
+// Ruta para registrar dotaciones
 app.post('/registrar-dotacion', registrarDotacion);
+// Ruta para obtener dotaciones
 app.get('/get-dotaciones', obtenerDotaciones);
+// Ruta para obtener dotaciones para edición
 app.get('/get-dotaciones-edicion', obtenerDotacionesParaEdicion);
+// Ruta para editar una dotación
 app.put('/editarDotacion/:id', editarDotacion);
 /////////////////////////////////////////////////
 
@@ -59,9 +73,8 @@ app.post('/operacion-historica', registrarOperacionHistorica);  // CU14 (manual)
 app.put('/historicos/:tipo/:id', actualizarHistorico);          // CU19 (editar)
 /////////////////////////////////////////////////
 
-// ✅ PREDICCIÓN IA (añadido sin borrar nada)
+// ✅ PREDICCIÓN IA (ENDPOINTS EXPLÍCITOS)
 /////////////////////////////////////////////////
-// Endpoints directos (operan con ML/modelo_dotacion.py)
 app.post('/prediccion/entrenar', entrenarModelo);
 app.get('/prediccion/proyectar', proyectar);
 /////////////////////////////////////////////////

@@ -26,7 +26,7 @@ function runPy(args = []) {
 // POST /prediccion/entrenar
 async function entrenarModelo(req, res) {
   try {
-    // Por defecto usa ML/folios (no BD)
+    // Carpeta con los Excels (por defecto ML/folios)
     const dataDir = req.body?.dataDir || path.join(__dirname, '..', 'ML', 'folios');
     const resp = await runPy(['--train', '--data-dir', dataDir]);
     res.status(200).json(resp);
@@ -44,7 +44,7 @@ async function proyectar(req, res) {
 
     const args = ['--predict', '--data-dir', dataDir];
     if (anio) args.push('--anio', String(anio));
-    if (mes)  args.push('--mes', String(mes).padStart(2, '0'));
+    if (mes)  args.push('--mes', String(mes).padStart(2,'0'));
 
     const resp = await runPy(args);
     res.status(200).json(resp);

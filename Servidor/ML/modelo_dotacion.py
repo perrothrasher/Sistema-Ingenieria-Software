@@ -40,8 +40,8 @@ def read_one(path):
 
     user_col = next((c for c in df.columns if 'usuario' in c), None)
     per_user_col = 'recuento de folio.1' if 'recuento de folio.1' in df.columns else (
-                   'recuento de folio' if 'recuento de folio' in df.columns else
-                   next((c for c in df.columns if 'folio' in c or 'folios' in c), None))
+                    'recuento de folio' if 'recuento de folio' in df.columns else
+                    next((c for c in df.columns if 'folio' in c or 'folios' in c), None))
 
     vac_cols = [c for c in df.columns if 'vacac' in c]
     lic_cols = [c for c in df.columns if 'licenc' in c]
@@ -69,10 +69,8 @@ def read_one(path):
 
 def load_all(data_dir):
     files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith('.xlsx')]
-    # Acepta nombres como "Enero 2025 Ventas e Ingreso por Usuario.xlsx"
-    files = [f for f in files if 'ventas e ingreso por usuario' in os.path.basename(f).lower()]
-    if not files:  # si no coincide, toma todos los xlsx
-        files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endswith('.xlsx')]
+    # Intentamos coincidir con tu nomenclatura de archivo:
+    files = [f for f in files if 'ventas e ingreso por usuario' in os.path.basename(f).lower()] or files
     if not files:
         raise RuntimeError('No se encontraron Excel en ' + os.path.abspath(data_dir))
     allm = pd.concat([read_one(p) for p in sorted(files)], ignore_index=True)
