@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio - Sistema</title>
+    <title>Sistema de Gestión - Inicio</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
         .top-bar {
             background-color: white;
             height: 60px;
@@ -41,108 +47,140 @@
             border: none;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            color: white;
-            transition: transform 0.3s ease;
-            cursor: pointer;
-        }
-        .metric-card:hover {
-            transform: translateY(-5px);
-        }
-        .metric-card.success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-        .metric-card.warning {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .metric-card.info {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        .metric-card.orange {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-        }
-        .metric-card.purple {
-            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-        }
-        .metric-card.teal {
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-        }
         
         .welcome-section {
             background: white;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            padding: 30px;
-            margin-bottom: 30px;
+            padding: 40px;
+            margin-bottom: 40px;
             text-align: center;
         }
         
-        .action-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        body {
-            overflow-x: hidden;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
+        .welcome-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
         }
         
         .action-card {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 20px;
             transition: all 0.3s ease;
             cursor: pointer;
             border: none;
+            width: 100%;
             text-align: left;
         }
         
         .action-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        /* <CHANGE> Unified color palette using blues and purples for elegance */
+        .action-card.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .action-card.success {
+            background: linear-gradient(135deg, #4facfe 0%, #667eea 100%);
+            color: white;
+        }
+        
+        .action-card.warning {
+            background: linear-gradient(135deg, #764ba2 0%, #9575cd 100%);
+            color: white;
+        }
+        
+        .action-card.info {
+            background: linear-gradient(135deg, #5c6bc0 0%, #7986cb 100%);
+            color: white;
+        }
+        
+        .action-card.secondary {
+            background: linear-gradient(135deg, #9fa8da 0%, #c5cae9 100%);
+            color: #333;
+        }
+        
+        .action-card.dark {
+            background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+            color: white;
+        }
+        
+        .action-card.orange {
+            background: linear-gradient(135deg, #7986cb 0%, #9fa8da 100%);
+            color: white;
         }
         
         .action-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
+            font-size: 2.5rem;
             margin-bottom: 15px;
+            opacity: 0.9;
         }
         
-        .icon-blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .icon-green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
-        .icon-orange { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: white; }
-        .icon-purple { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: white; }
-        .icon-teal { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
-        .icon-pink { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
-        .icon-yellow { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: white; }
+        .action-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .action-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
-    <!-- Barra superior -->
+    <!-- Navbar -->
     <div class="top-bar d-flex align-items-center">
         <div class="container-fluid">
             <nav class="navbar navbar-expand-lg w-100">
-                <a class="navbar-brand" href="index.html">Sistema</a>
+                <a class="navbar-brand" href="#">Sistema</a>
                 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -157,23 +195,30 @@
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-users"></i> Gestión
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
+                                    <i class="fas fa-user-edit"></i> Editar Clientes</a></li>
+                                <li><a class="dropdown-item" href="ver_cliente.html">
+                                    <i class="fas fa-users"></i> Ver Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
+                                    <i class="fas fa-user-tie"></i> Editar Trabajador</a></li>
+                                <li><a class="dropdown-item" href="ver_trabajador.html">
+                                    <i class="fas fa-users-cog"></i> Ver Trabajadores</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-plus"></i> Agregar
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">
-                                    <i class="fas fa-user-plus"></i> Agregar Cliente</a></li>
+                                    <i class="fas fa-user-plus"></i> Agregar Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">
                                     <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
-                                    <i class="fas fa-edit"></i> Editar Cliente</a></li>
-                                <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
-                                    <i class="fas fa-edit"></i> Editar Trabajador</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="ver_cliente.html">
-                                    <i class="fas fa-eye"></i> Ver Clientes</a></li>
-                                <li><a class="dropdown-item" href="ver_trabajador.html">
-                                    <i class="fas fa-eye"></i> Ver Trabajadores</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
@@ -182,7 +227,7 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="dotacion_personal.html">
-                                    <i class="fas fa-users-cog"></i> Agregar Dotación</a></li>
+                                    <i class="fas fa-users"></i> Agregar Dotación</a></li>
                                 <li><a class="dropdown-item" href="carga_datos_historicos.html">
                                     <i class="fas fa-upload"></i> Cargar Datos</a></li>
                                 <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
@@ -208,146 +253,128 @@
         </div>
     </div>
 
-    <!-- Contenido principal -->
+    <!-- Main Content -->
     <div class="container-fluid mt-4">
-        <!-- Sección de bienvenida -->
+        <!-- Welcome Section -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="welcome-section fade-in">
-                    <div class="mb-4">
-                        <i class="fas fa-home fa-3x text-primary mb-3"></i>
-                    </div>
-                    <h1 class="h2 mb-3 text-dark">Bienvenido</h1>
-                    <p class="text-muted mb-0" style="font-size: 18px;">
+                    <h1 class="welcome-title">
+                        <i class="fas fa-home me-3"></i>Panel de Control
+                    </h1>
+                    <p class="lead text-muted mb-0">
                         Bienvenido al sistema de gestión. Selecciona una opción para comenzar.
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Tarjetas de métricas rápidas -->
+        <!-- Quick Stats -->
         <div class="row mb-4">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="metric-card p-4 h-100" onclick="location.href='ver_cliente.html'">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Clientes</div>
-                            <div class="h4 mb-0 text-white font-weight-bold">Editar Clientes</div>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-users fa-2x text-white-50"></i>
-                        </div>
+            <div class="col-md-3 mb-3">
+                <div class="stats-card fade-in" style="animation-delay: 0.1s;">
+                    <div class="stats-number">
+                        <i class="fas fa-users"></i>
                     </div>
+                    <div class="stats-label">Gestión de Personal</div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="metric-card success p-4 h-100" onclick="location.href='ver_trabajador.html'">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Trabajadores</div>
-                            <div class="h4 mb-0 text-white font-weight-bold">Editar Trabajadores</div>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-user-tie fa-2x text-white-50"></i>
-                        </div>
+            <div class="col-md-3 mb-3">
+                <div class="stats-card fade-in" style="animation-delay: 0.2s;">
+                    <div class="stats-number">
+                        <i class="fas fa-chart-line"></i>
                     </div>
+                    <div class="stats-label">Análisis de Datos</div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="metric-card warning p-4 h-100" onclick="location.href='dotacion_personal.html'">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Dotación</div>
-                            <div class="h4 mb-0 text-white font-weight-bold">Gestión de Dotacion Personal</div>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-users-cog fa-2x text-white-50"></i>
-                        </div>
+            <div class="col-md-3 mb-3">
+                <div class="stats-card fade-in" style="animation-delay: 0.3s;">
+                    <div class="stats-number">
+                        <i class="fas fa-cogs"></i>
                     </div>
+                    <div class="stats-label">Configuración</div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="metric-card info p-4 h-100" onclick="location.href='carga_datos_historicos.html'">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Datos</div>
-                            <div class="h4 mb-0 text-white font-weight-bold">Visualizar Datos Históricos</div>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-chart-line fa-2x text-white-50"></i>
-                        </div>
+            <div class="col-md-3 mb-3">
+                <div class="stats-card fade-in" style="animation-delay: 0.4s;">
+                    <div class="stats-number">
+                        <i class="fas fa-shield-alt"></i>
                     </div>
+                    <div class="stats-label">Sistema Seguro</div>
                 </div>
             </div>
         </div>
 
-        <!-- Acciones principales -->
+        <!-- Action Cards -->
         <div class="row">
-            <div class="col-12">
-                <div class="welcome-section">
-                    <h5 class="mb-4 text-start">
-                        <i class="fas fa-tasks text-primary me-2"></i>
-                        Acciones Rápidas
-                    </h5>
-                    
-                    <div class="action-grid">
-                        <div class="action-card fade-in" onclick="location.href='registro_cliente.html'">
-                            <div class="action-icon icon-blue">
-                                <i class="fas fa-user-plus"></i>
-                            </div>
-                            <h6 class="mb-2 text-dark">Registrar Cliente</h6>
-                            <p class="text-muted small mb-0">Agregar un nuevo cliente al sistema</p>
-                        </div>
-
-                        <div class="action-card fade-in" onclick="location.href='registro2.html'">
-                            <div class="action-icon icon-green">
-                                <i class="fas fa-user-plus"></i>
-                            </div>
-                            <h6 class="mb-2 text-dark">Registrar Trabajador</h6>
-                            <p class="text-muted small mb-0">Agregar un nuevo trabajador al sistema</p>
-                        </div>
-
-                        <div class="action-card fade-in" onclick="location.href='editar_cliente.html'">
-                            <div class="action-icon icon-orange">
-                                <i class="fas fa-edit"></i>
-                            </div>
-                            <h6 class="mb-2 text-dark">Editar Cliente</h6>
-                            <p class="text-muted small mb-0">Modificar información de clientes existentes</p>
-                        </div>
-
-                        <div class="action-card fade-in" onclick="location.href='editar_trabajador.html'">
-                            <div class="action-icon icon-purple">
-                                <i class="fas fa-edit"></i>
-                            </div>
-                            <h6 class="mb-2 text-dark">Editar Trabajador</h6>
-                            <p class="text-muted small mb-0">Modificar información de trabajadores</p>
-                        </div>
-
-                        <div class="action-card fade-in" onclick="location.href='carga_datos_historicos.html'">
-                            <div class="action-icon icon-teal">
-                                <i class="fas fa-upload"></i>
-                            </div>
-                            <h6 class="mb-2 text-dark">Cargar Datos Históricos</h6>
-                            <p class="text-muted small mb-0">Subir archivos con información histórica</p>
-                        </div>
-
-                        <div class="action-card fade-in" onclick="location.href='visualizar_datos_historicos.html'">
-                            <div class="action-icon icon-pink">
-                                <i class="fas fa-chart-line"></i>
-                            </div>
-                            <h6 class="mb-2 text-dark">Visualizar Datos Históricos</h6>
-                            <p class="text-muted small mb-0">Ver gráficos y análisis de datos</p>
-                        </div>
-
-                        <div class="action-card fade-in" onclick="location.href='historial.html'">
-                            <div class="action-icon icon-yellow">
-                                <i class="fas fa-clock-rotate-left"></i>
-                            </div>
-                            <h6 class="mb-2 text-dark">Ver Historial</h6>
-                            <p class="text-muted small mb-0">Consultar el historial de operaciones</p>
-                        </div>
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <button class="action-card primary fade-in" onclick="location.href='registro_cliente.html'" style="animation-delay: 0.5s;">
+                    <div class="action-icon">
+                        <i class="fas fa-user-plus"></i>
                     </div>
-                </div>
+                    <div class="action-title">Registrar Cliente</div>
+                    <p class="action-description">Agregar nuevos clientes al sistema</p>
+                </button>
+            </div>
+            
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <button class="action-card success fade-in" onclick="location.href='registro2.html'" style="animation-delay: 0.6s;">
+                    <div class="action-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="action-title">Registrar Trabajador</div>
+                    <p class="action-description">Incorporar nuevos empleados</p>
+                </button>
+            </div>
+            
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <button class="action-card warning fade-in" onclick="location.href='editar_cliente.html'" style="animation-delay: 0.7s;">
+                    <div class="action-icon">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <div class="action-title">Editar Cliente</div>
+                    <p class="action-description">Modificar información de clientes</p>
+                </button>
+            </div>
+            
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <button class="action-card info fade-in" onclick="location.href='editar_trabajador.html'" style="animation-delay: 0.8s;">
+                    <div class="action-icon">
+                        <i class="fas fa-user-cog"></i>
+                    </div>
+                    <div class="action-title">Editar Trabajador</div>
+                    <p class="action-description">Actualizar datos de empleados</p>
+                </button>
+            </div>
+            
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <button class="action-card secondary fade-in" onclick="location.href='carga_datos_historicos.html'" style="animation-delay: 0.9s;">
+                    <div class="action-icon">
+                        <i class="fas fa-upload"></i>
+                    </div>
+                    <div class="action-title">Cargar Datos Históricos</div>
+                    <p class="action-description">Importar información histórica</p>
+                </button>
+            </div>
+            
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <button class="action-card dark fade-in" onclick="location.href='visualizar_datos_historicos.html'" style="animation-delay: 1.0s;">
+                    <div class="action-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="action-title">Visualizar Datos Históricos</div>
+                    <p class="action-description">Analizar tendencias y patrones</p>
+                </button>
+            </div>
+            
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <button class="action-card orange fade-in" onclick="location.href='historial.html'" style="animation-delay: 1.1s;">
+                    <div class="action-icon">
+                        <i class="fas fa-clock-rotate-left"></i>
+                    </div>
+                    <div class="action-title">Ver Historial</div>
+                    <p class="action-description">Consultar actividades anteriores</p>
+                </button>
             </div>
         </div>
     </div>
@@ -360,20 +387,19 @@
             localStorage.removeItem("apellido");
             window.location.href = "login.html";
         }
-
-        // Verificar autenticación
+        
         if (!localStorage.getItem("auth")) {
             window.location.href = "login.html";
         }
-
-        // Mostrar mensaje de bienvenida
+        
+        // Mostrar mensaje de bienvenida con nombre y apellido 
         const nombre = localStorage.getItem("nombre");
         const apellido = localStorage.getItem("apellido");
         if (nombre && apellido) {
-            document.getElementById('welcomeMessage').textContent = `${nombre} ${apellido}`;
+            document.getElementById('welcomeMessage').innerHTML = `${nombre} ${apellido}`;
         }
-
-        function verificarAdmin() {
+        
+        function verificarAdmin(){
             const rol = localStorage.getItem("rol");
             console.log(rol);
 
@@ -383,42 +409,27 @@
                 editarCliente: document.getElementById('dropdownEditarCliente'),
                 registrarCliente: document.getElementById('dropdownRegistrarCliente')
             };
-
+            
             Object.values(dropdowns).forEach(dropdown => {
-                if (dropdown) dropdown.style.display = 'block';
+                dropdown.style.display = 'block';  // Mostrar los elementos.
             });
 
             if (rol === 'Soporte TI' || rol === 'Gerente') {
                 Object.values(dropdowns).forEach(dropdown => {
-                    if (dropdown) {
-                        dropdown.style.pointerEvents = 'auto';
-                        dropdown.style.color = '';
-                        dropdown.style.textDecoration = '';
-                    }
+                    dropdown.style.pointerEvents = 'auto'; // Hacer clickeables
+                    dropdown.style.color = ''; // Restaurar color
+                    dropdown.style.textDecoration = ''; // Restaurar subrayado
                 });
             } else if (rol === 'Supervisor') {
                 Object.values(dropdowns).forEach(dropdown => {
-                    if (dropdown) {
-                        dropdown.style.pointerEvents = 'none';
-                        dropdown.style.color = 'gray';
-                        dropdown.style.textDecoration = 'none';
-                    }
+                    dropdown.style.pointerEvents = 'none'; // Deshabilitar clickeo
+                    dropdown.style.color = 'gray'; // Cambiar color
+                    dropdown.style.textDecoration = 'none'; // Eliminar subrayado
                 });
             }
         }
-
-        // Animaciones de entrada
-        document.addEventListener('DOMContentLoaded', () => {
-            verificarAdmin();
-            
-            // Agregar animación escalonada a las tarjetas
-            const cards = document.querySelectorAll('.action-card');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.classList.add('fade-in');
-                }, index * 100);
-            });
-        });
+        
+        window.onload = verificarAdmin;
     </script>
 </body>
 </html>
