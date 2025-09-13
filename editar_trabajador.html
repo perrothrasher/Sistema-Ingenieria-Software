@@ -1,225 +1,484 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Editar Trabajador</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    .form-container {
-      max-width: 500px;
-      margin: 20px auto;
-      background-color: #f4f4f4;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Trabajadores - Sistema</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .top-bar {
+            background-color: white;
+            height: 60px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff !important;
+            text-decoration: none;
+        }
+        
+        .navbar {
+            background-color: white;
+            padding: 0.5rem 1rem;
+        }
+        
+        .navbar-nav .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: #007bff;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-    h1 {
-      text-align: center;
-      margin-top: 30px;
-    }
-
-    form input, form button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button i {
-      margin-right: 5px;
-    }
-  </style>
+        body {
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .welcome-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 15px;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-color: #e9ecef;
+        }
+        
+        .btn-action {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            margin: 0 2px;
+        }
+        
+        .btn-edit {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+            color: white;
+        }
+        
+        .btn-delete {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+            color: white;
+        }
+        
+        .page-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm">
-    <div class="container-fluid">
-      <div class="navbar-logo">Sistema</div>
-      <ul class="navbar-links">
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-        <span class="navbar-toggler-icon"></span>
-      </button>  
-      <div class="collapse navbar-collapse" id="collapsibleNavbar">
-        <div class="droptdown">
-        <a class="btn" href="index.html" role="button" aria-expanded="false">Inicio</a>
-      </div>
-      <div class="dropdown">
-        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Editar</a>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" id="dropdownEditarCliente"href="editar_cliente.html">Editar Clientes</a></li>
-          <li><a class="dropdown-item" href="ver_cliente.html">Ver Clientes</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">Editar Trabajador</a></li>
-          <li><a class="dropdown-item" href="ver_trabajador.html">Ver Trabajadores</a></li>
-        </ul>
-      </div>
-      <div class="dropdown">
-        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Agregar</a>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">Agregar Clientes</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">Agregar Trabajador</a></li>
-        </ul>
-      </div>
-      <div class="dropdown">
-        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Dotación</a>
-        <ul class="dropdown-menu">
-          <a class="btn" href="dotacion_personal.html" role="button" aria-expanded="false">Agregar Dotación</a>
-        </ul>
-      </div>
-      <div class="droptdown">
-        <a class="btn" href="#" role="button" aria-expanded="false" onclick="logout()">Cerrar Sesión</a>
-      </div>
-      </div>
-    </ul>
+    <!-- Barra superior -->
+    <div class="top-bar d-flex align-items-center">
+        <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg w-100">
+                <a class="navbar-brand" href="index.html">Sistema</a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-users"></i> Gestión
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Cliente</a></li>
+                                <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
+                                    <i class="fas fa-edit"></i> Editar Cliente</a></li>
+                                <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
+                                    <i class="fas fa-edit"></i> Editar Trabajador</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="ver_cliente.html">
+                                    <i class="fas fa-eye"></i> Ver Clientes</a></li>
+                                <li><a class="dropdown-item" href="ver_trabajador.html">
+                                    <i class="fas fa-eye"></i> Ver Trabajadores</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-chart-line"></i> Dotación
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="dotacion_personal.html">
+                                    <i class="fas fa-users-cog"></i> Agregar Dotación</a></li>
+                                <li><a class="dropdown-item" href="carga_datos_historicos.html">
+                                    <i class="fas fa-upload"></i> Cargar Datos</a></li>
+                                <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
+                                    <i class="fas fa-chart-bar"></i> Visualizar Datos</a></li>
+                                <li><a class="dropdown-item" href="predicción.html">
+                                    <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
     </div>
-  </nav>
 
-  <div class="container">
-    <h1><i class="fas fa-edit"></i> Trabajadores Registrados</h1>
-    <div class="row" >
-        <table class="table" id="trabajadoresTable">
-          <thead class="table-success">
-            <tr>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Correo</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="trabajadoresBody">
-            <!-- Los datos de los  clientes se cargarán aquí -->
-          </tbody>
-        </table>
-    </div>  
-  </div>
-  
-  <script>
-    function logout() {
-      const confirmado = confirm("¿Estás seguro de que deseas cerrar sesión?");
-      if (confirmado) {
-        localStorage.removeItem("auth");
-        localStorage.removeItem("usuario");
-        localStorage.removeItem("correo");
-        window.location.href = "login.html";
-      }
-    };
+    <!-- Contenido principal -->
+    <div class="container-fluid mt-4">
+        <!-- Sección de título -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="welcome-section fade-in">
+                    <div class="mb-4">
+                        <i class="fas fa-edit fa-3x text-primary mb-3"></i>
+                    </div>
+                    <h1 class="h2 mb-3 page-title">Gestión de Trabajadores</h1>
+                    <p class="text-muted mb-0" style="font-size: 18px;">
+                        Administra y edita la información de los trabajadores registrados en el sistema.
+                    </p>
+                </div>
+            </div>
+        </div>
 
-    // Carga los trabajadores desde el backend
-    async function cargarTrabajadores() {
-      try {
-        const response = await fetch('http://localhost:8090/get-trabajadores', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-      });
-        const data = await response.json();
+        <!-- Tabla de trabajadores -->
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container fade-in">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            Trabajadores Registrados
+                        </h5>
+                        <div class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span id="totalTrabajadores">0</span> trabajadores encontrados
+                        </div>
+                    </div>
+                    
+                    <div class="loading-spinner" id="loadingSpinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando trabajadores...</p>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table" id="trabajadoresTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-user me-2"></i>Nombre</th>
+                                    <th><i class="fas fa-user me-2"></i>Apellido</th>
+                                    <th><i class="fas fa-envelope me-2"></i>Correo</th>
+                                    <th><i class="fas fa-cogs me-2"></i>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trabajadoresBody">
+                                <!-- Los datos de los trabajadores se cargarán aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <i class="fas fa-users"></i>
+                        <h5>No hay trabajadores registrados</h5>
+                        <p>Aún no se han registrado trabajadores en el sistema.</p>
+                        <a href="registro2.html" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Agregar Primer Trabajador
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        if (response.ok) {
-          const trabajadoresBody = document.getElementById('trabajadoresBody');
-          trabajadoresBody.innerHTML = ''; 
-
-          // Iterar sobre los datos de los trabajadores y mostrarlos en la tabla
-          data.trabajadores.forEach(trabajador => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${trabajador.nombre}</td>
-              <td>${trabajador.apellido}</td>
-              <td>${trabajador.correo}</td>
-              <td class="btn-group">
-                <button type="button" class="btn btn-light" onclick="eliminarTrabajador(${trabajador.id})">Eliminar</button>
-                <button type="button" class="btn btn-light" onclick="editarTrabajador(${trabajador.id})">Editar</button>
-              </td>
-            `;
-            trabajadoresBody.appendChild(tr);
-          });
-        } else {
-          alert('Error al cargar los trabajadores');
+    <script>
+        function logout() {
+            const confirmado = confirm("¿Estás seguro de que deseas cerrar sesión?");
+            if (confirmado) {
+                localStorage.removeItem("auth");
+                localStorage.removeItem("usuario");
+                localStorage.removeItem("correo");
+                localStorage.removeItem("rol");
+                localStorage.removeItem("nombre");
+                localStorage.removeItem("apellido");
+                window.location.href = "login.html";
+            }
         }
-      } catch (error) {
-        console.error('Error fetching trabajadores:', error);
-        alert('Error al obtener los trabajadores');
-      }
-    }
 
-    // Función para eliminar un trabajador
-    async function eliminarTrabajador(id) {
-      if (confirm('¿Estás seguro de que deseas eliminar este trabajador?')) {
-        try {
-          const response = await fetch(`http://localhost:8090/eliminarTrabajador/${id}`, {
-            method: 'DELETE'
-          });
-
-          if (!response.ok) {
-            throw new Error('Error al eliminar el trabajador');
-          }
-
-          alert('Trabajador eliminado con éxito');
-          
-          // Recargar los trabajadores después de la eliminación
-          cargarTrabajadores();
-        } catch (error) {
-          console.error('Error al eliminar el trabajador:', error);
-          alert('Hubo un error al eliminar el trabajador.');
+        // Mostrar mensaje de bienvenida
+        const nombre = localStorage.getItem("nombre");
+        const apellido = localStorage.getItem("apellido");
+        if (nombre && apellido) {
+            document.getElementById('welcomeMessage').textContent = `${nombre} ${apellido}`;
         }
-      }
-    }
 
-    function editarTrabajador(id) {
-      window.location.href = `editar2.html?id=${id}`;
-    }
+        // Carga los trabajadores desde el backend
+        async function cargarTrabajadores() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const trabajadoresTable = document.getElementById('trabajadoresTable');
+            const emptyState = document.getElementById('emptyState');
+            const totalTrabajadores = document.getElementById('totalTrabajadores');
+            
+            loadingSpinner.style.display = 'block';
+            trabajadoresTable.style.display = 'none';
+            emptyState.style.display = 'none';
+            
+            try {
+                const response = await fetch('http://localhost:8090/get-trabajadores', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                const data = await response.json();
 
+                loadingSpinner.style.display = 'none';
 
-  function verificarAdmin(){
-      const rol = localStorage.getItem("rol");
-      console.log(rol);
+                if (response.ok && data.trabajadores && data.trabajadores.length > 0) {
+                    const trabajadoresBody = document.getElementById('trabajadoresBody');
+                    trabajadoresBody.innerHTML = ''; 
 
-      const dropdowns = {
-        registrar: document.getElementById('dropdownRegistrar'),
-        editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
-        editarCliente: document.getElementById('dropdownEditarCliente'),
-        registrarCliente: document.getElementById('dropdownRegistrarCliente')
-      };
-      Object.values(dropdowns).forEach(dropdown => {
-      dropdown.style.display = 'block';  // Mostrar los elementos
-      });
+                    // Actualizar contador
+                    totalTrabajadores.textContent = data.trabajadores.length;
 
-      if (rol === 'Soporte TI' || rol === 'Gerente') {
+                    // Iterar sobre los datos de los trabajadores y mostrarlos en la tabla
+                    data.trabajadores.forEach((trabajador, index) => {
+                        const tr = document.createElement('tr');
+                        tr.style.animationDelay = `${index * 0.1}s`;
+                        tr.classList.add('fade-in');
+                        tr.innerHTML = `
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                    <strong>${trabajador.nombre}</strong>
+                                </div>
+                            </td>
+                            <td>${trabajador.apellido}</td>
+                            <td>
+                                <i class="fas fa-envelope text-muted me-2"></i>
+                                ${trabajador.correo}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-action btn-edit" onclick="editarTrabajador(${trabajador.id})" title="Editar trabajador">
+                                        <i class="fas fa-edit me-1"></i>Editar
+                                    </button>
+                                    <button type="button" class="btn btn-action btn-delete" onclick="eliminarTrabajador(${trabajador.id})" title="Eliminar trabajador">
+                                        <i class="fas fa-trash me-1"></i>Eliminar
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        trabajadoresBody.appendChild(tr);
+                    });
+                    
+                    trabajadoresTable.style.display = 'table';
+                } else {
+                    totalTrabajadores.textContent = '0';
+                    emptyState.style.display = 'block';
+                }
+            } catch (error) {
+                loadingSpinner.style.display = 'none';
+                console.error('Error fetching trabajadores:', error);
+                alert('Error al obtener los trabajadores. Por favor, intenta nuevamente.');
+            }
+        }
+
+        // Función para eliminar un trabajador
+        async function eliminarTrabajador(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar este trabajador? Esta acción no se puede deshacer.')) {
+                try {
+                    const response = await fetch(`http://localhost:8090/eliminarTrabajador/${id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Error al eliminar el trabajador');
+                    }
+
+                    // Mostrar mensaje de éxito con estilo
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        Trabajador eliminado con éxito
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.body.appendChild(alertDiv);
+                    
+                    // Recargar los trabajadores después de la eliminación
+                    setTimeout(() => {
+                        cargarTrabajadores();
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('Error al eliminar el trabajador:', error);
+                    alert('Hubo un error al eliminar el trabajador. Por favor, intenta nuevamente.');
+                }
+            }
+        }
+
+        function editarTrabajador(id) {
+            window.location.href = `editar2.html?id=${id}`;
+        }
+
+        function verificarAdmin() {
+            const rol = localStorage.getItem("rol");
+            console.log(rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+            
             Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'auto'; // Hacer clickeables
-              dropdown.style.color = ''; // Restaurar color
-              dropdown.style.textDecoration = ''; // Restaurar subrayado
+                if (dropdown) dropdown.style.display = 'block';
             });
-        } else if (rol === 'Supervisor') {
-            Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'none'; // Deshabilitar clickeo
-              dropdown.style.color = 'gray'; // Cambiar color
-              dropdown.style.textDecoration = 'none'; // Eliminar subrayado
-            });
-        }
-    }
 
-    window.onload = function() {
-      verificarAdmin();
-      cargarTrabajadores();
-    };
-    window.onload = () => {
-      [verificarAdmin, cargarTrabajadores].forEach(func => func());
-    };
-  </script>
+            if (rol === 'Soporte TI' || rol === 'Gerente') {
+                Object.values(dropdowns).forEach(dropdown => {
+                    if (dropdown) {
+                        dropdown.style.pointerEvents = 'auto';
+                        dropdown.style.color = '';
+                        dropdown.style.textDecoration = '';
+                    }
+                });
+            } else if (rol === 'Supervisor') {
+                Object.values(dropdowns).forEach(dropdown => {
+                    if (dropdown) {
+                        dropdown.style.pointerEvents = 'none';
+                        dropdown.style.color = 'gray';
+                        dropdown.style.textDecoration = 'none';
+                    }
+                });
+            }
+        }
+
+        // Verificar autenticación
+        if (!localStorage.getItem("auth")) {
+            window.location.href = "login.html";
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarAdmin();
+            cargarTrabajadores();
+        });
+    </script>
 </body>
 </html>
