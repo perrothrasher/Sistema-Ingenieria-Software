@@ -1,124 +1,424 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Inicio</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio - Sistema</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .top-bar {
+            background-color: white;
+            height: 60px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff !important;
+            text-decoration: none;
+        }
+        
+        .navbar {
+            background-color: white;
+            padding: 0.5rem 1rem;
+        }
+        
+        .navbar-nav .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: #007bff;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .metric-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .metric-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .metric-card.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .metric-card.orange {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+        .metric-card.purple {
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+        }
+        .metric-card.teal {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        
+        .welcome-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        body {
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .action-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            text-align: left;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .icon-blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .icon-green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
+        .icon-orange { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: white; }
+        .icon-purple { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); color: white; }
+        .icon-teal { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+        .icon-pink { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+        .icon-yellow { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); color: white; }
+    </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-sm">
-    <div class="container-fluid">
-      <div class="navbar-logo">Sistema</div>
-      <ul class="navbar-links">
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-        <span class="navbar-toggler-icon"></span>
-      </button>  
-      <div class="collapse navbar-collapse" id="collapsibleNavbar">
-        <div class="droptdown">
-        <a class="btn" href="index.html" role="button" aria-expanded="false">Inicio</a>
-      </div>
-      <div class="dropdown">
-        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Editar</a>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" id="dropdownEditarCliente"href="editar_cliente.html">Editar Clientes</a></li>
-          <li><a class="dropdown-item" href="ver_cliente.html">Ver Clientes</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">Editar Trabajador</a></li>
-          <li><a class="dropdown-item" href="ver_trabajador.html">Ver Trabajadores</a></li>
-        </ul>
-      </div>
-      <div class="dropdown">
-        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Agregar</a>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">Agregar Clientes</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">Agregar Trabajador</a></li>
-        </ul>
-      </div>
-      <div class="dropdown">
-        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Dotación</a>
-        <ul class="dropdown-menu">
-          <a class="btn" href="dotacion_personal.html" role="button" aria-expanded="false">Agregar Dotación</a>
-          <a class="btn" href="carga_datos_historicos.html" role="button" aria-expanded="false">Cargar de datos  </a>
-          <a class="btn" href="visualizar_datos_historicos.html" role="button" aria-expanded="false">Visualizar datos</a>
-          <a class="btn" href="predicción.html" role="button" aria-expanded="false">Ver prediccion</a>
-      </div>
-      <div class="droptdown">
-        <a class="btn" href="#" role="button" aria-expanded="false" onclick="logout()">Cerrar Sesión</a>
-      </div>
-      </div>
-    </ul>
+    <!-- Barra superior -->
+    <div class="top-bar d-flex align-items-center">
+        <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg w-100">
+                <a class="navbar-brand" href="index.html">Sistema</a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="index.html">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-users"></i> Gestión
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Cliente</a></li>
+                                <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
+                                    <i class="fas fa-edit"></i> Editar Cliente</a></li>
+                                <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
+                                    <i class="fas fa-edit"></i> Editar Trabajador</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="ver_cliente.html">
+                                    <i class="fas fa-eye"></i> Ver Clientes</a></li>
+                                <li><a class="dropdown-item" href="ver_trabajador.html">
+                                    <i class="fas fa-eye"></i> Ver Trabajadores</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-chart-line"></i> Dotación
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="dotacion_personal.html">
+                                    <i class="fas fa-users-cog"></i> Agregar Dotación</a></li>
+                                <li><a class="dropdown-item" href="carga_datos_historicos.html">
+                                    <i class="fas fa-upload"></i> Cargar Datos</a></li>
+                                <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
+                                    <i class="fas fa-chart-bar"></i> Visualizar Datos</a></li>
+                                <li><a class="dropdown-item" href="predicción.html">
+                                    <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
     </div>
-  </nav>
 
-  <div class="container-fluid mt-3 mb-5 text-center">
-    <h1><i class="fas fa-home" id="welcomeMessage"></i></h1>
-    <p style="text-align: center; font-size: 18px; margin-bottom: 2rem;">
-      Selecciona una opción del menú superior para comenzar.
-    </p>
+    <!-- Contenido principal -->
+    <div class="container-fluid mt-4">
+        <!-- Sección de bienvenida -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="welcome-section fade-in">
+                    <div class="mb-4">
+                        <i class="fas fa-home fa-3x text-primary mb-3"></i>
+                    </div>
+                    <h1 class="h2 mb-3 text-dark">Panel de Control</h1>
+                    <p class="text-muted mb-0" style="font-size: 18px;">
+                        Bienvenido al sistema de gestión. Selecciona una opción para comenzar.
+                    </p>
+                </div>
+            </div>
+        </div>
 
-    <div style="display: grid; gap: 1.5rem;">
-      <button class="d-flex justify-content-center" onclick="location.href='registro_cliente.html'"><i class="fas fa-user-plus"></i> Registrar Cliente</button>
-      <button onclick="location.href='registro2.html'"><i class="fas fa-user-plus"></i> Registrar Trabajador</button>
-      <button onclick="location.href='editar_cliente.html'"><i class="fas fa-edit"></i> Editar Cliente</button>
-      <button onclick="location.href='editar_trabajador.html'"><i class="fas fa-edit"></i> Editar trabajador</button>
-      <button onclick="location.href='carga_datos_historicos.html'"><i class="fas fa-upload"></i> Cargar Datos Históricos</button>
-      <button onclick="location.href='visualizar_datos_historicos.html'"><i class="fas fa-chart-line"></i> Visualizar Datos Históricos</button>
-      <button onclick="location.href='historial.html'"><i class="fas fa-clock-rotate-left"></i> Ver Historial</button>
+        <!-- Tarjetas de métricas rápidas -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="metric-card p-4 h-100" onclick="location.href='ver_cliente.html'">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Clientes</div>
+                            <div class="h4 mb-0 text-white font-weight-bold">Gestionar</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="metric-card success p-4 h-100" onclick="location.href='ver_trabajador.html'">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Trabajadores</div>
+                            <div class="h4 mb-0 text-white font-weight-bold">Gestionar</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-tie fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="metric-card warning p-4 h-100" onclick="location.href='dotacion_personal.html'">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Dotación</div>
+                            <div class="h4 mb-0 text-white font-weight-bold">Personal</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users-cog fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="metric-card info p-4 h-100" onclick="location.href='carga_datos_historicos.html'">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Datos</div>
+                            <div class="h4 mb-0 text-white font-weight-bold">Históricos</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones principales -->
+        <div class="row">
+            <div class="col-12">
+                <div class="welcome-section">
+                    <h5 class="mb-4 text-start">
+                        <i class="fas fa-tasks text-primary me-2"></i>
+                        Acciones Rápidas
+                    </h5>
+                    
+                    <div class="action-grid">
+                        <div class="action-card fade-in" onclick="location.href='registro_cliente.html'">
+                            <div class="action-icon icon-blue">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <h6 class="mb-2 text-dark">Registrar Cliente</h6>
+                            <p class="text-muted small mb-0">Agregar un nuevo cliente al sistema</p>
+                        </div>
+
+                        <div class="action-card fade-in" onclick="location.href='registro2.html'">
+                            <div class="action-icon icon-green">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <h6 class="mb-2 text-dark">Registrar Trabajador</h6>
+                            <p class="text-muted small mb-0">Agregar un nuevo trabajador al sistema</p>
+                        </div>
+
+                        <div class="action-card fade-in" onclick="location.href='editar_cliente.html'">
+                            <div class="action-icon icon-orange">
+                                <i class="fas fa-edit"></i>
+                            </div>
+                            <h6 class="mb-2 text-dark">Editar Cliente</h6>
+                            <p class="text-muted small mb-0">Modificar información de clientes existentes</p>
+                        </div>
+
+                        <div class="action-card fade-in" onclick="location.href='editar_trabajador.html'">
+                            <div class="action-icon icon-purple">
+                                <i class="fas fa-edit"></i>
+                            </div>
+                            <h6 class="mb-2 text-dark">Editar Trabajador</h6>
+                            <p class="text-muted small mb-0">Modificar información de trabajadores</p>
+                        </div>
+
+                        <div class="action-card fade-in" onclick="location.href='carga_datos_historicos.html'">
+                            <div class="action-icon icon-teal">
+                                <i class="fas fa-upload"></i>
+                            </div>
+                            <h6 class="mb-2 text-dark">Cargar Datos Históricos</h6>
+                            <p class="text-muted small mb-0">Subir archivos con información histórica</p>
+                        </div>
+
+                        <div class="action-card fade-in" onclick="location.href='visualizar_datos_historicos.html'">
+                            <div class="action-icon icon-pink">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h6 class="mb-2 text-dark">Visualizar Datos</h6>
+                            <p class="text-muted small mb-0">Ver gráficos y análisis de datos</p>
+                        </div>
+
+                        <div class="action-card fade-in" onclick="location.href='historial.html'">
+                            <div class="action-icon icon-yellow">
+                                <i class="fas fa-clock-rotate-left"></i>
+                            </div>
+                            <h6 class="mb-2 text-dark">Ver Historial</h6>
+                            <p class="text-muted small mb-0">Consultar el historial de operaciones</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  
-  <script>
-    function logout() {
-      localStorage.removeItem("auth");
-      localStorage.removeItem("rol");
-      localStorage.removeItem("nombre");
-      localStorage.removeItem("apellido");
-      window.location.href = "login.html";
-    }
-    if (!localStorage.getItem("auth")) {
-      window.location.href = "login.html";
-    }
-    // Mostrar mensaje de bienvenida con nombre y apellido
-    const nombre = localStorage.getItem("nombre");
-    const apellido = localStorage.getItem("apellido");
-    if (nombre && apellido) {
-    document.getElementById('welcomeMessage').innerHTML = `<i ></i> Bienvenido ${nombre} ${apellido}`;
-    }
-    function verificarAdmin(){
-      const rol = localStorage.getItem("rol");
-      console.log(rol);
 
-      const dropdowns = {
-        registrar: document.getElementById('dropdownRegistrar'),
-        editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
-        editarCliente: document.getElementById('dropdownEditarCliente'),
-        registrarCliente: document.getElementById('dropdownRegistrarCliente')
-      };
-      Object.values(dropdowns).forEach(dropdown => {
-      dropdown.style.display = 'block';  // Mostrar los elementos.
-      });
-
-      if (rol === 'Soporte TI' || rol === 'Gerente') {
-            Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'auto'; // Hacer clickeables
-              dropdown.style.color = ''; // Restaurar color
-              dropdown.style.textDecoration = ''; // Restaurar subrayado
-            });
-        } else if (rol === 'Supervisor') {
-            Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'none'; // Deshabilitar clickeo
-              dropdown.style.color = 'gray'; // Cambiar color
-              dropdown.style.textDecoration = 'none'; // Eliminar subrayado
-            });
+    <script>
+        function logout() {
+            localStorage.removeItem("auth");
+            localStorage.removeItem("rol");
+            localStorage.removeItem("nombre");
+            localStorage.removeItem("apellido");
+            window.location.href = "login.html";
         }
-    }
-    window.onload = verificarAdmin;
-    
-  </script>
+
+        // Verificar autenticación
+        if (!localStorage.getItem("auth")) {
+            window.location.href = "login.html";
+        }
+
+        // Mostrar mensaje de bienvenida
+        const nombre = localStorage.getItem("nombre");
+        const apellido = localStorage.getItem("apellido");
+        if (nombre && apellido) {
+            document.getElementById('welcomeMessage').textContent = `${nombre} ${apellido}`;
+        }
+
+        function verificarAdmin() {
+            const rol = localStorage.getItem("rol");
+            console.log(rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+
+            Object.values(dropdowns).forEach(dropdown => {
+                if (dropdown) dropdown.style.display = 'block';
+            });
+
+            if (rol === 'Soporte TI' || rol === 'Gerente') {
+                Object.values(dropdowns).forEach(dropdown => {
+                    if (dropdown) {
+                        dropdown.style.pointerEvents = 'auto';
+                        dropdown.style.color = '';
+                        dropdown.style.textDecoration = '';
+                    }
+                });
+            } else if (rol === 'Supervisor') {
+                Object.values(dropdowns).forEach(dropdown => {
+                    if (dropdown) {
+                        dropdown.style.pointerEvents = 'none';
+                        dropdown.style.color = 'gray';
+                        dropdown.style.textDecoration = 'none';
+                    }
+                });
+            }
+        }
+
+        // Animaciones de entrada
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarAdmin();
+            
+            // Agregar animación escalonada a las tarjetas
+            const cards = document.querySelectorAll('.action-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('fade-in');
+                }, index * 100);
+            });
+        });
+    </script>
 </body>
 </html>
