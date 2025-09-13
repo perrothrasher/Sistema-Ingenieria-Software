@@ -1,178 +1,501 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Registrar Cliente</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Cliente - Sistema</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .top-bar {
+            background-color: white;
+            height: 60px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff !important;
+            text-decoration: none;
+        }
+        
+        .navbar {
+            background-color: white;
+            padding: 0.5rem 1rem;
+        }
+        
+        .navbar-nav .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: #007bff;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 40px;
+            margin: 30px auto;
+            max-width: 800px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .form-header h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .form-header .subtitle {
+            color: #6c757d;
+            font-size: 16px;
+        }
+        
+        .form-header .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px 20px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background-color: #f8f9fa;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            background-color: white;
+            transform: translateY(-2px);
+        }
+        
+        .form-control::placeholder {
+            color: #adb5bd;
+            font-weight: 400;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 10;
+        }
+        
+        .form-control.with-icon {
+            padding-left: 50px;
+        }
+        
+        /* Fix select element icon positioning to prevent overlap with placeholder text */
+        .form-select.with-icon {
+            padding-left: 50px;
+            background-position: right 12px center;
+        }
+        
+        .form-select.with-icon option:first-child {
+            color: #adb5bd;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+        }
+        
+        .btn-submit:active {
+            transform: translateY(-1px);
+        }
+        
+        .row .col-md-6 {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .loading .btn-submit {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm">
-    <div class="container-fluid">
-      <div class="navbar-logo">Sistema</div>
-      <ul class="navbar-links">
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-        <span class="navbar-toggler-icon"></span>
-      </button>  
-      <div class="collapse navbar-collapse" id="collapsibleNavbar">
-        <div class="droptdown">
-        <a class="btn" href="index.html" role="button" aria-expanded="false">Inicio</a>
-      </div>
-      <div class="dropdown">
-        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Editar</a>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" id="dropdownEditarCliente"href="editar_cliente.html">Editar Clientes</a></li>
-          <li><a class="dropdown-item" href="ver_cliente.html">Ver Clientes</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">Editar Trabajador</a></li>
-          <li><a class="dropdown-item" href="ver_trabajador.html">Ver Trabajadores</a></li>
-        </ul>
-      </div>
-      <div class="dropdown">
-        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Agregar</a>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">Agregar Clientes</a></li>
-          <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">Agregar Trabajador</a></li>
-        </ul>
-      </div>
-      <div class="dropdown">
-        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Dotación</a>
-        <ul class="dropdown-menu">
-          <a class="btn" href="dotacion_personal.html" role="button" aria-expanded="false">Agregar Dotación</a>
-        </ul>
-      </div>
-      <div class="droptdown">
-        <a class="btn" href="#" role="button" aria-expanded="false" onclick="logout()">Cerrar Sesión</a>
-      </div>
-      </div>
-    </ul>
+    <!-- Barra superior -->
+    <div class="top-bar d-flex align-items-center">
+        <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg w-100">
+                <a class="navbar-brand" href="index.html">Sistema</a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-users"></i> Gestión
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item active" id="dropdownRegistrarCliente" href="registro_cliente.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Cliente</a></li>
+                                <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
+                                    <i class="fas fa-edit"></i> Editar Cliente</a></li>
+                                <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
+                                    <i class="fas fa-edit"></i> Editar Trabajador</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="ver_cliente.html">
+                                    <i class="fas fa-eye"></i> Ver Clientes</a></li>
+                                <li><a class="dropdown-item" href="ver_trabajador.html">
+                                    <i class="fas fa-eye"></i> Ver Trabajadores</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-chart-line"></i> Dotación
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="dotacion_personal.html">
+                                    <i class="fas fa-users-cog"></i> Agregar Dotación</a></li>
+                                <li><a class="dropdown-item" href="carga_datos_historicos.html">
+                                    <i class="fas fa-upload"></i> Cargar Datos</a></li>
+                                <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
+                                    <i class="fas fa-chart-bar"></i> Visualizar Datos</a></li>
+                                <li><a class="dropdown-item" href="predicción.html">
+                                    <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
     </div>
-  </nav>
-   <!-- Tabla de información para refgistrar cliente -->
-  <div class="container">
-    <h1><i class="fas fa-user-plus"></i> Registrar Cliente</h1>
-    <form id="registroForm" method="post">
-      <input type="text" id="nombre" name="nombre" placeholder="Nombre" required>
-      <input type="text" id="apellido" name="apellido" placeholder="Apellido" required>
-      <input type="text" id="rut" name="rut" placeholder="RUT" required>
-      <select id="region_id" name="region_id" required>
-        <option value="" disabled selected>Seleccione una región</option>
-        <option value="1">Arica y Parinacota</option>
-        <option value="2">Tarapacá</option>
-        <option value="3">Antofagasta</option>
-        <option value="4">Atacama</option>
-        <option value="5">Coquimbo</option>
-        <option value="6">Valparaíso</option>
-        <option value="7">Región Metropolitana de Santiago</option>
-        <option value="8">O’Higgins</option>
-        <option value="9">Maule</option>
-        <option value="10">Ñuble</option>
-        <option value="11">Biobío</option>
-        <option value="12">La Araucanía</option>
-        <option value="13">Los Ríos</option>
-        <option value="14">Los Lagos</option>
-        <option value="15">Aysén del General Carlos Ibáñez del Campo</option>
-        <option value="16">Magallanes y de la Antártica Chilena</option>
-      </select>
-      <input type="text" id="comuna" name="comuna" placeholder="Comuna" required>
-      <input type="text" id="direccion" name="direccion" placeholder="Dirección" required>
-      <input type="text" id="codigo_postal" name="codigo_postal" placeholder="Código Postal" required>
-      <input type="text" id="telefono" name="telefono" placeholder="Teléfono" required>
-      <input type="email" id="correo" name="correo" placeholder="Correo" required>
-      <button type="submit">Crear Cuenta</button>
-    </form>
-  </div>
 
-  <script>
-    document.getElementById('registroForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+    <!-- Contenido principal -->
+    <div class="container-fluid">
+        <div class="form-container fade-in">
+            <div class="form-header">
+                <div class="icon-wrapper">
+                    <i class="fas fa-user-plus fa-2x text-white"></i>
+                </div>
+                <h1>Registrar Cliente</h1>
+                <p class="subtitle">Complete el formulario para agregar un nuevo cliente al sistema</p>
+            </div>
+            
+            <form id="registroForm" method="post">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" class="form-control with-icon" id="nombre" name="nombre" placeholder="Nombre" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <i class="fas fa-user input-icon"></i>
+                            <input type="text" class="form-control with-icon" id="apellido" name="apellido" placeholder="Apellido" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <i class="fas fa-id-card input-icon"></i>
+                            <input type="text" class="form-control with-icon" id="rut" name="rut" placeholder="RUT" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <i class="fas fa-phone input-icon"></i>
+                            <input type="text" class="form-control with-icon" id="telefono" name="telefono" placeholder="Teléfono" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" class="form-control with-icon" id="correo" name="correo" placeholder="Correo Electrónico" required>
+                </div>
+                
+                <div class="form-group">
+                    <i class="fas fa-map-marker-alt input-icon"></i>
+                    <select class="form-select with-icon" id="region_id" name="region_id" required>
+                        <option value="" disabled selected>Seleccione una región</option>
+                        <option value="1">Arica y Parinacota</option>
+                        <option value="2">Tarapacá</option>
+                        <option value="3">Antofagasta</option>
+                        <option value="4">Atacama</option>
+                        <option value="5">Coquimbo</option>
+                        <option value="6">Valparaíso</option>
+                        <option value="7">Región Metropolitana de Santiago</option>
+                        <option value="8">O'Higgins</option>
+                        <option value="9">Maule</option>
+                        <option value="10">Ñuble</option>
+                        <option value="11">Biobío</option>
+                        <option value="12">La Araucanía</option>
+                        <option value="13">Los Ríos</option>
+                        <option value="14">Los Lagos</option>
+                        <option value="15">Aysén del General Carlos Ibáñez del Campo</option>
+                        <option value="16">Magallanes y de la Antártica Chilena</option>
+                    </select>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <i class="fas fa-city input-icon"></i>
+                            <input type="text" class="form-control with-icon" id="comuna" name="comuna" placeholder="Comuna" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <i class="fas fa-mail-bulk input-icon"></i>
+                            <input type="text" class="form-control with-icon" id="codigo_postal" name="codigo_postal" placeholder="Código Postal" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <i class="fas fa-home input-icon"></i>
+                    <input type="text" class="form-control with-icon" id="direccion" name="direccion" placeholder="Dirección" required>
+                </div>
+                
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Crear Cliente
+                </button>
+            </form>
+        </div>
+    </div>
 
-    const nombre = document.getElementById('nombre').value;
-    const apellido = document.getElementById('apellido').value;
-    const rut = document.getElementById('rut').value;
-    const direccion = document.getElementById('direccion').value;
-    const comuna = document.getElementById('comuna').value;
-    const correo = document.getElementById('correo').value;
-    const telefono = document.getElementById('telefono').value;
-    const region_id = document.getElementById('region_id').value; 
-    const codigo_postal = document.getElementById('codigo_postal').value;
+    <script>
+        document.getElementById('registroForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Agregar estado de carga
+            const form = document.getElementById('registroForm');
+            const submitBtn = document.querySelector('.btn-submit');
+            const originalText = submitBtn.innerHTML;
+            
+            form.classList.add('loading');
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creando Cliente...';
 
-    const data = {
-      nombre: nombre,
-      apellido: apellido,
-      rut: rut,
-      direccion: direccion,
-      comuna: comuna,
-      correo: correo,
-      telefono: telefono,
-      region_id: region_id,
-      codigo_postal: codigo_postal
-    };
+            const nombre = document.getElementById('nombre').value;
+            const apellido = document.getElementById('apellido').value;
+            const rut = document.getElementById('rut').value;
+            const direccion = document.getElementById('direccion').value;
+            const comuna = document.getElementById('comuna').value;
+            const correo = document.getElementById('correo').value;
+            const telefono = document.getElementById('telefono').value;
+            const region_id = document.getElementById('region_id').value; 
+            const codigo_postal = document.getElementById('codigo_postal').value;
 
-    // Enviar la solicitud POST 
-    const response = await fetch('http://localhost:8090/register-Cliente', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
+            const data = {
+                nombre: nombre,
+                apellido: apellido,
+                rut: rut,
+                direccion: direccion,
+                comuna: comuna,
+                correo: correo,
+                telefono: telefono,
+                region_id: region_id,
+                codigo_postal: codigo_postal
+            };
 
-    const result = await response.json();
-    if (response.ok) {
-      alert('Registro exitoso');
-      // reiniciar el formulario
-      document.getElementById('registroForm').reset();
-    } else {
-      alert(result.message || 'Error al registrar');
-    }
-  });
+            try {
+                // Enviar la solicitud POST 
+                const response = await fetch('http://localhost:8090/register-Cliente', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
 
-    function logout() {
-      const confirmado = confirm("¿Estás seguro de que deseas cerrar sesión?");
-      if (confirmado) {
-        localStorage.removeItem("auth");
-        window.location.href = "login.html";
-      }
-    }
+                const result = await response.json();
+                
+                if (response.ok) {
+                    // Mostrar mensaje de éxito con estilo
+                    submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>¡Cliente Creado!';
+                    submitBtn.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+                    
+                    setTimeout(() => {
+                        alert('Registro exitoso');
+                        // Reiniciar el formulario
+                        document.getElementById('registroForm').reset();
+                        form.classList.remove('loading');
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.style.background = '';
+                    }, 1500);
+                } else {
+                    throw new Error(result.message || 'Error al registrar');
+                }
+            } catch (error) {
+                form.classList.remove('loading');
+                submitBtn.innerHTML = originalText;
+                alert(error.message || 'Error al registrar');
+            }
+        });
 
-    if (!localStorage.getItem("auth")) {
-      window.location.href = "login.html";
-    }
-    function verificarAdmin(){
-      const rol = localStorage.getItem("rol");
-      console.log(rol);
-
-      const dropdowns = {
-        registrar: document.getElementById('dropdownRegistrar'),
-        editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
-        editarCliente: document.getElementById('dropdownEditarCliente'),
-        registrarCliente: document.getElementById('dropdownRegistrarCliente')
-      };
-      Object.values(dropdowns).forEach(dropdown => {
-      dropdown.style.display = 'block';  // Mostrar los elementos
-      });
-
-      if (rol === 'Soporte TI' || rol === 'Gerente') {
-            Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'auto'; // Hacer clickeables
-              dropdown.style.color = ''; // Restaurar color
-              dropdown.style.textDecoration = ''; // Restaurar subrayado
-            });
-        } else if (rol === 'Supervisor') {
-            Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'none'; // Deshabilitar clickeo
-              dropdown.style.color = 'gray'; // Cambiar color
-              dropdown.style.textDecoration = 'none'; // Eliminar subrayado
-            });
+        function logout() {
+            const confirmado = confirm("¿Estás seguro de que deseas cerrar sesión?");
+            if (confirmado) {
+                localStorage.removeItem("auth");
+                localStorage.removeItem("rol");
+                localStorage.removeItem("nombre");
+                localStorage.removeItem("apellido");
+                window.location.href = "login.html";
+            }
         }
-    }
 
-    window.onload = verificarAdmin;
-  </script>
+        // Verificar autenticación
+        if (!localStorage.getItem("auth")) {
+            window.location.href = "login.html";
+        }
+
+        // Mostrar mensaje de bienvenida
+        const nombre = localStorage.getItem("nombre");
+        const apellido = localStorage.getItem("apellido");
+        if (nombre && apellido) {
+            document.getElementById('welcomeMessage').textContent = `${nombre} ${apellido}`;
+        }
+
+        function verificarAdmin(){
+            const rol = localStorage.getItem("rol");
+            console.log(rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+            
+            Object.values(dropdowns).forEach(dropdown => {
+                if (dropdown) dropdown.style.display = 'block';
+            });
+
+            if (rol === 'Soporte TI' || rol === 'Gerente') {
+                Object.values(dropdowns).forEach(dropdown => {
+                    if (dropdown) {
+                        dropdown.style.pointerEvents = 'auto';
+                        dropdown.style.color = '';
+                        dropdown.style.textDecoration = '';
+                    }
+                });
+            } else if (rol === 'Supervisor') {
+                Object.values(dropdowns).forEach(dropdown => {
+                    if (dropdown) {
+                        dropdown.style.pointerEvents = 'none';
+                        dropdown.style.color = 'gray';
+                        dropdown.style.textDecoration = 'none';
+                    }
+                });
+            }
+        }
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarAdmin();
+        });
+
+        window.onload = verificarAdmin;
+    </script>
 </body>
 </html>
