@@ -1,626 +1,366 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Predicción de Dotación de Personal - Sistema</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        .top-bar {
-            background-color: white;
-            height: 60px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff !important;
-            text-decoration: none;
-        }
-        
-        .navbar {
-            background-color: white;
-            padding: 0.5rem 1rem;
-        }
-        
-        .navbar-nav .nav-link {
-            color: #6c757d;
-            font-weight: 500;
-        }
-        
-        .navbar-nav .nav-link:hover {
-            color: #007bff;
-        }
-        
-        .dropdown-menu {
-            border: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Predicción de Dotación de Personal - Sistema</title>
 
-        .metric-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            color: white;
-            transition: transform 0.3s ease;
-        }
-        .metric-card:hover {
-            transform: translateY(-5px);
-        }
-        .metric-card.success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        }
-        .metric-card.warning {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .metric-card.info {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        .chart-container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        .filter-section {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        .prediction-area {
-            border: 2px solid #e2e8f0;
-            transition: all 0.3s ease;
-            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-            border-radius: 15px;
-            padding: 30px;
-        }
-        .prediction-area.processing {
-            border-color: #4f46e5;
-            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        }
-        .progress-bar {
-            transition: width 0.3s ease;
-            background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
-        }
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        body {
-            overflow-x: hidden;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        }
-        .result-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 15px;
-            color: white;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .prediction-chart {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-    </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* === estilos de tu maqueta, sin cambios en los cards === */
+    .top-bar{background:#fff;height:60px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    .navbar-brand{font-size:24px;font-weight:bold;color:#007bff!important;text-decoration:none}
+    .navbar{background:#fff;padding:.5rem 1rem}
+    .navbar-nav .nav-link{color:#6c757d;font-weight:500}
+    .navbar-nav .nav-link:hover{color:#007bff}
+    .dropdown-menu{border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+
+    .metric-card{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;color:#fff;transition:transform .3s}
+    .metric-card:hover{transform:translateY(-5px)}
+    .metric-card.success{background:linear-gradient(135deg,#11998e,#38ef7d)}
+    .metric-card.warning{background:linear-gradient(135deg,#f093fb,#f5576c)}
+    .metric-card.info{background:linear-gradient(135deg,#4facfe,#00f2fe)}
+
+    .chart-container{background:#fff;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1);padding:20px;margin-bottom:30px}
+    .prediction-area{border:2px solid #e2e8f0;transition:all .3s;background:linear-gradient(135deg,#fff,#f8fafc);border-radius:15px;padding:24px}
+    .prediction-area.processing{border-color:#4f46e5;background:linear-gradient(135deg,#eff6ff,#dbeafe)}
+    .progress-bar{transition:width .3s;background:linear-gradient(90deg,#4f46e5,#7c3aed)}
+    .fade-in{animation:fadeIn .5s ease-in}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    body{overflow-x:hidden;background:linear-gradient(135deg,#f5f7fa,#c3cfe2)}
+    .result-card{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;color:#fff;padding:20px;margin-bottom:20px}
+    .estado-badge{font-size:14px}
+  </style>
 </head>
 <body>
-    <!-- Same navigation structure as historical data uploader -->
-    <div class="top-bar d-flex align-items-center">
-        <div class="container-fluid">
-            <nav class="navbar navbar-expand-lg w-100">
-                <a class="navbar-brand" href="#">Sistema</a>
-                
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.html">
-                                <i class="fas fa-home"></i> Inicio
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-chart-line"></i> Análisis
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
-                                    <i class="fas fa-chart-bar"></i> Datos Históricos</a></li>
-                                <li><a class="dropdown-item" href="prediccion_dotacion.html">
-                                    <i class="fas fa-crystal-ball"></i> Predicciones</a></li>
-                                <li><a class="dropdown-item" href="#" onclick="showComingSoon()">
-                                    <i class="fas fa-cogs"></i> Simulaciones</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-users"></i> Gestión
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="ver_cliente.html">Ver Clientes</a></li>
-                                <li><a class="dropdown-item" href="ver_trabajador.html">Ver Trabajadores</a></li>
-                                <li><a class="dropdown-item" href="dotacion_personal.html">Dotación Personal</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario Demo</span>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="logout()">
-                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+  <!-- NAV -->
+  <div class="top-bar d-flex align-items-center">
+    <div class="container-fluid">
+      <nav class="navbar navbar-expand-lg w-100">
+        <a class="navbar-brand" href="#">Sistema</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav me-auto">
+            <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-home"></i> Inicio</a></li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <i class="fas fa-chart-line"></i> Análisis
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="visualizar_datos_historicos.html"><i class="fas fa-chart-bar"></i> Datos Históricos</a></li>
+                <li><a class="dropdown-item" href="prediccion_dotacion.html"><i class="fas fa-crystal-ball"></i> Predicciones</a></li>
+                <li><a class="dropdown-item" href="#" onclick="showComingSoon()"><i class="fas fa-cogs"></i> Simulaciones</a></li>
+              </ul>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <i class="fas fa-users"></i> Gestión
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="ver_cliente.html">Ver Clientes</a></li>
+                <li><a class="dropdown-item" href="ver_trabajador.html">Ver Trabajadores</a></li>
+                <li><a class="dropdown-item" href="dotacion_personal.html">Dotación Personal</a></li>
+              </ul>
+            </li>
+          </ul>
+          <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario Demo</span>
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+              </ul>
+            </li>
+          </ul>
         </div>
+
+      </nav>
+    </div>
+  </div>
+
+  <div class="container-fluid mt-4">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+      <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h2 mb-1"><i class="fas fa-crystal-ball text-primary"></i> Predicción de Dotación de Personal</h1>
+          <p class="text-muted mb-0">Genera predicciones basadas en los Excel mensuales almacenados en MongoDB</p>
+        </div>
+        <div>
+          <button class="btn btn-outline-primary me-2" onclick="refreshPredictions()"><i class="fas fa-sync-alt"></i> Actualizar</button>
+          <button class="btn btn-primary" onclick="generatePrediction()"><i class="fas fa-magic"></i> Nueva Predicción</button>
+        </div>
+      </div>
     </div>
 
-    <div class="container-fluid mt-4">
-        <!-- Header section adapted for prediction functionality -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="h2 mb-1">
-                            <i class="fas fa-crystal-ball text-primary"></i>
-                            Predicción de Dotación de Personal
-                        </h1>
-                        <p class="text-muted">Genera predicciones inteligentes basadas en datos históricos y tendencias</p>
-                    </div>
-                    <div>
-                        <button class="btn btn-outline-primary me-2" onclick="refreshPredictions()">
-                            <i class="fas fa-sync-alt"></i> Actualizar
-                        </button>
-                        <button class="btn btn-primary" onclick="generatePrediction()">
-                            <i class="fas fa-magic"></i> Nueva Predicción
-                        </button>
-                    </div>
-                </div>
+    <!-- === MÉTRICAS (idénticas a tu diseño) === -->
+    <div class="row mb-4" id="metricsCards">
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="metric-card p-4 h-100">
+          <div class="d-flex justify-content-between">
+            <div>
+              <div class="text-white-50 small">Predicciones Generadas</div>
+              <div class="h4 mb-0 text-white" id="totalPredictions">0</div>
             </div>
+            <div class="align-self-center"><i class="fas fa-chart-line fa-2x text-white-50"></i></div>
+          </div>
         </div>
-
-        <!-- Metrics cards adapted for prediction data -->
-        <div class="row mb-4" id="metricsCards">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="metric-card p-4 h-100">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Predicciones Generadas</div>
-                            <div class="h4 mb-0 text-white font-weight-bold" id="totalPredictions">0</div>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-chart-line fa-2x text-white-50"></i>
-                        </div>
-                    </div>
-                </div>
+      </div>
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="metric-card success p-4 h-100">
+          <div class="d-flex justify-content-between">
+            <div>
+              <div class="text-white-50 small">Precisión Promedio</div>
+              <div class="h4 mb-0 text-white" id="avgAccuracy">95.2%</div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="metric-card success p-4 h-100">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Precisión Promedio</div>
-                            <div class="h4 mb-0 text-white font-weight-bold" id="avgAccuracy">95.2%</div>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-bullseye fa-2x text-white-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="metric-card warning p-4 h-100">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Última Predicción</div>
-                            <div class="h6 mb-0 text-white font-weight-bold" id="lastPrediction">Sin predicciones</div>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-clock fa-2x text-white-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="metric-card info p-4 h-100">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Modelo IA</div>
-                            <div class="h6 mb-0 text-white font-weight-bold">Activo</div>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-robot fa-2x text-white-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="align-self-center"><i class="fas fa-bullseye fa-2x text-white-50"></i></div>
+          </div>
         </div>
-
-        <!-- Prediction parameters form -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="chart-container">
-                    <h5 class="mb-3">
-                        <i class="fas fa-sliders-h text-primary"></i>
-                        Parámetros de Predicción
-                    </h5>
-                    
-                    
-                </div>
+      </div>
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="metric-card warning p-4 h-100">
+          <div class="d-flex justify-content-between">
+            <div>
+              <div class="text-white-50 small">Última Predicción</div>
+              <div class="h6 mb-0 text-white" id="lastPrediction">Sin predicciones</div>
             </div>
+            <div class="align-self-center"><i class="fas fa-clock fa-2x text-white-50"></i></div>
+          </div>
         </div>
-
-        <!-- Progress section for prediction processing -->
-        <div id="progressSection" class="row mb-4 d-none">
-            <div class="col-12">
-                <div class="chart-container">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold text-dark">Procesando predicción con IA...</span>
-                        <span id="progressText" class="text-primary fw-bold">0%</span>
-                    </div>
-                    <div class="progress" style="height: 10px;">
-                        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                    </div>
-                    <div class="small text-muted mt-2" id="progressStatus">Analizando datos históricos...</div>
-                </div>
+      </div>
+      <div class="col-xl-3 col-md-6 mb-4">
+        <div class="metric-card info p-4 h-100">
+          <div class="d-flex justify-content-between">
+            <div>
+              <div class="text-white-50 small">Modelo IA</div>
+              <!-- Mantengo el texto EXACTO de tu maqueta -->
+              <div class="h6 mb-0 text-white" id="modeloIAEstado">Activo</div>
             </div>
+            <div class="align-self-center"><i class="fas fa-robot fa-2x text-white-50"></i></div>
+          </div>
         </div>
-
-        <!-- Alertas -->
-        <div id="alertContainer"></div>
-
-        <!-- Results section for prediction output -->
-        <div id="resultsSection" class="row mb-4 d-none">
-            <div class="col-12">
-                <div class="chart-container">
-                    <h5 class="mb-3">
-                        <i class="fas fa-chart-bar text-success"></i>
-                        Resultados de la Predicción
-                    </h5>
-                    <div id="predictionResults"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Prediction history -->
-        <div class="row">
-            <div class="col-12">
-                <div class="chart-container">
-                    <h5 class="mb-3">
-                        <i class="fas fa-history text-info"></i>
-                        Historial de Predicciones
-                    </h5>
-                    <div id="predictionHistory">
-                        <div class="text-center text-muted py-5">
-                            <i class="fas fa-crystal-ball fa-3x text-muted mb-3"></i>
-                            <p class="fw-bold mb-1">No hay predicciones generadas aún</p>
-                            <p class="small text-muted">Las predicciones aparecerán aquí una vez que las generes</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <script>
-        class StaffPredictionSystem {
-            constructor() {
-                this.progressSection = document.getElementById('progressSection');
-                this.progressBar = document.getElementById('progressBar');
-                this.progressText = document.getElementById('progressText');
-                this.progressStatus = document.getElementById('progressStatus');
-                this.alertContainer = document.getElementById('alertContainer');
-                this.predictionHistory = document.getElementById('predictionHistory');
-                this.resultsSection = document.getElementById('resultsSection');
-                this.predictionResults = document.getElementById('predictionResults');
-                this.predictions = JSON.parse(localStorage.getItem('staffPredictions') || '[]');
-                
-                this.renderPredictionHistory();
-                this.updateMetrics();
-            }
+    <!-- Parámetros -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="chart-container">
+          <h5 class="mb-3"><i class="fas fa-sliders-h text-primary"></i> Parámetros de Predicción</h5>
+          <div class="row g-3 align-items-end prediction-area" id="predictionArea">
+            <div class="col-sm-4">
+              <label class="form-label">Año (opcional)</label>
+              <input id="anioInput" type="number" class="form-control" placeholder="Ej: 2025">
+            </div>
+            <div class="col-sm-4">
+              <label class="form-label">Mes (1–12, opcional)</label>
+              <input id="mesInput" type="number" class="form-control" placeholder="Ej: 8">
+            </div>
+            <div class="col-sm-4">
+              <button class="btn btn-primary w-100" onclick="generatePrediction()"><i class="fas fa-magic"></i> Proyectar</button>
+            </div>
+            <div class="col-12">
+              <button class="btn btn-outline-secondary" onclick="entrenarModelo()"><i class="fas fa-database"></i> Entrenar desde MongoDB</button>
+              <small class="text-muted ms-2">Construye la base desde Excel en GridFS y deja lista la proyección.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-            async startPrediction() {
-                if (!this.validateForm()) return;
-                
-                this.showProgress();
-                const progressSteps = [
-                    { progress: 20, status: 'Analizando datos históricos...' },
-                    { progress: 40, status: 'Aplicando algoritmos de machine learning...' },
-                    { progress: 60, status: 'Calculando tendencias estacionales...' },
-                    { progress: 80, status: 'Optimizando asignación de recursos...' },
-                    { progress: 100, status: 'Generando recomendaciones...' }
-                ];
+    <!-- Progreso -->
+    <div id="progressSection" class="row mb-4 d-none">
+      <div class="col-12">
+        <div class="chart-container">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="fw-bold text-dark">Procesando predicción...</span>
+            <span id="progressText" class="text-primary fw-bold">0%</span>
+          </div>
+          <div class="progress" style="height:10px;">
+            <div id="progressBar" class="progress-bar" role="progressbar" style="width:0%"></div>
+          </div>
+          <div class="small text-muted mt-2" id="progressStatus">Consultando servidor…</div>
+        </div>
+      </div>
+    </div>
 
-                try {
-                    for (const step of progressSteps) {
-                        await new Promise(resolve => setTimeout(resolve, 1500));
-                        this.updateProgress(step.progress, step.status);
-                    }
+    <!-- Alertas -->
+    <div id="alertContainer"></div>
 
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+    <!-- Resultados -->
+    <div id="resultsSection" class="row mb-4 d-none">
+      <div class="col-12">
+        <div class="chart-container">
+          <h5 class="mb-3"><i class="fas fa-chart-bar text-success"></i> Resultados de la Predicción</h5>
+          <div id="predictionResults"></div>
+        </div>
+      </div>
+    </div>
 
-                    const predictionData = this.generatePredictionData();
-                    this.predictions.unshift(predictionData);
-                    localStorage.setItem('staffPredictions', JSON.stringify(this.predictions));
+    <!-- Historial -->
+    <div class="row">
+      <div class="col-12">
+        <div class="chart-container">
+          <h5 class="mb-3"><i class="fas fa-history text-info"></i> Historial de Predicciones</h5>
+          <div id="predictionHistory">
+            <div class="text-center text-muted py-5">
+              <i class="fas fa-crystal-ball fa-3x text-muted mb-3"></i>
+              <p class="fw-bold mb-1">No hay predicciones generadas aún</p>
+              <p class="small text-muted">Las predicciones aparecerán aquí una vez que las generes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                    this.hideProgress();
-                    this.showResults(predictionData);
-                    this.showAlert('success', '¡Predicción generada exitosamente! Revisa los resultados detallados.');
-                    this.renderPredictionHistory();
-                    this.updateMetrics();
+<script>
+/* === JS: backend integrado, SIN tocar los 4 cards de métricas === */
+class StaffPredictionSystem{
+  constructor(){
+    this.progressSection=document.getElementById('progressSection');
+    this.progressBar=document.getElementById('progressBar');
+    this.progressText=document.getElementById('progressText');
+    this.progressStatus=document.getElementById('progressStatus');
+    this.alertContainer=document.getElementById('alertContainer');
+    this.predictionHistory=document.getElementById('predictionHistory');
+    this.resultsSection=document.getElementById('resultsSection');
+    this.predictionResults=document.getElementById('predictionResults');
+    this.totalPredEl=document.getElementById('totalPredictions');
+    this.lastPredEl=document.getElementById('lastPrediction');
+    // OJO: NO tocamos el texto del card “Modelo IA Activo”
+    this.predictions=JSON.parse(localStorage.getItem('staffPredictions')||'[]');
+    this.renderPredictionHistory(); this.updateMetrics();
+  }
 
-                } catch (error) {
-                    this.hideProgress();
-                    this.showAlert('error', 'Error al generar la predicción. Por favor, verifica los parámetros e intenta nuevamente.');
-                }
-            }
+  async entrenar(){
+    try{
+      this.showProgress('Preparando entrenamiento…',15);
+      const r=await fetch('http://localhost:8090/prediccion/entrenar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+      const js=await r.json();
+      this.hideProgress();
+      if(!r.ok||!js.ok) throw new Error(js.error||js.mensaje||'Fallo al entrenar');
+      this.showAlert('success','Entrenamiento listo. Ahora puedes proyectar.');
+    }catch(e){
+      this.hideProgress(); this.showAlert('error','No se pudo entrenar: '+e.message);
+    }
+  }
 
-            validateForm() {
-                const projectType = document.getElementById('projectType').value;
-                const projectDuration = document.getElementById('projectDuration').value;
-                const projectComplexity = document.getElementById('projectComplexity').value;
+  async proyectar(){
+    try{
+      const anio=document.getElementById('anioInput').value.trim();
+      const mes=document.getElementById('mesInput').value.trim();
+      let url='http://localhost:8090/prediccion/proyectar';
+      const qs=[]; if(anio) qs.push('anio='+encodeURIComponent(anio)); if(mes) qs.push('mes='+encodeURIComponent(mes));
+      if(qs.length) url+='?'+qs.join('&');
 
-                if (!projectType || !projectDuration || !projectComplexity) {
-                    this.showAlert('error', 'Por favor, completa todos los campos obligatorios.');
-                    return false;
-                }
+      this.showProgress('Proyectando…',40);
+      const r=await fetch(url); const js=await r.json(); this.hideProgress();
+      if(!r.ok||!js.ok) throw new Error(js.error||js.mensaje||'Fallo en proyección');
 
-                if (projectDuration < 1 || projectDuration > 365) {
-                    this.showAlert('error', 'La duración del proyecto debe estar entre 1 y 365 días.');
-                    return false;
-                }
+      // Historial (solo números y fecha; sin tocar cards de arriba)
+      const item={id:Date.now(),createdDate:new Date().toLocaleString('es-CL'),resumen:`${js.mes_base.anio}-${js.mes_base.mes} → ${js.mes_siguiente.anio}-${js.mes_siguiente.mes}`,estado:js.mes_siguiente.estado_modelo||js.mes_siguiente.estado_regla};
+      this.predictions.unshift(item); localStorage.setItem('staffPredictions',JSON.stringify(this.predictions));
+      this.renderPredictionHistory(); this.updateMetrics();
 
-                return true;
-            }
+      this.showResults(js);
+      this.showAlert('success','Predicción generada correctamente.');
+    }catch(e){
+      this.hideProgress(); this.showAlert('error',e.message);
+    }
+  }
 
-            generatePredictionData() {
-                const projectType = document.getElementById('projectType').value;
-                const projectDuration = parseInt(document.getElementById('projectDuration').value);
-                const projectComplexity = document.getElementById('projectComplexity').value;
-                const seasonality = document.getElementById('seasonality').value;
+  showResults(js){
+    const est=(js.mes_siguiente.estado_modelo||js.mes_siguiente.estado_regla||'').toLowerCase();
+    const badge= est==='sobre' ? '<span class="badge bg-danger estado-badge">sobredotación</span>'
+               : est==='sub'   ? '<span class="badge bg-warning text-dark estado-badge">subdotación</span>'
+                               : '<span class="badge bg-success estado-badge">adecuado</span>';
+    const html=`
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <div class="result-card">
+            <h6 class="text-white-50">Mes base</h6>
+            <h4 class="text-white">${js.mes_base.anio}-${String(js.mes_base.mes).padStart(2,'0')}</h4>
+            <small class="text-white-50">capacidad óptima: ${js.mes_base.capacidad_optima.toFixed(2)}</small>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="result-card success">
+            <h6 class="text-white-50">Mes siguiente</h6>
+            <h4 class="text-white">${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}</h4>
+            <small class="text-white-50">producción: ${js.mes_siguiente.produccion_total}</small>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <div class="result-card warning">
+            <h6 class="text-white-50">Estado</h6>
+            <h3 class="text-white">${badge}</h3>
+            <small class="text-white-50">reales: ${js.mes_siguiente.trabajadores_reales} • necesarios: ${js.mes_siguiente.trabajadores_necesarios}</small>
+          </div>
+        </div>
+      </div>`;
+    this.predictionResults.innerHTML=html;
+    this.resultsSection.classList.remove('d-none'); this.resultsSection.classList.add('fade-in');
+  }
 
-                const baseStaff = {
-                    'construccion': { base: 8, multiplier: 1.2 },
-                    'mantenimiento': { base: 4, multiplier: 0.8 },
-                    'instalacion': { base: 6, multiplier: 1.0 },
-                    'reparacion': { base: 3, multiplier: 0.6 }
-                };
+  renderPredictionHistory(){
+    if(this.predictions.length===0){
+      this.predictionHistory.innerHTML=`<div class="text-center text-muted py-5">
+        <i class="fas fa-crystal-ball fa-3x text-muted mb-3"></i>
+        <p class="fw-bold mb-1">No hay predicciones generadas aún</p>
+        <p class="small text-muted">Las predicciones aparecerán aquí una vez que las generes</p>
+      </div>`; return;
+    }
+    const toBadge=e=> e==='sobre' ? '<span class="badge bg-danger">sobre</span>' : e==='sub' ? '<span class="badge bg-warning text-dark">sub</span>' : '<span class="badge bg-success">ok</span>';
+    this.predictionHistory.innerHTML=this.predictions.map(p=>`
+      <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded border">
+        <div class="d-flex align-items-center">
+          <div class="me-3"><div class="bg-primary bg-opacity-10 rounded p-2"><i class="fas fa-crystal-ball text-primary"></i></div></div>
+          <div><p class="mb-1 fw-bold">${p.resumen}</p></div>
+        </div>
+        <div>${toBadge(p.estado)}</div>
+      </div>`).join('');
+  }
 
-                const complexityMultiplier = {
-                    'baja': 0.8,
-                    'media': 1.0,
-                    'alta': 1.3,
-                    'critica': 1.6
-                };
+  updateMetrics(){
+    this.totalPredEl.textContent=this.predictions.length;
+    this.lastPredEl.textContent=this.predictions[0]?.createdDate||'Sin predicciones';
+  }
 
-                const durationFactor = Math.ceil(projectDuration / 7); // weeks
-                const baseRequirement = baseStaff[projectType]?.base || 5;
-                const totalStaff = Math.ceil(baseRequirement * complexityMultiplier[projectComplexity] * (durationFactor * 0.1 + 1));
-
-                return {
-                    id: Date.now(),
-                    projectType: projectType,
-                    duration: projectDuration,
-                    complexity: projectComplexity,
-                    seasonality: seasonality,
-                    createdDate: new Date().toLocaleString('es-ES'),
-                    totalStaff: totalStaff,
-                    breakdown: {
-                        supervisores: Math.ceil(totalStaff * 0.15),
-                        tecnicos: Math.ceil(totalStaff * 0.6),
-                        operarios: Math.ceil(totalStaff * 0.25)
-                    },
-                    confidence: Math.floor(Math.random() * 10) + 90, // 90-99%
-                    estimatedCost: totalStaff * 2500 * Math.ceil(projectDuration / 30),
-                    recommendations: this.generateRecommendations(projectType, projectComplexity)
-                };
-            }
-
-            generateRecommendations(type, complexity) {
-                const recommendations = {
-                    'construccion': ['Considerar personal especializado en seguridad', 'Planificar rotaciones para trabajos pesados'],
-                    'mantenimiento': ['Incluir técnicos con certificaciones específicas', 'Considerar horarios nocturnos'],
-                    'instalacion': ['Personal con experiencia en el tipo de instalación', 'Herramientas especializadas requeridas'],
-                    'reparacion': ['Diagnóstico previo recomendado', 'Personal de emergencia disponible']
-                };
-
-                return recommendations[type] || ['Evaluación detallada recomendada', 'Seguimiento continuo del proyecto'];
-            }
-
-            showResults(data) {
-                const resultsHTML = `
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <div class="result-card">
-                                <h6 class="text-white-50">Personal Requerido</h6>
-                                <h3 class="text-white">${data.totalStaff} personas</h3>
-                                <small class="text-white-50">Confianza: ${data.confidence}%</small>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="result-card success">
-                                <h6 class="text-white-50">Costo Estimado</h6>
-                                <h3 class="text-white">$${data.estimatedCost.toLocaleString()}</h3>
-                                <small class="text-white-50">Incluye beneficios</small>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="result-card warning">
-                                <h6 class="text-white-50">Duración</h6>
-                                <h3 class="text-white">${data.duration} días</h3>
-                                <small class="text-white-50">Proyecto ${data.complexity}</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="prediction-chart">
-                        <h6 class="mb-3">Distribución de Personal</h6>
-                        <div class="row">
-                            <div class="col-md-4 text-center">
-                                <div class="h4 text-primary">${data.breakdown.supervisores}</div>
-                                <small class="text-muted">Supervisores</small>
-                            </div>
-                            <div class="col-md-4 text-center">
-                                <div class="h4 text-success">${data.breakdown.tecnicos}</div>
-                                <small class="text-muted">Técnicos</small>
-                            </div>
-                            <div class="col-md-4 text-center">
-                                <div class="h4 text-info">${data.breakdown.operarios}</div>
-                                <small class="text-muted">Operarios</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <h6>Recomendaciones:</h6>
-                        <ul class="list-unstyled">
-                            ${data.recommendations.map(rec => `<li><i class="fas fa-check text-success me-2"></i>${rec}</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
-
-                this.predictionResults.innerHTML = resultsHTML;
-                this.resultsSection.classList.remove('d-none');
-                this.resultsSection.classList.add('fade-in');
-            }
-
-            showProgress() {
-                this.progressSection.classList.remove('d-none');
-                this.progressSection.classList.add('fade-in');
-                document.getElementById('predictionArea').classList.add('processing');
-            }
-
-            hideProgress() {
-                this.progressSection.classList.add('d-none');
-                this.updateProgress(0, '');
-                document.getElementById('predictionArea').classList.remove('processing');
-            }
-
-            updateProgress(progress, status) {
-                this.progressBar.style.width = `${progress}%`;
-                this.progressText.textContent = `${progress}%`;
-                this.progressStatus.textContent = status;
-            }
-
-            showAlert(type, message) {
-                const alertId = Date.now();
-                const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-                const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
-
-                const alertHTML = `
-                    <div id="alert-${alertId}" class="alert ${alertClass} alert-dismissible fade show mb-4" role="alert">
-                        <i class="fas ${iconClass} me-2"></i>
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                `;
-
-                this.alertContainer.insertAdjacentHTML('beforeend', alertHTML);
-
-                setTimeout(() => {
-                    const alert = document.getElementById(`alert-${alertId}`);
-                    if (alert) alert.remove();
-                }, 5000);
-            }
-
-            renderPredictionHistory() {
-                if (this.predictions.length === 0) {
-                    this.predictionHistory.innerHTML = `
-                        <div class="text-center text-muted py-5">
-                            <i class="fas fa-crystal-ball fa-3x text-muted mb-3"></i>
-                            <p class="fw-bold mb-1">No hay predicciones generadas aún</p>
-                            <p class="small text-muted">Las predicciones aparecerán aquí una vez que las generes</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const historyHTML = this.predictions.map(prediction => `
-                    <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded border">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <div class="bg-primary bg-opacity-10 rounded p-2">
-                                    <i class="fas fa-crystal-ball text-primary"></i>
-                                </div>
-                            </div>
-                            <div>
-                                <p class="mb-1 fw-bold">${prediction.projectType.charAt(0).toUpperCase() + prediction.projectType.slice(1)} - ${prediction.complexity}</p>
-                                <p class="small text-muted mb-0">${prediction.totalStaff} personas • ${prediction.duration} días • ${prediction.createdDate}</p>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-success me-2">${prediction.confidence}% confianza</span>
-                            <button onclick="predictor.removePrediction(${prediction.id})" class="btn btn-sm btn-outline-danger">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-
-                this.predictionHistory.innerHTML = historyHTML;
-            }
-
-            removePrediction(predictionId) {
-                this.predictions = this.predictions.filter(pred => pred.id !== predictionId);
-                localStorage.setItem('staffPredictions', JSON.stringify(this.predictions));
-                this.renderPredictionHistory();
-                this.updateMetrics();
-            }
-
-            updateMetrics() {
-                const totalPredictions = this.predictions.length;
-                const lastPrediction = this.predictions.length > 0 
-                    ? new Date(this.predictions[0].createdDate).toLocaleDateString('es-ES')
-                    : 'Sin predicciones';
-
-                document.getElementById('totalPredictions').textContent = totalPredictions;
-                document.getElementById('lastPrediction').textContent = lastPrediction;
-            }
-        }
-
-        let predictor;
-        document.addEventListener('DOMContentLoaded', () => {
-            predictor = new StaffPredictionSystem();
-        });
-
-        function generatePrediction() {
-            predictor.startPrediction();
-        }
-
-        function refreshPredictions() {
-            predictor.renderPredictionHistory();
-            predictor.updateMetrics();
-            predictor.showAlert('success', 'Datos actualizados correctamente');
-        }
-
-        function showComingSoon() {
-            predictor.showAlert('info', 'Esta funcionalidad estará disponible próximamente');
-        }
-
-        function logout() {
-            localStorage.removeItem("auth");
-            localStorage.removeItem("rol");
-            localStorage.removeItem("nombre");
-            localStorage.removeItem("apellido");
-            window.location.href = "login.html";
-        }
-    </script>
+  showProgress(text='Procesando…',pct=20){
+    this.progressSection.classList.remove('d-none'); this.updateProgress(pct,text);
+    document.getElementById('predictionArea').classList.add('processing');
+  }
+  hideProgress(){ this.progressSection.classList.add('d-none'); this.updateProgress(0,''); document.getElementById('predictionArea').classList.remove('processing'); }
+  updateProgress(p,status){ this.progressBar.style.width=`${p}%`; this.progressText.textContent=`${p}%`; this.progressStatus.textContent=status||''; }
+  showAlert(type,message){
+    const id=Date.now();
+    const map={success:'alert-success',error:'alert-danger',info:'alert-info'};
+    const iconMap={success:'fa-check-circle',error:'fa-exclamation-triangle',info:'fa-info-circle'};
+    const cls=map[type]||'alert-info'; const icon=iconMap[type]||'fa-info-circle';
+    const html=`<div id="a-${id}" class="alert ${cls} alert-dismissible fade show mb-4" role="alert">
+      <i class="fas ${icon} me-2"></i>${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+    this.alertContainer.insertAdjacentHTML('beforeend',html);
+    setTimeout(()=>{document.getElementById('a-'+id)?.remove();},5000);
+  }
+}
+let predictor;
+document.addEventListener('DOMContentLoaded',()=>{ predictor=new StaffPredictionSystem(); });
+function generatePrediction(){ predictor.proyectar(); }
+function entrenarModelo(){ predictor.entrenar(); }
+function refreshPredictions(){ predictor.renderPredictionHistory(); predictor.updateMetrics(); predictor.showAlert('success','Datos actualizados'); }
+function showComingSoon(){ predictor.showAlert('info','Próximamente'); }
+function logout(){ localStorage.clear(); window.location.href='login.html'; }
+</script>
 </body>
 </html>
+
+
