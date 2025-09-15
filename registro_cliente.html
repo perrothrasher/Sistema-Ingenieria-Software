@@ -120,47 +120,80 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm">
+  <!-- Navbar -->
+    <div class="top-bar d-flex align-items-center">
         <div class="container-fluid">
-            <div class="navbar-logo">Sistema</div>
-            <ul class="navbar-links">
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+            <nav class="navbar navbar-expand-lg w-100">
+                <a class="navbar-brand" href="#">Sistema</a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
-                </button>  
-                <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                    <div class="droptdown">
-                        <a class="btn" href="index.html" role="button" aria-expanded="false">Inicio</a>
-                    </div>
-                    <div class="dropdown">
-                        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Editar</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">Editar Clientes</a></li>
-                            <li><a class="dropdown-item" href="ver_cliente.html">Ver Clientes</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">Editar Trabajador</a></li>
-                            <li><a class="dropdown-item" href="ver_trabajador.html">Ver Trabajadores</a></li>
-                        </ul>
-                    </div>
-                    <div class="dropdown">
-                        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Agregar</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">Agregar Clientes</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">Agregar Trabajador</a></li>
-                        </ul>
-                    </div>
-                    <div class="dropdown">
-                        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Dotación</a>
-                        <ul class="dropdown-menu">
-                            <a class="btn" href="dotacion_personal.html" role="button" aria-expanded="false">Agregar Dotación</a>
-                        </ul>
-                    </div>
-                    <div class="droptdown">
-                        <a class="btn" href="#" role="button" aria-expanded="false" onclick="logout()">Cerrar Sesión</a>
-                    </div>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="index.html">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
+                                    <i class="fas fa-user-edit"></i> Editar Clientes</a></li>
+                                <li><a class="dropdown-item" href="ver_cliente.html">
+                                    <i class="fas fa-users"></i> Ver Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
+                                    <i class="fas fa-user-tie"></i> Editar Trabajador</a></li>
+                                <li><a class="dropdown-item" href="ver_trabajador.html">
+                                    <i class="fas fa-users-cog"></i> Ver Trabajadores</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-plus"></i> Agregar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-chart-line"></i> Dotación
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="dotacion_personal.html">
+                                    <i class="fas fa-users"></i> Agregar Dotación</a></li>
+                                <li><a class="dropdown-item" href="carga_datos_historicos.html">
+                                    <i class="fas fa-upload"></i> Cargar Datos</a></li>
+                                <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
+                                    <i class="fas fa-chart-bar"></i> Visualizar Datos</a></li>
+                                <li><a class="dropdown-item" href="predicción.html">
+                                    <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    </ul>
                 </div>
-            </ul>
-        </div>
+    
     </nav>
 
     <div class="container">
