@@ -19,52 +19,43 @@
         
         .form-container {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             padding: 40px;
             margin: 30px auto;
             max-width: 800px;
-            animation: fadeInUp 0.6s ease-out;
         }
         
-        .form-header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f8f9fa;
-        }
-        
-        .form-header h1 {
-            color: #2c3e50;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-        
-        .form-header .subtitle {
-            color: #6c757d;
-            font-size: 16px;
-        }
-        
-        .form-header .icon-wrapper {
-            width: 80px;
-            height: 80px;
-            border-radius: 20px;
+        .page-title {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
         }
         
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             position: relative;
         }
         
         .form-control, .form-select {
             border: 2px solid #e9ecef;
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 15px 20px;
             font-size: 16px;
             transition: all 0.3s ease;
@@ -75,73 +66,38 @@
             border-color: #667eea;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
             background-color: white;
-            transform: translateY(-2px);
         }
         
-        .form-control::placeholder {
-            color: #adb5bd;
-            font-weight: 400;
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
         }
         
-        .input-icon {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6c757d;
-            z-index: 10;
+        .form-label i {
+            margin-right: 8px;
+            color: #667eea;
         }
         
-        .form-control.with-icon {
-            padding-left: 50px;
-        }
-        
-        .form-select.with-icon {
-            padding-left: 50px;
-            background-position: right 12px center;
-        }
-        
-        .form-select.with-icon option:first-child {
-            color: #adb5bd;
-        }
-
         .btn-submit {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             padding: 15px 40px;
             font-size: 18px;
             font-weight: 600;
             color: white;
-            width: 100%;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            width: 100%;
+            margin-top: 20px;
         }
         
         .btn-submit:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
-        }
-        
-        .btn-submit:active {
-            transform: translateY(-1px);
-        }
-        
-        .row .col-md-6 {
-            padding-left: 10px;
-            padding-right: 10px;
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
         }
         
         .fade-in {
@@ -164,7 +120,6 @@
     </style>
 </head>
 <body>
-    <!-- <CHANGE> Reemplazando la navegación compleja por la estructura simple del archivo de trabajador -->
     <nav class="navbar navbar-expand-sm">
         <div class="container-fluid">
             <div class="navbar-logo">Sistema</div>
@@ -208,94 +163,129 @@
         </div>
     </nav>
 
-    <!-- Contenido principal -->
-    <div class="container-fluid">
+    <div class="container">
         <div class="form-container fade-in">
-            <div class="form-header">
-                <div class="icon-wrapper">
-                    <i class="fas fa-user-plus fa-2x text-white"></i>
-                </div>
-                <h1>Registrar Cliente</h1>
-                <p class="subtitle">Complete el formulario para agregar un nuevo cliente al sistema</p>
-            </div>
+            <h1 class="page-title">
+                <i class="fas fa-user-plus me-3"></i>
+                Registrar Cliente
+            </h1>
             
             <form id="registroForm" method="post">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <i class="fas fa-user input-icon"></i>
-                            <input type="text" class="form-control with-icon" id="nombre" name="nombre" placeholder="Nombre" required>
+                <!-- Información Personal -->
+                <div class="form-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-user me-2"></i>
+                        Información Personal
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="nombre" class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Nombre
+                                </label>
+                                <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="apellido" class="form-label">
+                                    <i class="fas fa-user"></i>
+                                    Apellido
+                                </label>
+                                <input type="text" class="form-control" id="apellido" name="apellido" required>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <i class="fas fa-user input-icon"></i>
-                            <input type="text" class="form-control with-icon" id="apellido" name="apellido" placeholder="Apellido" required>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <i class="fas fa-id-card input-icon"></i>
-                            <input type="text" class="form-control with-icon" id="rut" name="rut" placeholder="RUT" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <i class="fas fa-phone input-icon"></i>
-                            <input type="text" class="form-control with-icon" id="telefono" name="telefono" placeholder="Teléfono" required>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <i class="fas fa-envelope input-icon"></i>
-                    <input type="email" class="form-control with-icon" id="correo" name="correo" placeholder="Correo Electrónico" required>
-                </div>
-                
-                <div class="form-group">
-                    <i class="fas fa-map-marker-alt input-icon"></i>
-                    <select class="form-select with-icon" id="region_id" name="region_id" required>
-                        <option value="" disabled selected>Seleccione una región</option>
-                        <option value="1">Arica y Parinacota</option>
-                        <option value="2">Tarapacá</option>
-                        <option value="3">Antofagasta</option>
-                        <option value="4">Atacama</option>
-                        <option value="5">Coquimbo</option>
-                        <option value="6">Valparaíso</option>
-                        <option value="7">Región Metropolitana de Santiago</option>
-                        <option value="8">O'Higgins</option>
-                        <option value="9">Maule</option>
-                        <option value="10">Ñuble</option>
-                        <option value="11">Biobío</option>
-                        <option value="12">La Araucanía</option>
-                        <option value="13">Los Ríos</option>
-                        <option value="14">Los Lagos</option>
-                        <option value="15">Aysén del General Carlos Ibáñez del Campo</option>
-                        <option value="16">Magallanes y de la Antártica Chilena</option>
-                    </select>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <i class="fas fa-city input-icon"></i>
-                            <input type="text" class="form-control with-icon" id="comuna" name="comuna" placeholder="Comuna" required>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <i class="fas fa-mail-bulk input-icon"></i>
-                            <input type="text" class="form-control with-icon" id="codigo_postal" name="codigo_postal" placeholder="Código Postal" required>
-                        </div>
+                    <div class="form-group">
+                        <label for="rut" class="form-label">
+                            <i class="fas fa-id-card"></i>
+                            RUT
+                        </label>
+                        <input type="text" class="form-control" id="rut" name="rut" required>
                     </div>
                 </div>
-                
-                <div class="form-group">
-                    <i class="fas fa-home input-icon"></i>
-                    <input type="text" class="form-control with-icon" id="direccion" name="direccion" placeholder="Dirección" required>
+
+                <!-- Información de Contacto -->
+                <div class="form-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-envelope me-2"></i>
+                        Información de Contacto
+                    </h4>
+                    <div class="form-group">
+                        <label for="correo" class="form-label">
+                            <i class="fas fa-envelope"></i>
+                            Correo Electrónico
+                        </label>
+                        <input type="email" class="form-control" id="correo" name="correo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono" class="form-label">
+                            <i class="fas fa-phone"></i>
+                            Teléfono
+                        </label>
+                        <input type="text" class="form-control" id="telefono" name="telefono" required>
+                    </div>
+                </div>
+
+                <!-- Información de Ubicación -->
+                <div class="form-section">
+                    <h4 class="section-title">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Información de Ubicación
+                    </h4>
+                    <div class="form-group">
+                        <label for="region_id" class="form-label">
+                            <i class="fas fa-map"></i>
+                            Región
+                        </label>
+                        <select class="form-select" id="region_id" name="region_id" required>
+                            <option value="" disabled selected>Seleccione una región</option>
+                            <option value="1">Arica y Parinacota</option>
+                            <option value="2">Tarapacá</option>
+                            <option value="3">Antofagasta</option>
+                            <option value="4">Atacama</option>
+                            <option value="5">Coquimbo</option>
+                            <option value="6">Valparaíso</option>
+                            <option value="7">Región Metropolitana de Santiago</option>
+                            <option value="8">O'Higgins</option>
+                            <option value="9">Maule</option>
+                            <option value="10">Ñuble</option>
+                            <option value="11">Biobío</option>
+                            <option value="12">La Araucanía</option>
+                            <option value="13">Los Ríos</option>
+                            <option value="14">Los Lagos</option>
+                            <option value="15">Aysén del General Carlos Ibáñez del Campo</option>
+                            <option value="16">Magallanes y de la Antártica Chilena</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="comuna" class="form-label">
+                                    <i class="fas fa-building"></i>
+                                    Comuna
+                                </label>
+                                <input type="text" class="form-control" id="comuna" name="comuna" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="codigo_postal" class="form-label">
+                                    <i class="fas fa-mail-bulk"></i>
+                                    Código Postal
+                                </label>
+                                <input type="text" class="form-control" id="codigo_postal" name="codigo_postal" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="direccion" class="form-label">
+                            <i class="fas fa-home"></i>
+                            Dirección
+                        </label>
+                        <input type="text" class="form-control" id="direccion" name="direccion" required>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn-submit">
