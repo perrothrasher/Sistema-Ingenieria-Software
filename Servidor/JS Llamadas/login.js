@@ -27,7 +27,6 @@ function login(req, res){
       return res.status(404).json({ message: 'Correo no encontrado' });
     }
 
-    console.log("Resultados de la consulta:", results);
     const trabajador = results[0];
 
 // Comparar la contraseña ingresada con la almacenada en la base de datos

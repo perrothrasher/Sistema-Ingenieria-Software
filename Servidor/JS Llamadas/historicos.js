@@ -109,4 +109,3 @@ async function actualizarHistorico(req, res) {
 }
 
 module.exports = { obtenerHistoricos, actualizarHistorico };
-

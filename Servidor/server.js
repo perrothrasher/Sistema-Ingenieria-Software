@@ -67,8 +67,8 @@ app.put('/historicos/:tipo/:id', actualizarHistorico);          // CU19 (editar)
 /////////////////////////////////////////////////
 
 // ===== NUEVO: montar rutas de predicción SIN tocar lo demás =====
-const prediccionRouter = require('./prediccion'); // <- nuevo archivo con la lógica de IA
-app.use('/prediccion', prediccionRouter);
+//const prediccionRouter = require('./prediccion'); // <- nuevo archivo con la lógica de IA
+//app.use('/prediccion', prediccionRouter);
 // ================================================================
 
 const puerto = 8090;
