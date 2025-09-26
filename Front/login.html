@@ -135,15 +135,10 @@
             body: JSON.stringify({ correo, contrasena })
         });
 
-        const result = await response.json();
         if (response.ok) {
-            alert('Login exitoso');
-            localStorage.setItem('auth', 'true');
-            localStorage.setItem('rol', result.trabajador.rol);
-            localStorage.setItem('nombre', result.trabajador.nombre);
-            localStorage.setItem('apellido', result.trabajador.apellido);
             window.location.href = 'index.html';
         } else {
+            const result = await response.json();
             alert(result.message || 'Error al iniciar sesión');
         }
     });

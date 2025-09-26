@@ -253,6 +253,64 @@
   </div>
 
 <script>
+  window.addEventListener('load', async () =>{
+            try{
+                // se obtienen los datos del usuario desde el servidor
+                const response = await fetch('/api/perfil');
+
+                if (!response.ok){
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const usuario = await response.json();
+
+                if (usuario.nombre && usuario.apellido){
+                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+
+                verificarAdmin(usuario.rol);
+            } catch (error){
+                console.error('Error de autenticación: ', error);
+                window.location.href = 'login.html'
+            }
+        });
+
+        // PERMISOS
+        function verificarAdmin(rol){
+            console.log("Rol del usuario: ", rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+
+            Object.values(dropdowns).forEach(dropdown => {
+                dropdown.style.display = 'block';
+            });
+
+            if (rol === 'Soporte TI' || rol === 'Gerente'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'auto';
+                    dropdown.style.color = '';
+                    dropdown.style.textDecoration= '';
+                });
+            } else if(rol === 'Supervisor'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'none';
+                    dropdown.style.color = 'Gray';
+                    dropdown.style.textDecoration= 'none';
+                });
+            }
+        }
+
+        async function logout() {
+            // Eliminacion de la cookie de sesión
+            await fetch ('/logout', {method: 'POST'});
+            window.location.href = 'login.html'
+        }
 /* === JS: backend integrado, SIN tocar los 4 cards de métricas === */
 class StaffPredictionSystem{
   constructor(){
@@ -389,7 +447,6 @@ function generatePrediction(){ predictor.proyectar(); }
 function entrenarModelo(){ predictor.entrenar(); }
 function refreshPredictions(){ predictor.renderPredictionHistory(); predictor.updateMetrics(); predictor.showAlert('success','Datos actualizados'); }
 function showComingSoon(){ predictor.showAlert('info','Próximamente'); }
-function logout(){ localStorage.clear(); window.location.href='login.html'; }
 </script>
 </body>
 </html>

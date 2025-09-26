@@ -379,6 +379,65 @@
     </div>
 
     <script>
+        window.addEventListener('load', async () =>{
+            try{
+                // se obtienen los datos del usuario desde el servidor
+                const response = await fetch('/api/perfil');
+
+                if (!response.ok){
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const usuario = await response.json();
+
+                if (usuario.nombre && usuario.apellido){
+                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+
+                verificarAdmin(usuario.rol);
+            } catch (error){
+                console.error('Error de autenticación: ', error);
+                window.location.href = 'login.html'
+            }
+        });
+
+        // PERMISOS
+        function verificarAdmin(rol){
+            console.log("Rol del usuario: ", rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+
+            Object.values(dropdowns).forEach(dropdown => {
+                dropdown.style.display = 'block';
+            });
+
+            if (rol === 'Soporte TI' || rol === 'Gerente'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'auto';
+                    dropdown.style.color = '';
+                    dropdown.style.textDecoration= '';
+                });
+            } else if(rol === 'Supervisor'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'none';
+                    dropdown.style.color = 'Gray';
+                    dropdown.style.textDecoration= 'none';
+                });
+            }
+        }
+
+        async function logout() {
+            // Eliminacion de la cookie de sesión
+            await fetch ('/logout', {method: 'POST'});
+            window.location.href = 'login.html'
+        }
+        
         class HistoricalDataUploader {
             constructor() {
                 this.uploadArea = document.getElementById('uploadArea');
@@ -607,13 +666,6 @@
             uploader.showAlert('info', 'Esta funcionalidad estará disponible próximamente');
         }
 
-        function logout() {
-            localStorage.removeItem("auth");
-            localStorage.removeItem("rol");
-            localStorage.removeItem("nombre");
-            localStorage.removeItem("apellido");
-            window.location.href = "login.html";
-        }
     </script>
     <script>
   // 1) Reenganchar el botón "Nueva Carga" para abrir el modal de ingreso manual

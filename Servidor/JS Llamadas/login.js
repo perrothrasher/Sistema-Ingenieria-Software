@@ -1,8 +1,11 @@
 const connection = require('./db_conection.js'); 
 const bcrypt = require('bcryptjs');
+const jtw = require('jsonwebtoken');
+
 // Ruta de login.
 function login(req, res){
   const { correo, contrasena } = req.body;
+
   // Verificar si el correo existe en la base de datos
   connection.query(`SELECT 
                       t.id, 
@@ -39,18 +42,26 @@ function login(req, res){
         return res.status(401).json({ message: 'Contraseña incorrecta' });
       }
 
-      // Si las credenciales son correctas, devolver la respuesta con los datos del trabajador
-      res.status(200).json({
-        message: 'Login exitoso',
-        trabajador: {
-          id: trabajador.id,
-          usuario: trabajador.usuario,
-          nombre: trabajador.nombre,
-          apellido: trabajador.apellido,
-          correo: trabajador.correo,
-          rol: trabajador.rol
-        }
+      // Creación de una cookie
+      const payload = {
+        id: trabajador.id,
+        rol: trabajador.rol,
+        nombre: trabajador.nombre,
+        apellido: trabajador.apellido
+      };
+
+      // Firma de la cookie
+      const token = jtw.sign(payload, process.env.JWT_SECRET, {expiresIn: '1h'});
+
+      // Envio cookie a HttpOnly
+      res.cookie('token', token,{
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
       });
+
+      // Envio de login exitoso
+      res.status(200).json({message: 'Login Exitoso'});
     });
   });
 };

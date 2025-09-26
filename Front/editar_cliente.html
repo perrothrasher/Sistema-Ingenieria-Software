@@ -314,24 +314,63 @@
     </div>
 
     <script>
-        function logout() {
-            const confirmado = confirm("¿Estás seguro de que deseas cerrar sesión?");
-            if (confirmado) {
-                localStorage.removeItem("auth");
-                localStorage.removeItem("usuario");
-                localStorage.removeItem("correo");
-                localStorage.removeItem("rol");
-                localStorage.removeItem("nombre");
-                localStorage.removeItem("apellido");
-                window.location.href = "login.html";
+        window.addEventListener('load', async () =>{
+            try{
+                // se obtienen los datos del usuario desde el servidor
+                const response = await fetch('/api/perfil');
+
+                if (!response.ok){
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const usuario = await response.json();
+
+                if (usuario.nombre && usuario.apellido){
+                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+
+                verificarAdmin(usuario.rol);
+            } catch (error){
+                console.error('Error de autenticación: ', error);
+                window.location.href = 'login.html'
+            }
+        });
+
+        // PERMISOS
+        function verificarAdmin(rol){
+            console.log("Rol del usuario: ", rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+
+            Object.values(dropdowns).forEach(dropdown => {
+                dropdown.style.display = 'block';
+            });
+
+            if (rol === 'Soporte TI' || rol === 'Gerente'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'auto';
+                    dropdown.style.color = '';
+                    dropdown.style.textDecoration= '';
+                });
+            } else if(rol === 'Supervisor'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'none';
+                    dropdown.style.color = 'Gray';
+                    dropdown.style.textDecoration= 'none';
+                });
             }
         }
 
-        // Mostrar mensaje de bienvenida
-        const nombre = localStorage.getItem("nombre");
-        const apellido = localStorage.getItem("apellido");
-        if (nombre && apellido) {
-            document.getElementById('welcomeMessage').textContent = `${nombre} ${apellido}`;
+        async function logout() {
+            // Eliminacion de la cookie de sesión
+            await fetch ('/logout', {method: 'POST'});
+            window.location.href = 'login.html'
         }
 
         // Carga los clientes desde el backend
@@ -445,45 +484,6 @@
 
         function editarCliente(id) {
             window.location.href = `editar.html?id=${id}`;
-        }
-
-        function verificarAdmin() {
-            const rol = localStorage.getItem("rol");
-            console.log(rol);
-
-            const dropdowns = {
-                registrar: document.getElementById('dropdownRegistrar'),
-                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
-                editarCliente: document.getElementById('dropdownEditarCliente'),
-                registrarCliente: document.getElementById('dropdownRegistrarCliente')
-            };
-            
-            Object.values(dropdowns).forEach(dropdown => {
-                if (dropdown) dropdown.style.display = 'block';
-            });
-
-            if (rol === 'Soporte TI' || rol === 'Gerente') {
-                Object.values(dropdowns).forEach(dropdown => {
-                    if (dropdown) {
-                        dropdown.style.pointerEvents = 'auto';
-                        dropdown.style.color = '';
-                        dropdown.style.textDecoration = '';
-                    }
-                });
-            } else if (rol === 'Supervisor') {
-                Object.values(dropdowns).forEach(dropdown => {
-                    if (dropdown) {
-                        dropdown.style.pointerEvents = 'none';
-                        dropdown.style.color = 'gray';
-                        dropdown.style.textDecoration = 'none';
-                    }
-                });
-            }
-        }
-
-        // Verificar autenticación
-        if (!localStorage.getItem("auth")) {
-            window.location.href = "login.html";
         }
 
         // Inicialización

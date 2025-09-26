@@ -158,15 +158,64 @@
   </div>
 
   <script>
-    function logout() {
-      const confirmado = confirm("¿Estás seguro de que deseas cerrar sesión?");
-      if (confirmado) {
-        localStorage.removeItem("auth");
-        localStorage.removeItem("usuario");
-        localStorage.removeItem("correo");
-        window.location.href = "login.html";
-      }
-    };
+    window.addEventListener('load', async () =>{
+            try{
+                // se obtienen los datos del usuario desde el servidor
+                const response = await fetch('/api/perfil');
+
+                if (!response.ok){
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const usuario = await response.json();
+
+                if (usuario.nombre && usuario.apellido){
+                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+
+                verificarAdmin(usuario.rol);
+            } catch (error){
+                console.error('Error de autenticación: ', error);
+                window.location.href = 'login.html'
+            }
+        });
+
+        // PERMISOS
+        function verificarAdmin(rol){
+            console.log("Rol del usuario: ", rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+
+            Object.values(dropdowns).forEach(dropdown => {
+                dropdown.style.display = 'block';
+            });
+
+            if (rol === 'Soporte TI' || rol === 'Gerente'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'auto';
+                    dropdown.style.color = '';
+                    dropdown.style.textDecoration= '';
+                });
+            } else if(rol === 'Supervisor'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'none';
+                    dropdown.style.color = 'Gray';
+                    dropdown.style.textDecoration= 'none';
+                });
+            }
+        }
+
+        async function logout() {
+            // Eliminacion de la cookie de sesión
+            await fetch ('/logout', {method: 'POST'});
+            window.location.href = 'login.html'
+        }
 
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
@@ -245,36 +294,6 @@
         alert('Hubo un error al actualizar el cliente.');
       }
     });
-    function verificarAdmin(){
-      const rol = localStorage.getItem("rol");
-      console.log(rol);
-
-      const dropdowns = {
-        registrar: document.getElementById('dropdownRegistrar'),
-        editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
-        editarCliente: document.getElementById('dropdownEditarCliente'),
-        registrarCliente: document.getElementById('dropdownRegistrarCliente')
-      };
-      Object.values(dropdowns).forEach(dropdown => {
-      dropdown.style.display = 'block';  // Mostrar los elementos
-      });
-
-      if (rol === 'Soporte TI' || rol === 'Gerente') {
-            Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'auto'; // Hacer clickeables
-              dropdown.style.color = ''; // Restaurar el color
-              dropdown.style.textDecoration = ''; // Restaurar lo subrayado
-            });
-        } else if (rol === 'Supervisor') {
-            Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'none'; // Deshabilitar el clickeo
-              dropdown.style.color = 'gray'; // Cambiar el color
-              dropdown.style.textDecoration = 'none'; // Eliminar lo que está subrayado
-            });
-        }
-    }
-
-    window.onload = verificarAdmin;
   </script>
 </body>
 </html>

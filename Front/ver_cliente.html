@@ -142,44 +142,65 @@
   </div>
   
   <script>
-    function logout() {
-      const confirmado = confirm("¿Estás seguro de que deseas cerrar sesión?");
-      if (confirmado) {
-        localStorage.removeItem("auth");
-        localStorage.removeItem("usuario");
-        localStorage.removeItem("correo");
-        window.location.href = "login.html";
-      }
-    };
-    function verificarAdmin(){
-      const rol = localStorage.getItem("rol");
-      console.log(rol);
+    window.addEventListener('load', async () =>{
+            try{
+                // se obtienen los datos del usuario desde el servidor
+                const response = await fetch('/api/perfil');
 
-      const dropdowns = {
-        registrar: document.getElementById('dropdownRegistrar'),
-        editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
-        editarCliente: document.getElementById('dropdownEditarCliente'),
-        registrarCliente: document.getElementById('dropdownRegistrarCliente')
-      };
-      Object.values(dropdowns).forEach(dropdown => {
-      dropdown.style.display = 'block';  // Mostrar los elementos
-      });
+                if (!response.ok){
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-      if (rol === 'Soporte TI' || rol === 'Gerente') {
+                const usuario = await response.json();
+
+                if (usuario.nombre && usuario.apellido){
+                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+
+                verificarAdmin(usuario.rol);
+            } catch (error){
+                console.error('Error de autenticación: ', error);
+                window.location.href = 'login.html'
+            }
+        });
+
+        // PERMISOS
+        function verificarAdmin(rol){
+            console.log("Rol del usuario: ", rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+
             Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'auto'; // Hacer clickeables
-              dropdown.style.color = ''; // Restaurar color
-              dropdown.style.textDecoration = ''; // Restaurar subrayado
+                dropdown.style.display = 'block';
             });
-        } else if (rol === 'Supervisor') {
-            Object.values(dropdowns).forEach(dropdown => {
-              dropdown.style.pointerEvents = 'none'; // Deshabilitar clickeo
-              dropdown.style.color = 'gray'; // Cambiar color
-              dropdown.style.textDecoration = 'none'; // Eliminar subrayado
-            });
+
+            if (rol === 'Soporte TI' || rol === 'Gerente'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'auto';
+                    dropdown.style.color = '';
+                    dropdown.style.textDecoration= '';
+                });
+            } else if(rol === 'Supervisor'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'none';
+                    dropdown.style.color = 'Gray';
+                    dropdown.style.textDecoration= 'none';
+                });
+            }
         }
-    }
 
+        async function logout() {
+            // Eliminacion de la cookie de sesión
+            await fetch ('/logout', {method: 'POST'});
+            window.location.href = 'login.html'
+        }
+        
     // Cargar los clientes desde el backend
     async function cargarClientes() {
       try {
