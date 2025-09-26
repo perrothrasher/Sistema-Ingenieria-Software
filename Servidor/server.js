@@ -2,9 +2,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const path = require('path');
 
+/////////////////////////////////////////////////
+// Utilización de express para no utilizar xampp
 const app = express();
+app.use(express.static(path.join(__dirname, '..', 'Front')));
 app.use(bodyParser.json());
+/////////////////////////////////////////////////
 
 /////////////////////////////////////////////////
 const corsOptions = require('./JS Llamadas/cors_config.js'); // Configuración de CORS.

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Dotación de Personal - Sistema</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .top-bar {
+            background-color: white;
+            height: 60px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff !important;
+            text-decoration: none;
+        }
+        
+        .navbar {
+            background-color: white;
+            padding: 0.2rem 1rem;
+        }
+        
+        .navbar-nav .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: #007bff;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .page-header {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            z-index: 10;
+        }
+
+        .form-control.with-icon {
+            padding-left: 45px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            overflow: hidden;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            text-align: center;
+            border-color: #e9ecef;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .row.g-3 > * {
+            padding-right: calc(var(--bs-gutter-x) * 0.5);
+            padding-left: calc(var(--bs-gutter-x) * 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .form-card, .table-card {
+                padding: 20px;
+            }
+            
+            .page-header {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+   <!-- Navbar -->
+    <div class="top-bar d-flex align-items-center">
+        <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg w-100">
+              <a class="navbar-brand" href="#">
+    <img src="assets/totalcheck-logo.png" alt="TotalCheck Logo" style="height:30px; width:auto;">
+</a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="index.html">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
+                                    <i class="fas fa-user-edit"></i> Editar Clientes</a></li>
+                                <li><a class="dropdown-item" href="ver_cliente.html">
+                                    <i class="fas fa-users"></i> Ver Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
+                                    <i class="fas fa-user-tie"></i> Editar Trabajador</a></li>
+                                <li><a class="dropdown-item" href="ver_trabajador.html">
+                                    <i class="fas fa-users-cog"></i> Ver Trabajadores</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-plus"></i> Agregar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-chart-line"></i> Dotación
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="dotacion_personal.html">
+                                    <i class="fas fa-users"></i> Agregar Dotación</a></li>
+                                <li><a class="dropdown-item" href="carga_datos_historicos.html">
+                                    <i class="fas fa-upload"></i> Cargar Datos</a></li>
+                                <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
+                                    <i class="fas fa-chart-bar"></i> Visualizar Datos</a></li>
+                                <li><a class="dropdown-item" href="predicción.html">
+                                    <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+      </nav>
+      </nav>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container-fluid mt-4">
+        <!-- Encabezado de la página -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="page-header fade-in">
+                    <div class="mb-4">
+                        <i class="fas fa-users-cog fa-3x text-primary mb-3"></i>
+                    </div>
+                    <h1 class="h2 mb-3 text-dark">Gestión de Dotación de Personal</h1>
+                    <p class="text-muted mb-0" style="font-size: 18px;">
+                        Administra la dotación de personal por mes y tipo de contrato
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario de registro -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="form-card fade-in">
+                    <h5 class="mb-4 text-start">
+                        <i class="fas fa-plus-circle text-primary me-2"></i>
+                        Registrar Nueva Dotación
+                    </h5>
+                    
+                    <form id="dotacionForm">
+                        <div class="row g-3">
+                            <!-- Mes -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="mes" class="form-label">
+                                        <i class="fas fa-calendar-alt me-2"></i>Mes
+                                    </label>
+                                    <select id="mes" name="mes" class="form-select" required>
+                                        <option value="" disabled selected>Seleccione un mes</option>
+                                        <option value="1">Enero</option>
+                                        <option value="2">Febrero</option>
+                                        <option value="3">Marzo</option>
+                                        <option value="4">Abril</option>
+                                        <option value="5">Mayo</option>
+                                        <option value="6">Junio</option>
+                                        <option value="7">Julio</option>
+                                        <option value="8">Agosto</option>
+                                        <option value="9">Septiembre</option>
+                                        <option value="10">Octubre</option>
+                                        <option value="11">Noviembre</option>
+                                        <option value="12">Diciembre</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Año -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="anio" class="form-label">
+                                        <i class="fas fa-calendar me-2"></i>Año
+                                    </label>
+                                    <select id="anio" name="anio" class="form-select" required>
+                                        <option value="" disabled selected>Seleccione un año</option>
+                                        <option value="2025">2025</option>
+                                        <option value="2024">2024</option>
+                                        <option value="2023">2023</option>
+                                        <option value="2022">2022</option>
+                                        <option value="2021">2021</option>
+                                        <option value="2020">2020</option>
+                                        <option value="2019">2019</option>
+                                        <option value="2018">2018</option>
+                                        <option value="2017">2017</option>
+                                        <option value="2016">2016</option>
+                                        <option value="2015">2015</option>
+                                        <option value="2014">2014</option>
+                                        <option value="2013">2013</option>
+                                        <option value="2012">2012</option>
+                                        <option value="2011">2011</option>
+                                        <option value="2010">2010</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Tipo de contrato -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="tipo_contrato" class="form-label">
+                                        <i class="fas fa-file-contract me-2"></i>Tipo de Contrato
+                                    </label>
+                                    <select id="tipo_contrato" name="tipo_contrato" class="form-select" required>
+                                        <option value="" disabled selected>Seleccione un tipo de contrato</option>
+                                        <option value="1">Full Time</option>
+                                        <option value="2">Part Time</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Cantidad de personal -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cantidad_personal" class="form-label">
+                                        <i class="fas fa-users me-2"></i>Cantidad de Personal
+                                    </label>
+                                    <div class="input-group">
+                                        <i class="fas fa-hashtag input-icon"></i>
+                                        <input type="number" id="cantidad_personal" name="cantidad_personal" 
+                                               class="form-control with-icon" placeholder="Cantidad de personal" 
+                                               required min="1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Carga horaria -->
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="carga_horaria" class="form-label">
+                                        <i class="fas fa-clock me-2"></i>Carga Horaria Mensual
+                                    </label>
+                                    <div class="input-group">
+                                        <i class="fas fa-hourglass-half input-icon"></i>
+                                        <input type="number" id="carga_horaria" name="carga_horaria" 
+                                               class="form-control with-icon" placeholder="Carga horaria mensual en horas" 
+                                               required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Registrar Dotación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de dotaciones -->
+        <div class="row">
+            <div class="col-12">
+                <div class="table-card fade-in">
+                    <h5 class="mb-4 text-start">
+                        <i class="fas fa-table text-primary me-2"></i>
+                        Dotaciones Registradas
+                    </h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table" id="dotacionTable">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-calendar me-2"></i>Año</th>
+                                    <th><i class="fas fa-calendar-alt me-2"></i>Mes</th>
+                                    <th><i class="fas fa-file-contract me-2"></i>Tipo de Contrato</th>
+                                    <th><i class="fas fa-users me-2"></i>Cantidad de Personal</th>
+                                    <th><i class="fas fa-clock me-2"></i>Carga Horaria</th>
+                                    <th><i class="fas fa-cogs me-2"></i>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dotacionBody">
+                                <!-- Los datos de la dotación se cargarán aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            const confirmado = confirm("¿Estás seguro de que deseas cerrar sesión?");
+            if (confirmado) {
+                localStorage.removeItem("auth");
+                localStorage.removeItem("usuario");
+                localStorage.removeItem("correo");
+                window.location.href = "login.html";
+            }
+        }
+
+        document.getElementById('dotacionForm').addEventListener('submit', async function(e){
+            e.preventDefault();
+
+            const anio = document.getElementById('anio').value;
+            const mes = document.getElementById('mes').value;
+            const tipoContrato = document.getElementById('tipo_contrato').value;
+            const cantidadPersonal = document.getElementById('cantidad_personal').value;
+            const cargaHoraria = document.getElementById('carga_horaria').value;
+
+            // Objeto con los datos del formulario
+            const dotacionData = {
+                anio,
+                mes,
+                TipoContrato_id: tipoContrato,
+                cantidad_personal: cantidadPersonal,
+                carga_horaria: cargaHoraria
+            };
+
+            try{
+                // Enviar los datos al backend
+                const response = await fetch ('http://localhost:8090/registrar-dotacion',{
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dotacionData)
+                });
+                
+                const result = await response.json();
+                if (response.ok){
+                    alert('Dotación registrada exitosamente');
+                    // Reiniciar el formulario
+                    document.getElementById('dotacionForm').reset();
+                    // Recargar la dotación
+                    cargarDotacion();
+                } else{
+                    alert(result.message || 'Error al registrar la dotación');
+                }
+            } catch (error){
+                console.error('Error al registrar la dotación:', error);
+                alert('Error al registrar la dotación');
+            }
+        });
+
+        // Cargar la dotación desde el backend
+        async function cargarDotacion(){
+            try{
+                const response = await fetch ('http://localhost:8090/get-dotaciones', {
+                    method: 'GET',
+                    headers:{
+                        'Content-Type': 'application/json'
+                    },
+                });
+                const data = await response.json();
+
+                if (response.ok){
+                    const dotacionBody = document.getElementById('dotacionBody');
+                    dotacionBody.innerHTML = '';
+
+                    // Iterar sobre los datos de la dotación y mostrarlos en la tabla
+                    data.dotaciones.forEach(dotacion => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                        <td><strong>${dotacion.anio}</strong></td>
+                        <td><strong>${dotacion.mes}</strong></td>
+                        <td><span class="badge bg-info">${dotacion.tipo_contrato}</span></td>
+                        <td><i class="fas fa-users me-1"></i>${dotacion.cantidad_personal} personas</td>
+                        <td><i class="fas fa-clock me-1"></i>${dotacion.carga_horaria} horas</td>
+                        <td>
+                            <button type="button" class="btn btn-success btn-sm" onclick="editarDotacion(${dotacion.id})">
+                                <i class="fas fa-edit me-1"></i>Editar
+                            </button>
+                        </td>
+                        `;
+                        dotacionBody.appendChild(tr);
+                    });
+                } else{
+                    alert('Error al cargar la dotación');
+                }
+            } catch (error){
+                console.error('Error fetching dotacion:', error);
+                alert('Error al obtener la dotación');
+            }
+        }
+
+        // Función para editar una dotación
+        function editarDotacion(id) {
+            window.location.href = `editar3.html?id=${id}`;
+        }
+
+        function verificarAdmin(){
+            const rol = localStorage.getItem("rol");
+            console.log(rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+            
+            Object.values(dropdowns).forEach(dropdown => {
+                if (dropdown) dropdown.style.display = 'block';
+            });
+
+            if (rol === 'Soporte TI' || rol === 'Gerente') {
+                Object.values(dropdowns).forEach(dropdown => {
+                    if (dropdown) {
+                        dropdown.style.pointerEvents = 'auto';
+                        dropdown.style.color = '';
+                        dropdown.style.textDecoration = '';
+                    }
+                });
+            } else if (rol === 'Supervisor') {
+                Object.values(dropdowns).forEach(dropdown => {
+                    if (dropdown) {
+                        dropdown.style.pointerEvents = 'none';
+                        dropdown.style.color = 'gray';
+                        dropdown.style.textDecoration = 'none';
+                    }
+                });
+            }
+        }
+
+        // Mostrar mensaje de bienvenida
+        const nombre = localStorage.getItem("nombre");
+        const apellido = localStorage.getItem("apellido");
+        if (nombre && apellido) {
+            document.getElementById('welcomeMessage').textContent = `${nombre} ${apellido}`;
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarAdmin();
+            cargarDotacion();
+            
+            // Agregar animación escalonada a los elementos
+            const elements = document.querySelectorAll('.fade-in');
+            elements.forEach((element, index) => {
+                setTimeout(() => {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>
