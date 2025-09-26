@@ -1,2 +1,13 @@
+# Archivos privados
 .env
+
+# Carpeta local, si todos tuvieramos la misma pudisese generar errores
 Servidor/node_modules/
+
+# Archivos temporales MAC y Windows
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
