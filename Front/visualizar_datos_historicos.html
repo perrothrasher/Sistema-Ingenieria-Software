@@ -414,6 +414,7 @@
 </div>
   
     <script>
+        /// AUTENTICACIÓN Y PERMISOS ESQUELETO
         window.addEventListener('load', async () =>{
             try{
                 // se obtienen los datos del usuario desde el servidor
@@ -472,6 +473,7 @@
             await fetch ('/logout', {method: 'POST'});
             window.location.href = 'login.html'
         }
+        /// FIN AUTENTICACIÓN Y PERMISOS ESQUELETO
         
         class HistoricalDataVisualization {
             constructor() {
