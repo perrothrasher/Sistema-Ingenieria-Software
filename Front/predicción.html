@@ -259,20 +259,17 @@
                 const response = await fetch('/api/perfil');
 
                 if (!response.ok){
-                    window.location.href = 'login.html';
-                    return;
+                    console.warn('Dev mode: perfil no disponible, se omite redirección al login');
+                } else {
+                    const usuario = await response.json();
+                    if (usuario.nombre && usuario.apellido){
+                        document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                    }
+                    verificarAdmin(usuario.rol);
                 }
-
-                const usuario = await response.json();
-
-                if (usuario.nombre && usuario.apellido){
-                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
-                }
-
-                verificarAdmin(usuario.rol);
             } catch (error){
                 console.error('Error de autenticación: ', error);
-                window.location.href = 'login.html'
+                console.warn('Dev mode: se omite redirección al login');
             }
         });
 
@@ -307,9 +304,8 @@
         }
 
         async function logout() {
-            // Eliminacion de la cookie de sesión
-            await fetch ('/logout', {method: 'POST'});
-            window.location.href = 'login.html'
+            try { await fetch ('/logout', {method: 'POST'}); } catch (e) {}
+            console.log('Sesión cerrada (dev), permaneces en la página');
         }
 /* === JS: backend integrado, SIN tocar los 4 cards de métricas === */
 class StaffPredictionSystem{

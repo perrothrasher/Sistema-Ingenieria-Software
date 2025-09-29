@@ -122,6 +122,8 @@
                 </div>
       </nav>
   </nav>
+        </div>
+    </div>
 
   <div class="container">
     <h1><i class="fas fa-user-plus"></i> Editar Cliente</h1>
@@ -158,26 +160,33 @@
   </div>
 
   <script>
+    function isDev(){
+      try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
+      catch(_) { return true; }
+    }
+
     window.addEventListener('load', async () =>{
             try{
                 // se obtienen los datos del usuario desde el servidor
                 const response = await fetch('/api/perfil');
 
                 if (!response.ok){
-                    window.location.href = 'login.html';
-                    return;
+                    if (isDev()) {
+                      console.warn('Dev mode: perfil no disponible, se omite redirección al login');
+                    } else {
+                      window.location.href = 'login.html';
+                      return;
+                    }
+                } else {
+                    const usuario = await response.json();
+                    if (usuario.nombre && usuario.apellido){
+                        document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                    }
+                    verificarAdmin(usuario.rol);
                 }
-
-                const usuario = await response.json();
-
-                if (usuario.nombre && usuario.apellido){
-                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
-                }
-
-                verificarAdmin(usuario.rol);
             } catch (error){
                 console.error('Error de autenticación: ', error);
-                window.location.href = 'login.html'
+                if (!isDev()) window.location.href = 'login.html';
             }
         });
 
@@ -211,11 +220,14 @@
             }
         }
 
-        async function logout() {
-            // Eliminacion de la cookie de sesión
-            await fetch ('/logout', {method: 'POST'});
-            window.location.href = 'login.html'
-        }
+    async function logout() {
+      try { await fetch ('/logout', {method: 'POST'}); } catch(e) {}
+      if (isDev()) {
+        console.log('Sesión cerrada (dev), permaneces en la página');
+      } else {
+        window.location.href = 'login.html'
+      }
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');

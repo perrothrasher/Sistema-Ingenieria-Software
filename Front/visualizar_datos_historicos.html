@@ -29,7 +29,7 @@
             transition: transform 0.3s ease;
         }
         .metric-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-9px);
         }
         .metric-card.success {
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
@@ -77,6 +77,77 @@
         canvas {
             max-width: 100% !important;
             height: auto !important;
+        }
+    </style>
+    <style>
+        /* Desactivar completamente efectos de botones (hover/focus/active) */
+        .btn,
+        .btn-primary,
+        .btn-outline-primary,
+        .btn-secondary,
+        .btn-outline-secondary,
+        .btn-success,
+        .btn-outline-success,
+        .btn-warning,
+        .btn-outline-warning,
+        .btn-danger,
+        .btn-outline-danger {
+            transition: none !important;
+        }
+
+        .btn:hover,
+        .btn:focus,
+        .btn:active,
+        .btn.show,
+        .btn:focus-visible {
+            box-shadow: none !important;
+            filter: none !important;
+            transform: none !important;
+        }
+
+        /* Mantener mismo look en hover/focus/active */
+        .btn-primary:hover,
+        .btn-primary:focus,
+        .btn-primary:active,
+        .btn-primary.show {
+            background-color: var(--bs-primary) !important;
+            border-color: var(--bs-primary) !important;
+            color: #fff !important;
+        }
+
+        .btn-outline-primary:hover,
+        .btn-outline-primary:focus,
+        .btn-outline-primary:active,
+        .btn-outline-primary.show {
+            background-color: transparent !important;
+            border-color: var(--bs-primary) !important;
+            color: var(--bs-primary) !important;
+        }
+
+        .btn-outline-warning:hover,
+        .btn-outline-warning:focus,
+        .btn-outline-warning:active,
+        .btn-outline-warning.show {
+            background-color: transparent !important;
+            border-color: var(--bs-warning) !important;
+            color: var(--bs-warning) !important;
+        }
+
+        /* Dropdown toggle sin efecto */
+        .dropdown-toggle:hover,
+        .dropdown-toggle:focus,
+        .dropdown-toggle:active,
+        .show > .dropdown-toggle.btn-primary {
+            background-color: var(--bs-primary) !important;
+            border-color: var(--bs-primary) !important;
+            box-shadow: none !important;
+        }
+
+        /* Ítems del menú sin highlight al hover */
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background-color: transparent !important;
+            color: inherit !important;
         }
     </style>
 </head>
@@ -156,10 +227,8 @@
                         </li>
                     </ul>
                 </div>
-      </nav>
-      </nav>
+        </div>
     </div>
-</div>
 
     <!-- Contenido Principal -->
     <div class="container-fluid mt-4">
@@ -415,26 +484,35 @@
   
     <script>
         /// AUTENTICACIÓN Y PERMISOS ESQUELETO
+        function isDev(){
+            try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
+            catch(_) { return true; }
+        }
+
         window.addEventListener('load', async () =>{
             try{
                 // se obtienen los datos del usuario desde el servidor
                 const response = await fetch('/api/perfil');
 
                 if (!response.ok){
-                    window.location.href = 'login.html';
-                    return;
+                    if (isDev()) {
+                        console.warn('Dev mode: perfil no disponible, se omite redirección al login');
+                    } else {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                } else {
+                    const usuario = await response.json();
+
+                    if (usuario.nombre && usuario.apellido){
+                        document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                    }
+
+                    verificarAdmin(usuario.rol);
                 }
-
-                const usuario = await response.json();
-
-                if (usuario.nombre && usuario.apellido){
-                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
-                }
-
-                verificarAdmin(usuario.rol);
             } catch (error){
                 console.error('Error de autenticación: ', error);
-                window.location.href = 'login.html'
+                if (!isDev()) window.location.href = 'login.html'
             }
         });
 
@@ -469,9 +547,12 @@
         }
 
         async function logout() {
-            // Eliminacion de la cookie de sesión
-            await fetch ('/logout', {method: 'POST'});
-            window.location.href = 'login.html'
+            try { await fetch ('/logout', {method: 'POST'}); } catch(e) {}
+            if (isDev()) {
+                console.log('Sesión cerrada (dev), permaneces en la página');
+            } else {
+                window.location.href = 'login.html'
+            }
         }
         /// FIN AUTENTICACIÓN Y PERMISOS ESQUELETO
         

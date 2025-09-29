@@ -118,18 +118,7 @@
             background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
         }
 
-        .navbar {
-            background-color: white;
-            padding: 0.2rem 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
         
-        .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-            color: #007bff !important;
-            text-decoration: none;
-        }
     </style>
 </head>
 <body>
@@ -208,9 +197,10 @@
                         </li>
                     </ul>
                 </div>
-    
-    </nav>
-
+            </nav>
+        </div>
+    </div>
+ 
     <div class="container">
         <div class="form-container fade-in">
             <h1 class="page-title">
@@ -345,26 +335,33 @@
     </div>
 
     <script>
+        function isDev(){
+            try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
+            catch(_) { return true; }
+        }
+
         window.addEventListener('load', async () =>{
             try{
                 // se obtienen los datos del usuario desde el servidor
                 const response = await fetch('/api/perfil');
 
                 if (!response.ok){
-                    window.location.href = 'login.html';
-                    return;
+                    if (isDev()) {
+                        console.warn('Dev mode: perfil no disponible, se omite redirección al login');
+                    } else {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                } else {
+                    const usuario = await response.json();
+                    if (usuario.nombre && usuario.apellido){
+                        document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                    }
+                    verificarAdmin(usuario.rol);
                 }
-
-                const usuario = await response.json();
-
-                if (usuario.nombre && usuario.apellido){
-                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
-                }
-
-                verificarAdmin(usuario.rol);
             } catch (error){
                 console.error('Error de autenticación: ', error);
-                window.location.href = 'login.html'
+                if (!isDev()) window.location.href = 'login.html';
             }
         });
 
@@ -399,9 +396,12 @@
         }
 
         async function logout() {
-            // Eliminacion de la cookie de sesión
-            await fetch ('/logout', {method: 'POST'});
-            window.location.href = 'login.html'
+            try { await fetch ('/logout', {method: 'POST'}); } catch (e) {}
+            if (isDev()) {
+                console.log('Sesión cerrada (dev), permaneces en la página');
+            } else {
+                window.location.href = 'login.html';
+            }
         }
         
         document.getElementById('registroForm').addEventListener('submit', async function(e) {
