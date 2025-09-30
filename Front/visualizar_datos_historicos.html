@@ -570,19 +570,30 @@
             async loadData() {
                 try {
                     this.showLoading(true);
-
-                    console.log('Cargando datos desde backend...');
-                    const response = await fetch(`${URL_BASE}/historicos?tipo=dotacion`);
-                    if (!response.ok) throw new Error('Error al cargar datos históricos');
-
-                    const result = await response.json();
-                    this.data = result.data || [];
+                    
+                    // Llamada a la API para obtener datos históricos
+                    const response = await fetch('/api/historicos/dotacion');
+                    if (!response.ok) {
+                        throw new Error('Error al cargar datos históricos');
+                    }
+                    
+                    this.data = await response.json();
                     this.filteredData = [...this.data];
-
+                    
+                    // Inicializar componentes con datos reales
+                    this.initializeFilters();
+                    this.initializeCharts();
+                    this.initializeDataTable();
+                    this.updateMetrics();
+                    
+                    console.log('Datos históricos cargados:', this.data.length, 'registros');
+                    
                 } catch (error) {
-                    console.error('Error al cargar datos:', error);
-                    this.showAlert('error', 'Error al cargar los datos históricos. Usando datos de ejemplo.');
-                    this.loadSampleData(); // fallback
+                    console.error('Error cargando datos:', error);
+                    this.showAlert('error', 'No se pudieron cargar los datos históricos');
+                    // No usar loadSampleData como fallback
+                    this.data = [];
+                    this.filteredData = [];
                 } finally {
                     this.showLoading(false);
                 }
@@ -631,50 +642,6 @@
                 if (nombre && apellido) {
                     document.getElementById('welcomeMessage').textContent = `${nombre} ${apellido}`;
                 }
-            }
-
-            async loadData() {
-                try {
-                    this.showLoading(true);
-                    
-                    // TEMPORAL: Usar datos de ejemplo directamente para evitar problemas de conexión
-                    console.log('Cargando datos de ejemplo...');
-                    this.loadSampleData();
-                    
-                    // Comentado temporalmente para evitar loops
-                    // const response = await fetch('http://localhost:3000/dotaciones');
-                    // if (!response.ok) {
-                    //     throw new Error('Error al cargar datos');
-                    // }
-                    // 
-                    // const result = await response.json();
-                    // this.data = result.dotaciones || [];
-                    // this.filteredData = [...this.data];
-                    
-                } catch (error) {
-                    console.error('Error al cargar datos:', error);
-                    this.showAlert('error', 'Error al cargar los datos históricos. Usando datos de ejemplo.');
-                    
-                    // Datos de ejemplo si falla la conexión
-                    this.loadSampleData();
-                } finally {
-                    this.showLoading(false);
-                }
-            }
-
-            loadSampleData() {
-                // Datos de ejemplo para demostración
-                this.data = [
-                    { id: 1, anio: 2024, mes: 'Enero', tipo_contrato: 'Indefinido', cantidad_personal: 45, carga_horaria: 44 },
-                    { id: 2, anio: 2024, mes: 'Enero', tipo_contrato: 'Temporal', cantidad_personal: 12, carga_horaria: 40 },
-                    { id: 3, anio: 2024, mes: 'Febrero', tipo_contrato: 'Indefinido', cantidad_personal: 47, carga_horaria: 44 },
-                    { id: 4, anio: 2024, mes: 'Febrero', tipo_contrato: 'Temporal', cantidad_personal: 15, carga_horaria: 40 },
-                    { id: 5, anio: 2024, mes: 'Marzo', tipo_contrato: 'Indefinido', cantidad_personal: 50, carga_horaria: 44 },
-                    { id: 6, anio: 2024, mes: 'Marzo', tipo_contrato: 'Temporal', cantidad_personal: 18, carga_horaria: 40 },
-                    { id: 7, anio: 2023, mes: 'Diciembre', tipo_contrato: 'Indefinido', cantidad_personal: 42, carga_horaria: 44 },
-                    { id: 8, anio: 2023, mes: 'Diciembre', tipo_contrato: 'Temporal', cantidad_personal: 10, carga_horaria: 40 }
-                ];
-                this.filteredData = [...this.data];
             }
 
             initializeFilters() {
