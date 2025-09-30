@@ -17,12 +17,37 @@
 
     .login-card {
       background: white;
-      padding: 3rem 2.5rem;
+      padding: 3rem 2.5rem 2.2rem;
       border-radius: 18px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.2);
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
       animation: fadeIn 0.8s ease;
+      position: relative;
+    }
+
+    .login-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      padding: 1px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .logo-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.2rem;
+    }
+
+    .logo-wrapper img {
+      height: 48px;
+      width: auto;
     }
 
     .login-card h1 {
@@ -30,6 +55,15 @@
       margin-bottom: 2rem;
       color: #1e3a8a;
       font-weight: 700;
+    }
+
+    .subtitle {
+      text-align: center;
+      margin-top: -1rem;
+      margin-bottom: 1.5rem;
+      color: #6b7280;
+      font-weight: 500;
+      font-size: .95rem;
     }
 
     .input-group {
@@ -43,6 +77,18 @@
       left: 1rem;
       transform: translateY(-50%);
       color: #6b7280;
+    }
+
+    .input-group .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: .75rem;
+      transform: translateY(-50%);
+      color: #6b7280;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: .25rem;
     }
 
     .input-group input {
@@ -81,6 +127,13 @@
       box-shadow: 0 6px 14px rgba(0,0,0,0.15);
     }
 
+    .login-card button:disabled {
+      opacity: .75;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
     .error {
       background-color: #fee2e2;
       color: #b91c1c;
@@ -105,7 +158,11 @@
 </head> 
 <body class="login-page">
   <div class="login-card">
+    <div class="logo-wrapper">
+      <img src="assets/totalcheck-logo.png" alt="TotalCheck Logo">
+    </div>
     <h1>Iniciar Sesión</h1>
+    <div class="subtitle">Accede a tu cuenta para continuar</div>
     <form id="loginForm">
       <div class="input-group">
         <i class="fas fa-user"></i>
@@ -114,33 +171,75 @@
       <div class="input-group">
         <i class="fas fa-lock"></i>
         <input type="password" id="contrasena" placeholder="Contraseña" required>
+        <button type="button" id="togglePassword" class="toggle-password" aria-label="Mostrar u ocultar contraseña">
+        </button>
       </div>
-      <button type="submit">Ingresar</button>
+      <button id="loginBtn" type="submit">
+        <span class="btn-text">Ingresar</span>
+      </button>
     </form>
     <p id="loginError" class="error" style="display: none;">Credenciales inválidas</p>
   </div>
 
   <script>
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    const form = document.getElementById('loginForm');
+    const btn = document.getElementById('loginBtn');
+    const btnText = btn.querySelector('.btn-text');
+    const errorBox = document.getElementById('loginError');
+    const passInput = document.getElementById('contrasena');
+    const toggleBtn = document.getElementById('togglePassword');
 
-        const correo = document.getElementById('correo').value;
-        const contrasena = document.getElementById('contrasena').value;
-        
+    toggleBtn.addEventListener('click', () => {
+      const isPassword = passInput.getAttribute('type') === 'password';
+      passInput.setAttribute('type', isPassword ? 'text' : 'password');
+      toggleBtn.innerHTML = `<i class="fas ${isPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
+    });
+
+    function showError(message){
+      errorBox.textContent = message || 'Credenciales inválidas';
+      errorBox.style.display = 'block';
+    }
+
+    function clearError(){
+      errorBox.style.display = 'none';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearError();
+
+      const correo = document.getElementById('correo').value.trim();
+      const contrasena = passInput.value;
+
+      // Estado de carga
+      btn.disabled = true;
+      btnText.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Ingresando...';
+
+      try {
         const response = await fetch('http://localhost:8090/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ correo, contrasena })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ correo, contrasena })
         });
 
         if (response.ok) {
-            window.location.href = 'index.html';
-        } else {
-            const result = await response.json();
-            alert(result.message || 'Error al iniciar sesión');
+          window.location.href = 'index.html';
+          return;
         }
+
+        // Manejo de error
+        let msg = 'Error al iniciar sesión';
+        try {
+          const result = await response.json();
+          if (result && (result.message || result.error)) msg = result.message || result.error;
+        } catch (_) {}
+        showError(msg);
+      } catch (err) {
+        showError('No se pudo conectar con el servidor');
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = 'Ingresar';
+      }
     });
   </script>
 </body>
