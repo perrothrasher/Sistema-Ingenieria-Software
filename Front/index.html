@@ -452,12 +452,16 @@
         }
 
         async function logout() {
-            try { await fetch ('/logout', {method: 'POST'}); } catch(e){}
-            if (isDev()) {
-                console.log('Sesión cerrada (dev), permaneces en la página');
-            } else {
-                window.location.href = 'login.html';
-            }
+            try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
+            try { sessionStorage.clear(); localStorage.clear(); } catch (e) {}
+            try {
+                document.cookie.split(';').forEach(c => {
+                    const eqPos = c.indexOf('=');
+                    const name = (eqPos > -1 ? c.substring(0, eqPos) : c).trim();
+                    if (name) document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                });
+            } catch (e) {}
+            window.location.replace('login.html');
         }
     </script>
 </body>
