@@ -11,10 +11,12 @@ require('dotenv').config();
 /////////////////////////////////////////////////
 // Utilización de express para no utilizar xampp
 const app = express();
+app.set('trust proxy', 1);
 app.use(express.static(path.join(__dirname, '..', 'Front')));
 app.use(express.json());
 app.use(cookieParser());
 /////////////////////////////////////////////////
+
 
 /////////////////////////////////////////////////
 const corsOptions = require('./JS Llamadas/cors_config.js'); // Configuración de CORS.

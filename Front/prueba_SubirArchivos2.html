@@ -275,16 +275,6 @@
 
         <form id="upload-form">
             <div class="form-group">
-                <label for="anio">Año al que pertenece el Documento:</label>
-                <input type="number" id="anio" placeholder="Ej: 2025" required>
-            </div>
-
-            <div class="form-group">
-                <label for="mes">Mes al que pertenece el Documento:</label>
-                <input type="number" id="mes" min="1" max="12" placeholder="Ej: 9 para Septiembre" required>
-            </div>
-
-            <div class="form-group">
                 <label for="file-input">Seleccionar Archivo:</label>
                 <input type="file" id="file-input" required>
             </div>
@@ -367,8 +357,6 @@
         // --- Referencias a los elementos del DOM ---
         const uploadForm = document.getElementById('upload-form');
         const fileInput = document.getElementById('file-input');
-        const anioInput = document.getElementById('anio');
-        const mesInput = document.getElementById('mes');
         const previewContainer = document.getElementById('preview-container');
         const uploadBtn = document.getElementById('upload-btn');
         const statusMessage = document.getElementById('status-message');
@@ -395,8 +383,8 @@
         uploadForm.addEventListener('submit', async (event) => {
             event.preventDefault(); // Evitar la recarga de la página
 
-            if (!selectedFile || !anioInput.value || !mesInput.value) {
-                showStatus('Por favor, completa todos los campos y selecciona un archivo.', 'error');
+            if (!selectedFile) {
+                showStatus('Por favor, selecciona un archivo.', 'error');
                 return;
             }
 
@@ -407,8 +395,6 @@
             // Crear el objeto FormData para enviar los datos
             const formData = new FormData();
             formData.append('miArchivo', selectedFile);
-            formData.append('anioDocumento', anioInput.value);
-            formData.append('mesDocumento', mesInput.value);
             
             try {
                 // --- Simulación del Token JWT ---

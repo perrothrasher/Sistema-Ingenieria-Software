@@ -1,6 +1,7 @@
 const connection = require('./db_conection.js'); 
 const bcrypt = require('bcryptjs');
 const jtw = require('jsonwebtoken');
+const { registrarAuditoria } = require('./auditoria.js');
 
 // Ruta de login.
 function login(req, res){
@@ -52,6 +53,15 @@ function login(req, res){
 
       // Firma de la cookie
       const token = jtw.sign(payload, process.env.JWT_SECRET, {expiresIn: '1h'});
+
+      // Registrar evento de auditoría
+      const ip = req.ip || req.connection.remoteAddress;
+      registrarAuditoria(
+        trabajador.id,
+        `${trabajador.nombre} ${trabajador.apellido}`,
+        'INICIO_SESION_EXITOSO', 
+        ip
+      );
 
       // Envio cookie a HttpOnly
       res.cookie('token', token,{

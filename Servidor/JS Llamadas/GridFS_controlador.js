@@ -8,12 +8,6 @@ const subirArchivo = async (req, res) =>{
         return res.status(400).json({error: 'No se ha proporcionado ningún archivo'});
     }
 
-    // Datos del año y mes del archivo subido
-    const {anioDocumento, mesDocumento} = req.body;
-    if(!anioDocumento || !mesDocumento){
-        return res.status(400).json({error: 'Faltan datos del año o mes del documento'});
-    }
-
     try{
         const db = await conexion_Mongo();
         const bucket = new GridFSBucket(db, {bucketName: 'archivos'});
@@ -24,8 +18,6 @@ const subirArchivo = async (req, res) =>{
         const uploadStream = bucket.openUploadStream(nombreArchivo,{
             metadata:{
                 mimeType: req.file.mimetype,
-                anio: parseInt(anioDocumento),
-                mes: parseInt(mesDocumento),
                 fechaSubida: new Date() //Fecha actual
             }
         });
