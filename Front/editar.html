@@ -238,7 +238,7 @@
 
     async function cargarCliente(id) {
       try {
-        const response = await fetch(`http://localhost:8090/get-clientes?id=${id}`);
+        const response = await fetch(`${URL_BASE}/get-clientes?id=${id}`);
         const data = await response.json();
 
         console.log('Datos del cliente:', data); 
@@ -289,7 +289,7 @@
       console.log('Datos enviados para actualizar el cliente:', updatedCliente); 
 
       try {
-        const response = await fetch(`http://localhost:8090/editarCliente/${id}`, {
+        const response = await fetch(`${URL_BASE}/editarCliente/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'

@@ -572,7 +572,7 @@
                     this.showLoading(true);
 
                     console.log('Cargando datos desde backend...');
-                    const response = await fetch('http://localhost:8090/historicos?tipo=dotacion');
+                    const response = await fetch(`${URL_BASE}/historicos?tipo=dotacion`);
                     if (!response.ok) throw new Error('Error al cargar datos históricos');
 
                     const result = await response.json();
@@ -1203,7 +1203,7 @@
         };
 
         try {
-          const r = await fetch(`http://localhost:8090/historicos/dotacion/${id}`, {
+          const r = await fetch(`${URL_BASE}/historicos/dotacion/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type':'application/json' },
             body: JSON.stringify(payload)

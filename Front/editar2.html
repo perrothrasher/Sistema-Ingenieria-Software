@@ -253,7 +253,7 @@
 
     async function cargarTrabajador(id) {
       try {
-        const response = await fetch(`http://localhost:8090/get-trabajadores?id=${id}`);
+        const response = await fetch(`${URL_BASE}/get-trabajadores?id=${id}`);
         const data = await response.json();
 
         if (data.trabajadores && data.trabajadores.length > 0) {
@@ -307,7 +307,7 @@
       console.log('Datos enviados para actualizar el trabajador:', updatedTrabajador);  // Verifica que los datos sean correctos
 
       try {
-        const response = await fetch(`http://localhost:8090/editarTrabajador/${id}`, {
+        const response = await fetch(`${URL_BASE}/editarTrabajador/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'

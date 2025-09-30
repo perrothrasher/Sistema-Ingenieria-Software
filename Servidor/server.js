@@ -4,13 +4,15 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const https = require('https');
+const fs = require('fs');
 require('dotenv').config();
 
 /////////////////////////////////////////////////
 // Utilización de express para no utilizar xampp
 const app = express();
 app.use(express.static(path.join(__dirname, '..', 'Front')));
-app.use(bodyParser.json());
+app.use(express.json());
 app.use(cookieParser());
 /////////////////////////////////////////////////
 
@@ -102,8 +104,23 @@ app.put('/historicos/:tipo/:id', actualizarHistorico);          // CU19 (editar)
 //app.use('/prediccion', prediccionRouter);
 // ================================================================
 
+const httpsOptions ={
+  key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
+  cert: fs.readFileSync(path.join(__dirname, 'localhost+2.pem'))
+};
+
 const puerto = 8090;
+
+// Si se cuenta con un certificado SSL, usar HTTPS
+
+https.createServer(httpsOptions, app).listen(puerto, () =>{
+  console.log(`¡Servidor HTTPS seguro corriendo en el puerto ${puerto}!`);
+  console.log(`Accede en: https://localhost:${puerto}/login.html`);
+})
+
+/* 
 app.listen(puerto, () => {
   //console.log('Servidor en ejecución en el puerto ' + puerto);
   console.log('Link: http://localhost:'+ puerto+'/login.html');
 });
+*/
