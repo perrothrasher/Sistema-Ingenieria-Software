@@ -23,10 +23,15 @@ const verificarToken = require('./JS Llamadas/authMiddleware.js');
 const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente } = require('./JS Llamadas/cliente.js');
 const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores } = require('./JS Llamadas/trabajadores.js'); 
 const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion } = require('./JS Llamadas/dotacion.js');
-//const { conexion_Mongo } = require('./JS Llamadas/mongo_connection.js'); // Conexión a MongoDB OK
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
+/////////////////////////////////////////////////
+
+// RUTAS PARA GESTIÓN DE ARCHIVOS (SUBIDA Y DESCARGA)
+/////////////////////////////////////////////////
+const fileRoutes = require('./JS Llamadas/GridFS_rutas.js');
+app.use('/api/archivos', fileRoutes);
 /////////////////////////////////////////////////
 
 // LOGIN
@@ -99,6 +104,6 @@ app.put('/historicos/:tipo/:id', actualizarHistorico);          // CU19 (editar)
 
 const puerto = 8090;
 app.listen(puerto, () => {
-  console.log('Servidor en ejecución en el puerto ' + puerto);
-  console.log('Link: http://localhost:'+ puerto);
+  //console.log('Servidor en ejecución en el puerto ' + puerto);
+  console.log('Link: http://localhost:'+ puerto+'/login.html');
 });

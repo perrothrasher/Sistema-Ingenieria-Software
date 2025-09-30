@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión - Subir Archivos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .top-bar {
+            background-color: white;
+            height: 60px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff !important;
+            text-decoration: none;
+        }
+        
+        .navbar {
+            background-color: white;
+            padding: 0.2rem 1rem;
+        }
+        
+        .navbar-nav .nav-link {
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: #007bff;
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .welcome-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 40px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .welcome-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        
+        .action-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        /* Colores de las opcines */
+        .action-card.primary {
+            background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+            color: white;
+        }
+        
+        .action-card.success {
+            background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+            color: white;
+        }
+        
+        .action-card.warning {
+            background: linear-gradient(135deg, #3f51b5 0%, #5c6bc0 100%);
+            color: white;
+        }
+        
+        .action-card.info {
+            background: linear-gradient(135deg, #764ba2 0%, #9575cd 100%);
+            color: white;
+        }
+        
+        .action-card.secondary {
+            background: linear-gradient(135deg, #764ba2 0%, #9575cd 100%);
+            color: #ffffff;
+        }
+        
+        .action-card.dark {
+            background: linear-gradient(135deg, #764ba2 0%, #9575cd 100%);
+            color: white;
+        }
+        
+        .action-card.orange {
+            background: linear-gradient(135deg, #9fa8da 0%, #c5cae9 100%);
+            color: rgb(0, 0, 0);
+        }
+        
+        .action-card.prediction {
+            background: linear-gradient(135deg, #9fa8da 0%, #c5cae9 100%);
+            color: rgb(0, 0, 0);
+        }
+        
+        .action-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        
+        .action-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .action-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="top-bar d-flex align-items-center">
+        <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg w-100">
+          <a class="navbar-brand" href="#">
+    <img src="assets/totalcheck-logo.png" alt="TotalCheck Logo" style="height:30px; width:auto;">
+</a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="index.html">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
+                                    <i class="fas fa-user-edit"></i> Editar Clientes</a></li>
+                                <li><a class="dropdown-item" href="ver_cliente.html">
+                                    <i class="fas fa-users"></i> Ver Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
+                                    <i class="fas fa-user-tie"></i> Editar Trabajador</a></li>
+                                <li><a class="dropdown-item" href="ver_trabajador.html">
+                                    <i class="fas fa-users-cog"></i> Ver Trabajadores</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-plus"></i> Agregar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-chart-line"></i> Dotación
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="dotacion_personal.html">
+                                    <i class="fas fa-users"></i> Agregar Dotación</a></li>
+                                <li><a class="dropdown-item" href="carga_datos_historicos.html">
+                                    <i class="fas fa-upload"></i> Cargar Datos</a></li>
+                                <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
+                                    <i class="fas fa-chart-bar"></i> Visualizar Datos</a></li>
+                                <li><a class="dropdown-item" href="predicción.html">
+                                    <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-chart-line"></i> Pruebas
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="prueba_SubirArchivos.html">
+                                    <i class="fas fa-users"></i> Subir Archivos</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+     <div class="upload-container">
+        <h1>Subir Nuevo Documento</h1>
+
+        <form id="upload-form">
+            <div class="form-group">
+                <label for="anio">Año al que pertenece el Documento:</label>
+                <input type="number" id="anio" placeholder="Ej: 2025" required>
+            </div>
+
+            <div class="form-group">
+                <label for="mes">Mes al que pertenece el Documento:</label>
+                <input type="number" id="mes" min="1" max="12" placeholder="Ej: 9 para Septiembre" required>
+            </div>
+
+            <div class="form-group">
+                <label for="file-input">Seleccionar Archivo:</label>
+                <input type="file" id="file-input" required>
+            </div>
+            
+            <button type="submit" id="upload-btn" disabled>Confirmar y Subir</button>
+        </form>
+
+        <div id="preview-container">
+            <p>La previsualización del archivo aparecerá aquí.</p>
+        </div>
+
+        <div id="status-message"></div>
+    </div>
+    
+    <div class="container mt-5">
+        <h1 class="mb-4">Lista de Documentos Almacenados</h1>
+        <div id="lista-archivos" class="list-group">
+            <p id="loading-message">Cargando archivos...</p>
+        </div>
+    </div>
+    <script>
+        window.addEventListener('load', async () =>{
+            try{
+                // se obtienen los datos del usuario desde el servidor
+                const response = await fetch('/api/perfil');
+
+                if (!response.ok){
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const usuario = await response.json();
+
+                if (usuario.nombre && usuario.apellido){
+                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+
+                verificarAdmin(usuario.rol);
+            } catch (error){
+                console.error('Error de autenticación: ', error);
+                window.location.href = 'login.html'
+            }
+        });
+
+        // PERMISOS
+        function verificarAdmin(rol){
+            console.log("Rol del usuario: ", rol);
+
+            const dropdowns = {
+                registrar: document.getElementById('dropdownRegistrar'),
+                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
+                editarCliente: document.getElementById('dropdownEditarCliente'),
+                registrarCliente: document.getElementById('dropdownRegistrarCliente')
+            };
+
+            Object.values(dropdowns).forEach(dropdown => {
+                dropdown.style.display = 'block';
+            });
+
+            if (rol === 'Soporte TI' || rol === 'Gerente'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'auto';
+                    dropdown.style.color = '';
+                    dropdown.style.textDecoration= '';
+                });
+            } else if(rol === 'Supervisor'){
+                Object.values(dropdowns).forEach(dropdown =>{
+                    dropdown.style.pointerEvents = 'none';
+                    dropdown.style.color = 'Gray';
+                    dropdown.style.textDecoration= 'none';
+                });
+            }
+        }
+
+        async function logout() {
+            // Eliminacion de la cookie de sesión
+            await fetch ('/logout', {method: 'POST'});
+            window.location.href = 'login.html'
+        }
+
+        // --- Referencias a los elementos del DOM ---
+        const uploadForm = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const anioInput = document.getElementById('anio');
+        const mesInput = document.getElementById('mes');
+        const previewContainer = document.getElementById('preview-container');
+        const uploadBtn = document.getElementById('upload-btn');
+        const statusMessage = document.getElementById('status-message');
+
+        let selectedFile = null;
+
+        // --- Event Listener para la selección de archivo ---
+        fileInput.addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
+            if (!selectedFile) {
+                resetPreview();
+                uploadBtn.disabled = true;
+                return;
+            }
+            
+            // Generar y mostrar la previsualización
+            generatePreview(selectedFile);
+            
+            // Habilitar el botón de subida
+            uploadBtn.disabled = false;
+        });
+
+        // --- Event Listener para el envío del formulario ---
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Evitar la recarga de la página
+
+            if (!selectedFile || !anioInput.value || !mesInput.value) {
+                showStatus('Por favor, completa todos los campos y selecciona un archivo.', 'error');
+                return;
+            }
+
+            // Deshabilitar botón y mostrar estado de carga
+            uploadBtn.disabled = true;
+            showStatus('Subiendo archivo...', 'loading');
+
+            // Crear el objeto FormData para enviar los datos
+            const formData = new FormData();
+            formData.append('miArchivo', selectedFile);
+            formData.append('anioDocumento', anioInput.value);
+            formData.append('mesDocumento', mesInput.value);
+            
+            try {
+                // --- Simulación del Token JWT ---
+                // En una aplicación real, obtendrías este token del localStorage o de una cookie después del login.
+
+                const response = await fetch('/api/archivos/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Si el servidor responde con un error (4xx, 5xx)
+                    throw new Error(result.message || 'Error en el servidor');
+                }
+                
+                showStatus(`Éxito: ${result.message}`, 'success');
+                resetForm();
+
+            } catch (error) {
+                console.error('Error al subir el archivo:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                // Habilitar el botón nuevamente si no se reseteó el formulario
+                if (selectedFile) {
+                    uploadBtn.disabled = false;
+                }
+            }
+        });
+
+        // --- Funciones auxiliares ---
+
+        function generatePreview(file) {
+            previewContainer.innerHTML = ''; // Limpiar previsualización anterior
+            const objectURL = URL.createObjectURL(file);
+
+            if (file.type === 'application/pdf') {
+                const iframe = document.createElement('iframe');
+                iframe.src = objectURL;
+                previewContainer.appendChild(iframe);
+            } else if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = objectURL;
+                previewContainer.appendChild(img);
+            } else {
+                const fileInfo = document.createElement('div');
+                fileInfo.classList.add('file-info');
+                const sizeInMB = (file.size / 1024 / 1024).toFixed(2);
+                fileInfo.innerHTML = `
+                    <h3>${file.name}</h3>
+                    <p><strong>Tipo:</strong> ${file.type || 'Desconocido'}</p>
+                    <p><strong>Tamaño:</strong> ${sizeInMB} MB</p>
+                    <p>No se puede previsualizar este tipo de archivo.</p>
+                `;
+                previewContainer.appendChild(fileInfo);
+            }
+        }
+
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-${type}`;
+        }
+        
+        function resetPreview() {
+            previewContainer.innerHTML = '<p>La previsualización del archivo aparecerá aquí.</p>';
+        }
+
+        function resetForm() {
+            uploadForm.reset();
+            selectedFile = null;
+            uploadBtn.disabled = true;
+            resetPreview();
+            setTimeout(() => showStatus('', ''), 5000); // Limpiar mensaje de éxito después de 5 segundos
+        }
+
+        window.addEventListener('load', async () => {
+            const listaContainer = document.getElementById('lista-archivos');
+            const loadingMessage = document.getElementById('loading-message');
+
+            try {
+                // 1. Llama a tu nueva API para obtener la lista de archivos
+                const response = await fetch('/api/archivos/lista');
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al cargar la lista de archivos.');
+                }
+
+                const archivos = await response.json();
+                
+                // Limpiar el mensaje de "cargando"
+                listaContainer.innerHTML = '';
+
+                if (archivos.length === 0) {
+                     listaContainer.innerHTML = '<p class="text-muted">No hay archivos para mostrar.</p>';
+                     return;
+                }
+
+                // 2. Crea dinámicamente un elemento en la lista por cada archivo
+                archivos.forEach(archivo => {
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                    item.id = `file-${archivo.id}`;
+
+                    const fileInfo = `
+                        <div>
+                            <h5 class="mb-1">${archivo.filename}</h5>
+                            <small class="text-muted">Subido: ${new Date(archivo.uploadDate).toLocaleString()}</small>
+                        </div>
+                    `;
+                    
+                    // 3. El botón de descarga apunta a tu ruta de descarga existente
+                    const actionButtons = `
+                        <div>
+                            <a href="/api/archivos/ver/${encodeURIComponent(archivo.filename)}" class="btn btn-primary btn-sm me-2" download>
+                                <i class="fas fa-download"></i> Descargar
+                            </a>
+                            <button class="btn btn-danger btn-sm btn-eliminar" data-id="${archivo.id}" data-filename="${archivo.filename}">
+                                <i class="fas fa-trash-alt"></i> Eliminar
+                            </button>
+                        </div>
+                    `;
+
+                    item.innerHTML = fileInfo + actionButtons;
+                    listaContainer.appendChild(item);
+                });
+
+            } catch (error) {
+                loadingMessage.textContent = `Error: ${error.message}`;
+                loadingMessage.className = 'alert alert-danger';
+                console.error('Error:', error);
+            }
+        });
+
+        document.getElementById('lista-archivos').addEventListener('click', async (event) => {
+            // Usamos delegación de eventos para escuchar clics en los botones de eliminar
+            if (event.target.classList.contains('btn-eliminar') || event.target.parentElement.classList.contains('btn-eliminar')) {
+                
+                const button = event.target.closest('.btn-eliminar');
+                const fileId = button.dataset.id;
+                const filename = button.dataset.filename;
+
+                // 1. Pedir confirmación al usuario (¡importante!)
+                if (!confirm(`¿Estás seguro de que deseas eliminar el archivo "${filename}"? Esta acción no se puede deshacer.`)) {
+                    return; // Si el usuario cancela, no hacemos nada.
+                }
+
+                try {
+                    // 2. Llamar a la API de eliminación con el método DELETE
+                    const response = await fetch(`/api/archivos/${fileId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'No se pudo eliminar el archivo.');
+                    }
+
+                    // 3. Si la eliminación fue exitosa, quitar el elemento de la lista en el frontend
+                    const itemParaEliminar = document.getElementById(`file-${fileId}`);
+                    if (itemParaEliminar) {
+                        itemParaEliminar.remove();
+                    }
+                    
+                    alert(`Archivo "${filename}" eliminado correctamente.`);
+
+                } catch (error) {
+                    console.error('Error al eliminar:', error);
+                    alert(`Error: ${error.message}`);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
