@@ -1,177 +1,304 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Editar Cliente</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    .form-container {
-      max-width: 500px;
-      margin: 20px auto;
-      background-color: #f4f4f4;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    h1 {
-      text-align: center;
-      margin-top: 30px;
-    }
-
-    form input, form button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button i {
-      margin-right: 5px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Clientes - Sistema</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        body {
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .welcome-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 15px;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-color: #e9ecef;
+        }
+        
+        .btn-action {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            margin: 0 2px;
+        }
+        
+        .btn-view {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .page-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+    </style>
 </head>
 <body>
-     <!-- Navbar -->
-    <div class="top-bar d-flex align-items-center">
-        <div class="container-fluid">
-            <nav class="navbar navbar-expand-lg w-100">
-                <a class="navbar-brand" href="#">
-    <img src="assets/totalcheck-logo.png" alt="TotalCheck Logo" style="height:30px; width:auto;">
-</a>
-                
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="index.html">
-                                <i class="fas fa-home"></i> Inicio
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-edit"></i> Editar
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
-                                    <i class="fas fa-user-edit"></i> Editar Clientes</a></li>
-                                <li><a class="dropdown-item" href="ver_cliente.html">
-                                    <i class="fas fa-users"></i> Ver Clientes</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
-                                    <i class="fas fa-user-tie"></i> Editar Trabajador</a></li>
-                                <li><a class="dropdown-item" href="ver_trabajador.html">
-                                    <i class="fas fa-users-cog"></i> Ver Trabajadores</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-plus"></i> Agregar
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">
-                                    <i class="fas fa-user-plus"></i> Agregar Clientes</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">
-                                    <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-chart-line"></i> Dotación
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="dotacion_personal.html">
-                                    <i class="fas fa-users"></i> Agregar Dotación</a></li>
-                                <li><a class="dropdown-item" href="carga_datos_historicos.html">
-                                    <i class="fas fa-upload"></i> Cargar Datos</a></li>
-                                <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
-                                    <i class="fas fa-chart-bar"></i> Visualizar Datos</a></li>
-                                <li><a class="dropdown-item" href="predicción.html">
-                                    <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" onclick="logout()">
-                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
-                            </ul>
-                        </li>
-                    </ul>
+    <nav>
+         Navbar 
+        <div class="top-bar d-flex align-items-center">
+            <div class="container-fluid">
+                <nav class="navbar navbar-expand-lg w-100">
+                    <a class="navbar-brand" href="#">
+                        <img src="assets/totalcheck-logo.png" alt="TotalCheck Logo" style="height:30px; width:auto;">
+                    </a>
+                    
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="index.html">
+                                    <i class="fas fa-home"></i> Inicio
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-edit"></i> Editar
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" id="dropdownEditarCliente" href="editar_cliente.html">
+                                        <i class="fas fa-user-edit"></i> Editar Clientes</a></li>
+                                    <li><a class="dropdown-item" href="ver_cliente.html">
+                                        <i class="fas fa-users"></i> Ver Clientes</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" id="dropdownEditarTrabajador" href="editar_trabajador.html">
+                                        <i class="fas fa-user-tie"></i> Editar Trabajador</a></li>
+                                    <li><a class="dropdown-item" href="ver_trabajador.html">
+                                        <i class="fas fa-users-cog"></i> Ver Trabajadores</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-plus"></i> Agregar
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" id="dropdownRegistrarCliente" href="registro_cliente.html">
+                                        <i class="fas fa-user-plus"></i> Agregar Clientes</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" id="dropdownRegistrar" href="registro2.html">
+                                        <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-chart-line"></i> Dotación
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="dotacion_personal.html">
+                                        <i class="fas fa-users"></i> Agregar Dotación</a></li>
+                                    <li><a class="dropdown-item" href="carga_datos_historicos.html">
+                                        <i class="fas fa-upload"></i> Cargar Datos</a></li>
+                                    <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
+                                        <i class="fas fa-chart-bar"></i> Visualizar Datos</a></li>
+                                    <li><a class="dropdown-item" href="predicción.html">
+                                        <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <ul class="navbar-nav">
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="logout()">
+                                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </nav>
+
+      
+    <div class="container-fluid mt-4">
+         Sección de título 
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="welcome-section fade-in">
+                    <div class="mb-4">
+                        <i class="fas fa-eye fa-3x text-primary mb-3"></i>
+                    </div>
+                    <h1 class="h2 mb-3 page-title">Visualización de Clientes</h1>
+                    <p class="text-muted mb-0" style="font-size: 18px;">
+                        Consulta la información de los clientes registrados en el sistema.
+                    </p>
                 </div>
-      </nav>
+            </div>
+        </div>
+
+         Tabla de clientes 
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container fade-in">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            Clientes Registrados
+                        </h5>
+                        <div class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span id="totalClientes">0</span> clientes encontrados
+                        </div>
+                    </div>
+                    
+                    <div class="loading-spinner" id="loadingSpinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando clientes...</p>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table" id="clientesTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-user me-2"></i>Nombre</th>
+                                    <th><i class="fas fa-user me-2"></i>Apellido</th>
+                                    <th><i class="fas fa-envelope me-2"></i>Correo</th>
+                                    <th><i class="fas fa-cogs me-2"></i>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientesBody">
+                                 Los datos de los clientes se cargarán aquí 
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <i class="fas fa-users"></i>
+                        <h5>No hay clientes registrados</h5>
+                        <p>Aún no se han registrado clientes en el sistema.</p>
+                        <a href="registro_cliente.html" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Agregar Primer Cliente
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-  <div class="container">
-    <h1><i class="fas fa-edit"></i> Clientes Registrados</h1>
-    <div class="row" >
-        <table class="table" id="clientesTable">
-          <thead class="table-success">
-            <tr>
-              <th>Nombre</th>
-              <th>Apellido</th>
-              <th>Correo</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="clientesBody">
-            <!-- Los datos de los clientes se cargarán aquí -->
-          </tbody>
-        </table>
-    </div>  
-  </div>
-  
-  <script>
-    function isDev(){
-      try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
-      catch(_) { return true; }
-    }
+    <script>
+        function isDev(){
+            try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
+            catch(_) { return true; }
+        }
 
-    window.addEventListener('load', async () =>{
+        window.addEventListener('load', async () =>{
             try{
                 // se obtienen los datos del usuario desde el servidor
                 const response = await fetch('/api/perfil');
 
-        if (!response.ok){
-            if (isDev()) {
-              console.warn('Dev mode: perfil no disponible, se omite redirección al login');
-            } else {
-              window.location.href = 'login.html';
-              return;
+                if (!response.ok){
+                    if (isDev()) {
+                        console.warn('Dev mode: perfil no disponible, se omite redirección al login');
+                    } else {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                } else {
+                    const usuario = await response.json();
+                    if (usuario.nombre && usuario.apellido){
+                        document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                    }
+                    verificarAdmin(usuario.rol);
+                }
+            } catch (error){
+                console.error('Error de autenticación: ', error);
+                if (!isDev()) window.location.href = 'login.html';
             }
-        } else {
-          const usuario = await response.json();
-          if (usuario.nombre && usuario.apellido){
-              document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
-          }
-          verificarAdmin(usuario.rol);
-        }
-    } catch (error){
-        console.error('Error de autenticación: ', error);
-        if (!isDev()) window.location.href = 'login.html';
-    }
         });
 
         // PERMISOS
@@ -204,85 +331,118 @@
             }
         }
 
-    async function logout() {
-      try { await fetch ('/logout', {method: 'POST'}); } catch(e) {}
-      if (isDev()) {
-        console.log('Sesión cerrada (dev), permaneces en la página');
-      } else {
-        window.location.href = 'login.html'
-      }
-    }
-        
-    // Cargar los clientes desde el backend
-    async function cargarClientes() {
-      try {
-        const response = await fetch('http://localhost:8090/get-clientes', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-      });
-        const data = await response.json();
-
-        if (response.ok) {
-          const clientesBody = document.getElementById('clientesBody');
-          clientesBody.innerHTML = ''; 
-
-          // Iterar sobre los datos de los clientes y mostrarlos en la tabla
-          data.clientes.forEach(cliente => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td>${cliente.nombre}</td>
-              <td>${cliente.apellido}</td>
-              <td>${cliente.correo}</td>
-              <td>
-                <button class="btn btn-primary")" disabled><i class="fas fa-eye"></i></button>
-            `;
-            clientesBody.appendChild(tr);
-          });
-        } else {
-          alert('Error al cargar los clientes');
+        async function logout() {
+            try { await fetch ('/logout', {method: 'POST'}); } catch(e) {}
+            if (isDev()) {
+                console.log('Sesión cerrada (dev), permaneces en la página');
+            } else {
+                window.location.href = 'login.html'
+            }
         }
-      } catch (error) {
-        console.error('Error fetching clients:', error);
-        alert('Error al obtener los clientes');
-      }
-    }
 
-    // Función para eliminar un cliente
-    async function eliminarCliente(id) {
-      if (confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
-        try {
-          const response = await fetch(`http://localhost:8090/eliminarCliente/${id}`, {
-            method: 'DELETE'
-          });
+        // Cargar los clientes desde el backend
+        async function cargarClientes() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const clientesTable = document.getElementById('clientesTable');
+            const emptyState = document.getElementById('emptyState');
+            const totalClientes = document.getElementById('totalClientes');
+            
+            loadingSpinner.style.display = 'block';
+            clientesTable.style.display = 'none';
+            emptyState.style.display = 'none';
+            
+            try {
+                const response = await fetch('http://localhost:8090/get-clientes', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                const data = await response.json();
 
-          if (!response.ok) {
-            throw new Error('Error al eliminar el cliente');
-          }
+                loadingSpinner.style.display = 'none';
 
-          alert('Cliente eliminado con éxito');
-          
-          // Recargar los clientes después de la eliminación
-          cargarClientes();
-        } catch (error) {
-          console.error('Error al eliminar el cliente:', error);
-          alert('Hubo un error al eliminar el cliente.');
+                if (response.ok && data.clientes && data.clientes.length > 0) {
+                    const clientesBody = document.getElementById('clientesBody');
+                    clientesBody.innerHTML = ''; 
+
+                    // Actualizar contador
+                    totalClientes.textContent = data.clientes.length;
+
+                    // Iterar sobre los datos de los clientes y mostrarlos en la tabla
+                    data.clientes.forEach((cliente, index) => {
+                        const tr = document.createElement('tr');
+                        tr.style.animationDelay = `${index * 0.1}s`;
+                        tr.classList.add('fade-in');
+                        tr.innerHTML = `
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                    <strong>${cliente.nombre}</strong>
+                                </div>
+                            </td>
+                            <td>${cliente.apellido}</td>
+                            <td>
+                                <i class="fas fa-envelope text-muted me-2"></i>
+                                ${cliente.correo}
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-action btn-view" disabled title="Ver detalles del cliente">
+                                    <i class="fas fa-eye me-1"></i>Ver
+                                </button>
+                            </td>
+                        `;
+                        clientesBody.appendChild(tr);
+                    });
+                    
+                    clientesTable.style.display = 'table';
+                } else {
+                    totalClientes.textContent = '0';
+                    emptyState.style.display = 'block';
+                }
+            } catch (error) {
+                loadingSpinner.style.display = 'none';
+                console.error('Error fetching clients:', error);
+                alert('Error al obtener los clientes');
+            }
         }
-      }
-    }
 
-    function editarCliente(id) {
-      window.location.href = `editar.html?id=${id}`;
-    }
+        // Función para eliminar un cliente
+        async function eliminarCliente(id) {
+            if (confirm('¿Estás seguro de que deseas eliminar este cliente?')) {
+                try {
+                    const response = await fetch(`http://localhost:8090/eliminarCliente/${id}`, {
+                        method: 'DELETE'
+                    });
 
-    window.onload = function() {
-      verificarAdmin();
-      cargarClientes();
-    };
-    window.onload = () => {
-      [verificarAdmin, cargarClientes].forEach(func => func());
-    };
-  </script>
+                    if (!response.ok) {
+                        throw new Error('Error al eliminar el cliente');
+                    }
+
+                    alert('Cliente eliminado con éxito');
+                    
+                    // Recargar los clientes después de la eliminación
+                    cargarClientes();
+                } catch (error) {
+                    console.error('Error al eliminar el cliente:', error);
+                    alert('Hubo un error al eliminar el cliente.');
+                }
+            }
+        }
+
+        function editarCliente(id) {
+            window.location.href = `editar.html?id=${id}`;
+        }
+
+        window.onload = function() {
+            verificarAdmin();
+            cargarClientes();
+        };
+        window.onload = () => {
+            [verificarAdmin, cargarClientes].forEach(func => func());
+        };
+    </script>
 </body>
 </html>
