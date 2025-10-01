@@ -36,12 +36,17 @@ async function registrarAuditoria(trabajadorId, nombreUsuario, accion, direccion
 const obtenerAuditoriaPorUsuario = async (req, res) => {
     try {
         const usuarioId = req.params.usuarioId || req.query.usuarioId;
+        const accion = req.query.accion;
+        
         const db = await conexion_Mongo();
         const auditoriaCollection = db.collection('auditoria_logs');
 
         let query = {};
         if(usuarioId){
             query.trabajadorId = isNaN(usuarioId)? usuarioId: parseInt(usuarioId);
+        }
+        if(accion){
+            query.accion = accion;
         }
 
         // Buscamos todos los logs del usuario y los ordenamos por fecha, del más reciente al más antiguo
