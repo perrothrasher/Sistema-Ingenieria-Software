@@ -1,5 +1,6 @@
 // Importar la conexión a la base de datos
 const connection = require('./db_conection.js'); 
+const { registrarAuditoria } = require('./auditoria.js');
 
 function registrarDotacion(req, res){
   const { anio, mes, TipoContrato_id, cantidad_personal, carga_horaria } = req.body;
@@ -16,6 +17,13 @@ function registrarDotacion(req, res){
         console.error('Error en la consulta SQL:', err);
         return res.status(500).json({ message: 'Error al registrar la dotación', error: err.message });
       }
+      // Registrar evento en la auditoría
+        const {id, nombre, apellido, rol} = req.usuario;
+        const ip = req.ip || req.connection.remoteAddress;
+        registrarAuditoria(
+            id, `${nombre} ${apellido}`, 'Dotación Creada', ip, rol,
+            {dotacionId: results.insertId, mes: req.body.mes, anio: req.body.anio} // Datos adicionales del evento
+        );
       res.status(200).json({ message: 'Dotación registrada exitosamente' });
     }
   );
@@ -106,6 +114,13 @@ function editarDotacion(req, res){
                 return res.status(500).json({ message: 'Error al actualizar la dotación', error: err.message });
             }
             console.log('Dotación actualizada:', results);
+            // Registrar evento en la auditoría
+            const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+            const ip = req.ip || req.connection.remoteAddress;
+            registrarAuditoria(
+                userId, `${userNombre} ${userApellido}`, 'Dotación Editada', ip, rol,
+                {dotacionIdEditada: req.params.id} // Datos adicionales del evento
+            );
             res.status(200).json({ message: 'Dotación actualizada exitosamente' });
         }
     );

@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const connection = require('./db_conection.js'); 
+const { registrarAuditoria } = require('./auditoria.js');
 
 async function registrarTrabajador(req, res) {
   const { nombre, apellido, rut, direccion, comuna,  correo, telefono, contrasena, rol, region_id, codigo_postal, usuario } = req.body;
@@ -62,6 +63,14 @@ async function registrarTrabajador(req, res) {
           return res.status(500).json({ message: 'Error al registrar trabajador: ' + err.message });
         }
         console.log('Trabajador insertado con ID:', resultTrabajador.insertId);
+        
+        // Registrar evento en la auditoría
+        const {id, nombre, apellido, rol} = req.usuario;
+        const ip = req.ip || req.connection.remoteAddress;
+        registrarAuditoria(
+          id, `${nombre} ${apellido}`, 'Trabajador Creado', ip, rol,
+          {nuevoTrabajadorId: resultTrabajador.insertId, nuevoUsuario: req.body.usuario} // Datos adicionales del evento
+        )
       });
       res.status(201).json({ message: 'Trabajador registrado exitosamente' });
     });

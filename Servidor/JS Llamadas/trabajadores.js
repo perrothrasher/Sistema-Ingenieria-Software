@@ -1,5 +1,6 @@
 const connection = require('./db_conection.js'); 
 const bcrypt = require('bcryptjs');
+const { registrarAuditoria } = require('./auditoria.js');
 
 // Ruta para obtener todos los trabajadores.
 function obtenerTrabajadores(req, res){
@@ -84,6 +85,14 @@ function editarTrabajadores(req, res){
                 return res.status(404).json({ message: 'Trabajador no encontrado' });
             }
 
+            // Registrar evento en la auditoría
+            const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+            const ip = req.ip || req.connection.remoteAddress;
+            registrarAuditoria(
+              userId, `${userNombre} ${userApellido}`, 'Trabajador Editado', ip, rol,
+              {trabajadorIdEditado: req.params.id} // Datos adicionales del evento
+            );
+
             res.status(200).json({ message: 'Trabajador actualizado con éxito' });
         }
     );
@@ -105,6 +114,13 @@ function eliminarTrabajadores(req, res){
         if (err){
             return res.status(500).json({ message: 'Error al eliminar el trabajador' });
         }
+        // Registrar evento en la auditoría
+        const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+        const ip = req.ip || req.connection.remoteAddress;
+        registrarAuditoria(
+          userId, `${userNombre} ${userApellido}`, 'Trabajador Eliminado', ip, rol,
+          {trabajadorIdEliminado: id} // Datos adicionales del evento
+        );
         res.status(200).json({ message: 'Trabajador eliminado exitosamente' });
     });
 };

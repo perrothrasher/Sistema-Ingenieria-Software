@@ -43,6 +43,17 @@ app.use('/api/archivos', fileRoutes);
 // RUTAS DE AUDITORÍA 
 /////////////////////////////////////////////////
 app.use('/api/auditoria', auditoriaRoutes);
+//TRABAJADORES
+app.post('/register', verificarToken, registrarTrabajador);
+app.put('/editarTrabajador/:id', verificarToken, editarTrabajadores);
+app.delete('/eliminarTrabajador/:id', verificarToken, eliminarTrabajadores);
+//CLIENTES
+app.post('/register-cliente', verificarToken, registrarCliente);
+app.put('/editarCliente/:id', verificarToken, editarClientes);
+app.delete('/eliminarCliente/:id', verificarToken, eliminarCliente);
+//DOTACIÓN
+app.post('/registrar-dotacion', verificarToken, registrarDotacion);
+app.put('/editarDotacion/:id', verificarToken, editarDotacion);
 /////////////////////////////////////////////////
 
 // LOGIN

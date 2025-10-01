@@ -1,4 +1,5 @@
 const connection = require('./db_conection.js'); 
+const { registrarAuditoria } = require('./auditoria.js');
 
 // Ruta para registrar un cliente.
 function registrarCliente(req, res){
@@ -45,6 +46,15 @@ function registrarCliente(req, res){
             return res.status(500).json({ message: 'Error al registrar cliente: ' + err.message });
           }
           console.log('Cliente insertado con ID:', resultCliente.insertId);
+
+          // Registrar evento en la auditoría
+          const {id, nombre, apellido, rol} = req.usuario;
+          const ip = req.ip || req.connection.remoteAddress;
+          registrarAuditoria(
+            id, `${nombre} ${apellido}`, 'Cliente Creado', ip, rol,
+            {clienteId: resultCliente.insertId} // Datos adicionales del evento
+          )
+
         });
         res.status(201).json({ message: 'Cliente registrado exitosamente' });
       });
@@ -140,6 +150,14 @@ function editarClientes(req, res){
         return res.status(404).json({ message: 'Cliente no encontrado' });
       }
 
+      // Registrar evento en la auditoría
+      const{id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+      const ip = req.ip || req.connection.remoteAddress;
+      registrarAuditoria(
+        userId, `${userNombre} ${userApellido}`, 'Cliente Editado', ip, rol,
+        {clienteId: id} // Datos adicionales del evento
+      );
+
       res.status(200).json({ message: 'Cliente actualizado con éxito' });
     }
   );
@@ -162,6 +180,13 @@ function eliminarCliente(req, res){
     if (err) {
       return res.status(500).json({ message: 'Error al eliminar el cliente' });
     }
+    // Registrar evento en la auditoría
+    const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+    const ip = req.ip || req.connection.remoteAddress;
+    registrarAuditoria(
+      userId, `${userNombre} ${userApellido}`, 'Cliente Eliminado', ip, rol,
+      {clienteId: id} // Datos adicionales del evento
+    );
     res.status(200).json({ message: 'Cliente eliminado exitosamente' });
   });
 };
