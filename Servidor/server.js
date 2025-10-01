@@ -17,6 +17,9 @@ app.use(express.json());
 app.use(cookieParser());
 /////////////////////////////////////////////////
 
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017';
+const MONGO_DB  = process.env.MONGO_DB  || 'IngenieriaSoftware';
+const PUERTO    = process.env.PORT      || 8090;
 
 /////////////////////////////////////////////////
 const corsOptions = require('./JS Llamadas/cors_config.js'); // Configuración de CORS.
@@ -136,8 +139,8 @@ app.put('/historicos/:tipo/:id', actualizarHistorico);          // CU19 (editar)
 /////////////////////////////////////////////////
 
 // ===== NUEVO: montar rutas de predicción SIN tocar lo demás =====
-//const prediccionRouter = require('./prediccion'); // <- nuevo archivo con la lógica de IA
-//app.use('/prediccion', prediccionRouter);
+const prediccionRouter = require('./JS Llamadas/prediccion.js'); // <- nuevo archivo con la lógica de IA
+app.use('/prediccion', prediccionRouter);
 // ================================================================
 
 const httpsOptions ={
