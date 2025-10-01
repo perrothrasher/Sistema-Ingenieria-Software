@@ -1,13 +1,12 @@
 // JS Llamadas/prediccion.js
+// Lee Excels desde GridFS (bucket 'archivos') y proyecta mes siguiente
+
 const { Router } = require('express');
-const fs = require('fs-extra');
-const path = require('path');
 const ExcelJS = require('exceljs');
+const { GridFSBucket } = require('mongodb');
 
 const router = Router();
 
-// Carpeta con tus Excels
-const CARPETA_EXCELS = path.join(__dirname, '..', 'ML', 'Excels');
 // Colección donde se guarda el RESUMEN mensual
 const COLECCION_MESES = 'venta_ingreso_usuario_resumen';
 
@@ -20,7 +19,7 @@ const mapaMes = {
 
 // Detecta mes y año en nombres tipo "Enero 2025 Ventas e Ingreso por Usuario.xlsx"
 function extraerMesAnioDesdeNombre(nombre) {
-  const base = nombre.toLowerCase().replaceAll('_',' ');
+  const base = String(nombre || '').toLowerCase().replaceAll('_',' ');
   const partes = base.split(/\s+/);
   let mes=null, anio=null;
   for (let i=0;i<partes.length;i++){
@@ -32,9 +31,10 @@ function extraerMesAnioDesdeNombre(nombre) {
 }
 
 // Lee hoja 0 y saca un resumen robusto (sin depender de nombres de columnas)
-async function resumirExcel(rutaArchivo){
+// Ahora recibe un Buffer (archivo descargado desde GridFS)
+async function resumirExcelDesdeBuffer(buffer){
   const libro = new ExcelJS.Workbook();
-  await libro.xlsx.readFile(rutaArchivo);
+  await libro.xlsx.load(buffer);
   const hoja = libro.worksheets[0];
   if (!hoja) return { filas_utiles:0, suma_numeros:0 };
 
@@ -42,7 +42,7 @@ async function resumirExcel(rutaArchivo){
 
   hoja.eachRow((fila, n) => {
     if (n===1) return; // saltar cabecera
-    const hayDato = fila.values?.some(v => v!==null && v!==undefined && v!=='');
+    const hayDato = fila.values?.some(v => v!==null && v!==undefined && String(v).trim()!=='');
     if (!hayDato) return;
 
     filas_utiles++;
@@ -68,7 +68,7 @@ async function resumirExcel(rutaArchivo){
   return { filas_utiles, suma_numeros };
 }
 
-// Regla simple de proyección (promedio móvil + tendencia)
+// Proyección simple (promedio móvil + tendencia)
 function proyectarSiguienteMes(ordenAsc){
   if (!ordenAsc.length) return { ok:false, error:'Sin datos entrenados' };
 
@@ -118,50 +118,71 @@ function proyectarSiguienteMes(ordenAsc){
   };
 }
 
+// ---------- Helpers GridFS ----------
+
+// Descarga el archivo completo de GridFS a Buffer
+async function descargarArchivoGridFS(db, fileId) {
+  const bucket = new GridFSBucket(db, { bucketName: 'archivos' });
+  const chunks = [];
+  return await new Promise((resolve, reject) => {
+    bucket.openDownloadStream(fileId)
+      .on('data', (d) => chunks.push(d))
+      .on('error', reject)
+      .on('end', () => resolve(Buffer.concat(chunks)));
+  });
+}
+
+// Lista de archivos del bucket 'archivos.files' (puedes filtrar por patrón si quieres)
+async function listarArchivosExcel(db) {
+  const colFiles = db.collection('archivos.files');
+  // Filtra solo .xlsx (termina en .xlsx)
+  return await colFiles.find({ filename: { $regex: /\.xlsx$/i } }).toArray();
+}
+
 // =========== ENDPOINTS ===========
 
-// POST /prediccion/entrenar  -> lee Excels y guarda resumen mensual en Mongo
+// POST /prediccion/entrenar  -> lee Excels desde GridFS y guarda resumen mensual en Mongo
 router.post('/entrenar', async (req, res) => {
   try{
     await req.app.locals.mongoReady;
     const db = req.app.locals.getDB();
-    const col = db.collection(COLECCION_MESES);
+    const colResumen = db.collection(COLECCION_MESES);
 
-    await fs.ensureDir(CARPETA_EXCELS);
-    const archivos = (await fs.readdir(CARPETA_EXCELS))
-      .filter(f => f.toLowerCase().endsWith('.xlsx'));
-
+    const archivos = await listarArchivosExcel(db);
     if (!archivos.length){
-      return res.status(400).json({ ok:false, error:'No hay .xlsx en ML/Excels' });
+      return res.status(400).json({ ok:false, error:'No hay .xlsx en GridFS (archivos.files)' });
     }
 
-    for (const nombre of archivos){
-      const info = extraerMesAnioDesdeNombre(nombre);
+    for (const file of archivos){
+      const info = extraerMesAnioDesdeNombre(file.filename);
       if (!info){
-        console.warn(`[Entrenar] No pude extraer mes/año desde: ${nombre}`);
+        console.warn(`[Entrenar] No pude extraer mes/año desde: ${file.filename}`);
         continue;
       }
-      const ruta = path.join(CARPETA_EXCELS, nombre);
-      const { filas_utiles, suma_numeros } = await resumirExcel(ruta);
+
+      const buffer = await descargarArchivoGridFS(db, file._id);
+      const { filas_utiles, suma_numeros } = await resumirExcelDesdeBuffer(buffer);
+
       const produccion_total = (suma_numeros>0 ? suma_numeros : filas_utiles);
 
       const doc = {
         anio: info.anio,
         mes:  info.mes,
-        archivo: nombre,
+        archivo: file.filename,
+        fileId: file._id,
         filas_utiles,
         produccion_total,
         updatedAt: new Date()
       };
 
-      await col.updateOne(
+      await colResumen.updateOne(
         { anio: info.anio, mes: info.mes },
         { $set: doc },
         { upsert: true }
       );
     }
 
-    res.json({ ok:true, mensaje:'Entrenamiento completado' });
+    res.json({ ok:true, mensaje:'Entrenamiento completado desde GridFS' });
   } catch(e){
     console.error('[Entrenar] ', e);
     res.status(500).json({ ok:false, error:e.message });
