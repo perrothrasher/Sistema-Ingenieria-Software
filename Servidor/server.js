@@ -24,8 +24,10 @@ app.use(cors(corsOptions));
 const registrarTrabajador = require('./JS Llamadas/registrar_trabajador.js'); // Registrar trabajador
 const login = require('./JS Llamadas/login.js'); // Iniciar sesión
 const verificarToken = require('./JS Llamadas/authMiddleware.js');
+const { registrarAuditoria } = require('./JS Llamadas/auditoria.js');
+const auditoriaRoutes = require('./JS Llamadas/auditoria_rutas.js');
 const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente } = require('./JS Llamadas/cliente.js');
-const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores } = require('./JS Llamadas/trabajadores.js'); 
+const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores, listarTrabajadores } = require('./JS Llamadas/trabajadores.js'); 
 const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion } = require('./JS Llamadas/dotacion.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
@@ -38,6 +40,11 @@ const fileRoutes = require('./JS Llamadas/GridFS_rutas.js');
 app.use('/api/archivos', fileRoutes);
 /////////////////////////////////////////////////
 
+// RUTAS DE AUDITORÍA 
+/////////////////////////////////////////////////
+app.use('/api/auditoria', auditoriaRoutes);
+/////////////////////////////////////////////////
+
 // LOGIN
 /////////////////////////////////////////////////
 // Ruta para iniciar sesión
@@ -46,7 +53,21 @@ app.post('/login', login);
 app.get('/api/perfil', verificarToken, (req, res) => {
   res.json(req.usuario);
 });
-app.post('/logout', (req, res) =>{
+app.post('/logout', verificarToken, (req, res) => {
+  try{
+    const ip = req.ip || req.connection.remoteAddress;
+    const usuario = req.usuario;
+
+    registrarAuditoria(
+      usuario.id,
+      `${usuario.nombre} ${usuario.apellido}`,
+      'Cierre de sesión',
+      ip,
+      usuario.rol
+    );
+  }catch(error){
+    console.error('Error registrando auditoría de cierre de sesión:', error);
+  }
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -68,6 +89,8 @@ app.get('/get-trabajadores', obtenerTrabajadores);
 app.put('/editarTrabajador/:id', editarTrabajadores);
 // Ruta para eliminar un trabajador
 app.delete('/eliminarTrabajador/:id', eliminarTrabajadores);
+// Ruta para listar trabajadores (id, nombre, apellido)
+app.get('/api/usuarios/lista', verificarToken, listarTrabajadores);
 /////////////////////////////////////////////////
 
 // CLIENTES

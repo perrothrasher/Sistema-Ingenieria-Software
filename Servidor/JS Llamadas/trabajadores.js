@@ -109,8 +109,26 @@ function eliminarTrabajadores(req, res){
     });
 };
 
+function listarTrabajadores(req, res){
+    const sql = `
+        SELECT t.id, p.nombre, p.apellido, r.nombre AS rol
+        FROM Trabajador t
+        JOIN Persona p ON t.persona_id = p.id
+        JOIN Rol r ON t.rol_id = r.id
+        ORDER BY p.nombre ASC
+    `;
+    connection.query(sql, (err, results) => {
+        if (err) {
+            console.error("Error al listar nombres de usuarios:", err);
+            return res.status(500).json({ message: "Error interno del servidor." });
+        }
+        res.status(200).json(results);
+    });
+};
+
 module.exports = {
     obtenerTrabajadores,
     editarTrabajadores,
-    eliminarTrabajadores
-}
+    eliminarTrabajadores,
+    listarTrabajadores
+};

@@ -8,16 +8,61 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    
     <style>
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
             overflow-x: hidden;
         }
-        
-        
-        
+        .timeline { 
+            list-style: none; 
+            padding: 20px 0 20px; 
+            position: relative; 
+        }
+        .timeline:before {
+            top: 0; bottom: 0; 
+            position: absolute; 
+            content: " ";
+            width: 3px; 
+            background-color: #eeeeee; 
+            left: 50px; 
+            margin-left: -1.5px;
+        }
+        .timeline-item { 
+            margin-bottom: 20px; 
+            position: relative; 
+        }
+        .timeline-icon {
+            position: absolute; 
+            top: 0; left: 50px;
+            width: 40px; 
+            height: 40px;
+            margin-left: -20px;
+            background-color: #667eea;
+            color: white; 
+            border-radius: 50%;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+        }
+        .timeline-body {
+            margin-left: 90px;
+            background: white; 
+            border-radius: 6px;
+            padding: 20px; 
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .timeline-body:before {
+            content: " "; 
+            height: 0; 
+            width: 0; 
+            position: absolute;
+            top: 15px; 
+            right: 100%;
+            border: 10px solid transparent; 
+            border-right-color: white;
+        }
         .welcome-section {
             background: white;
             border-radius: 15px;
@@ -238,8 +283,6 @@
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="prueba_SubirArchivos2.html">
                                     <i class="fas fa-users"></i> Subir Archivos</a></li>
-                                <li><a class="dropdown-item" href="ver_auditoria.html">
-                                    <i class="fas fa-users"></i> Visualizacion de Auditoría</a></li>
                             </ul>
                         </li>
                     </ul>
@@ -258,142 +301,32 @@
             </nav>
         </div>
     </div>
-
-    <!-- Main Content -->
-    <div class="container-fluid mt-4">
-        <!-- Welcome Section -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="welcome-section fade-in">
-                    <h1 class="welcome-title">
-          <img src="assets/totalcheck-logo.png" alt="TotalCheck Logo"><br></i>Panel de Control
-                    </h1>
-                    <p class="lead text-muted mb-0">
-                        Bienvenido al sistema de gestión. Selecciona una opción para comenzar.
-                    </p>
+    <div class="container mt-5">
+        <h1 class="mb-4">Visor de Auditoría del Sistema</h1>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row align-items-end">
+                    <div class="row align-items-end">
+                        <div class="col-md-6">
+                            <label for="user-select" class="form-label fw-bold">Seleccionar Usuario</label>
+                            <select id="user-select" class="form-select">
+                                <option selected disabled>Cargando usuarios...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="user-role-display" class="h5 text-muted"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Stats -->
-        <div class="row mb-4">
-            <div class="col-md-3 mb-3">
-                <div class="stats-card fade-in" style="animation-delay: 0.1s;">
-                    <div class="stats-number">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <div class="stats-label">Gestión de Personal</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="stats-card fade-in" style="animation-delay: 0.2s;">
-                    <div class="stats-number">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="stats-label">Análisis de Datos</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="stats-card fade-in" style="animation-delay: 0.3s;">
-                    <div class="stats-number">
-                        <i class="fas fa-cogs"></i>
-                    </div>
-                    <div class="stats-label">Configuración</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="stats-card fade-in" style="animation-delay: 0.4s;">
-                    <div class="stats-number">
-                        <i class="fas fa-shield-alt"></i>
-                    </div>
-                    <div class="stats-label">Sistema Seguro</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Action Cards -->
-        <div class="row">
-            <div class="col-lg-6 col-xl-4 mb-4">
-                <button class="action-card primary fade-in" onclick="location.href='registro_cliente.html'" style="animation-delay: 0.5s;">
-                    <div class="action-icon">
-                        <i class="fas fa-user-plus"></i>
-                    </div>
-                    <div class="action-title">Registrar Cliente</div>
-                    <p class="action-description">Agregar nuevos clientes al sistema</p>
-                </button>
-            </div>
-            
-            <div class="col-lg-6 col-xl-4 mb-4">
-                <button class="action-card success fade-in" onclick="location.href='registro2.html'" style="animation-delay: 0.6s;">
-                    <div class="action-icon">
-                        <i class="fas fa-user-tie"></i>
-                    </div>
-                    <div class="action-title">Registrar Trabajador</div>
-                    <p class="action-description">Incorporar nuevos empleados</p>
-                </button>
-            </div>
-            
-            <div class="col-lg-6 col-xl-4 mb-4">
-                <button class="action-card warning fade-in" onclick="location.href='editar_cliente.html'" style="animation-delay: 0.7s;">
-                    <div class="action-icon">
-                        <i class="fas fa-user-edit"></i>
-                    </div>
-                    <div class="action-title">Editar Cliente</div>
-                    <p class="action-description">Modificar información de clientes</p>
-                </button>
-            </div>
-            
-            <div class="col-lg-6 col-xl-4 mb-4">
-                <button class="action-card info fade-in" onclick="location.href='editar_trabajador.html'" style="animation-delay: 0.8s;">
-                    <div class="action-icon">
-                        <i class="fas fa-user-cog"></i>
-                    </div>
-                    <div class="action-title">Editar Trabajador</div>
-                    <p class="action-description">Actualizar datos de empleados</p>
-                </button>
-            </div>
-            
-            <div class="col-lg-6 col-xl-4 mb-4">
-                <button class="action-card secondary fade-in" onclick="location.href='carga_datos_historicos.html'" style="animation-delay: 0.9s;">
-                    <div class="action-icon">
-                        <i class="fas fa-upload"></i>
-                    </div>
-                    <div class="action-title">Cargar Datos Históricos</div>
-                    <p class="action-description">Importar información histórica</p>
-                </button>
-            </div>
-            
-            <div class="col-lg-6 col-xl-4 mb-4">
-                <button class="action-card dark fade-in" onclick="location.href='visualizar_datos_historicos.html'" style="animation-delay: 1.0s;">
-                    <div class="action-icon">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="action-title">Visualizar Datos Históricos</div>
-                    <p class="action-description">Analizar tendencias y patrones</p>
-                </button>
-            </div>
-            
-            <div class="col-lg-6 col-xl-4 mb-4">
-                <button class="action-card prediction fade-in" onclick="location.href='predicción.html'" style="animation-delay: 1.1s;">
-                    <div class="action-icon">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <div class="action-title">Predicción</div>
-                    <p class="action-description">Generar predicciones de dotación de personal</p>
-                </button>
-            </div>
-            
-            <div class="col-lg-6 col-xl-4 mb-4">
-                <button class="action-card orange fade-in" onclick="location.href='historial.html'" style="animation-delay: 1.2s;">
-                    <div class="action-icon">
-                        <i class="fas fa-clock-rotate-left"></i>
-                    </div>
-                    <div class="action-title">Ver Historial</div>
-                    <p class="action-description">Consultar actividades anteriores</p>
-                </button>
-            </div>
+        <div id="timeline-container">
+            <p class="text-muted text-center">Seleccione un usuario para ver su línea de tiempo de actividad.</p>
         </div>
     </div>
+
 
     <script>
         function isDev(){
@@ -474,6 +407,88 @@
             } catch (e) {}
             window.location.replace('login.html');
         }
+        
+        const userSelect = document.getElementById('user-select');
+        const timelineContainer = document.getElementById('timeline-container');
+        const userRoleDisplay = document.getElementById('user-role-display');
+
+        let listaDeUsuarios = [];
+
+        // Al cargar la página, llenamos el selector de usuarios
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/usuarios/lista');
+                const data = await response.json();
+                if (!response.ok) throw new Error('No se pudo cargar la lista de usuarios.');
+
+                listaDeUsuarios = data;
+                console.log('Usuarios cargados:', listaDeUsuarios);
+                
+                userSelect.innerHTML = '<option selected disabled>-- Seleccione un usuario --</option>';
+                listaDeUsuarios.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = `${user.id}- ${user.nombre} ${user.apellido}`;
+                    userSelect.appendChild(option);
+                });
+
+            } catch (error) {
+                userSelect.innerHTML = `<option selected disabled>${error.message}</option>`;
+            }
+        });
+
+        // Cuando el usuario selecciona a alguien, cargamos su línea de tiempo
+        userSelect.addEventListener('change', async () => {
+            const userId = userSelect.value;
+            if (!userId) return;
+            
+            const usuarioSeleccionado = listaDeUsuarios.find(user => user.id == userId);
+            if (usuarioSeleccionado) {
+            // Mostramos el rol en el nuevo elemento HTML
+            userRoleDisplay.innerHTML = `<strong>Rol:</strong> <span class="badge bg-primary">${usuarioSeleccionado.rol}</span>`;
+            } else {
+                userRoleDisplay.textContent = '';
+            }
+
+            timelineContainer.innerHTML = '<p class="text-center">Cargando registros...</p>';
+
+            try {
+                const response = await fetch(`/api/auditoria/${userId}`);
+                if (!response.ok) throw new Error('No se pudo cargar la auditoría para este usuario.');
+
+                const logs = await response.json();
+                
+                if (logs.length === 0) {
+                    timelineContainer.innerHTML = '<p class="text-muted text-center">Este usuario no tiene registros de actividad.</p>';
+                    return;
+                }
+
+                // Construimos la línea de tiempo
+                let timelineHTML = '<ul class="timeline">';
+                logs.forEach(log => {
+                    const icon = log.accion.includes('INICIO') ? 'fa-sign-in-alt' : 'fa-sign-out-alt';
+                    timelineHTML += `
+                        <li class="timeline-item">
+                            <div class="timeline-icon"><i class="fas ${icon}"></i></div>
+                            <div class="timeline-body">
+                                <h5 class="fw-bold">${log.accion.replace('_', ' ')}</h5>
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-clock me-2"></i>${new Date(log.timestamp).toLocaleString()}
+                                </p>
+                                <p class="mb-0">
+                                    <i class="fas fa-network-wired me-2"></i>IP: ${log.direccionIp}
+                                </p>
+                            </div>
+                        </li>
+                    `;
+                });
+                timelineHTML += '</ul>';
+                timelineContainer.innerHTML = timelineHTML;
+
+            } catch (error) {
+                timelineContainer.innerHTML = `<p class="alert alert-danger">${error.message}</p>`;
+            }
+        });
     </script>
 </body>
 </html>

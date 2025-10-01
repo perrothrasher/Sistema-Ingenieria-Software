@@ -59,8 +59,9 @@ function login(req, res){
       registrarAuditoria(
         trabajador.id,
         `${trabajador.nombre} ${trabajador.apellido}`,
-        'INICIO_SESION_EXITOSO', 
-        ip
+        'Inicio de Sesión', 
+        ip,
+        trabajador.rol
       );
 
       // Envio cookie a HttpOnly
