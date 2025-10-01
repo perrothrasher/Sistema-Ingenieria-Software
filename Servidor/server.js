@@ -35,6 +35,7 @@ const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesP
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
+const conexion_Mongo = require('./JS Llamadas/mongo_connection.js');
 /////////////////////////////////////////////////
 
 // RUTAS PARA GESTIÓN DE ARCHIVOS (SUBIDA Y DESCARGA)
@@ -157,6 +158,13 @@ https.createServer(httpsOptions, app).listen(puerto, () =>{
   console.log(`Accede en: https://localhost:${puerto}/login.html`);
 })
 
+app.locals.mongoReady = (async () => {
+  const db = await conexion_Mongo();     // obtiene la DB desde tu helper
+  app.locals.getDB = () => db;           // para que los routers hagan req.app.locals.getDB()
+  return db;
+})();
+
+process.on('SIGINT', () => process.exit(0)); // opcional: tu helper mantiene el cliente
 /* 
 app.listen(puerto, () => {
   //console.log('Servidor en ejecución en el puerto ' + puerto);
