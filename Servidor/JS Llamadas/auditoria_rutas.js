@@ -7,6 +7,6 @@ const verificarToken = require('./authMiddleware.js');
 router.use(verificarToken);
 
 // GET /api/auditoria/:usuarioId
-router.get('/:usuarioId', obtenerAuditoriaPorUsuario);
+router.get('/', obtenerAuditoriaPorUsuario);
 
 module.exports = router;

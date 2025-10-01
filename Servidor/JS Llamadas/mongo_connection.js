@@ -12,7 +12,7 @@ const DB_Nombre = process.env.MongoDB_NAME;
 if (!uri) {
   throw new Error('❌ No se encontró la variable MongoDB en el archivo .env');
 } else{
-    console.log('✅ conexion MongoDB OK');
+    console.log('Conexión exitosa a MongoDB');
 }
 
 const client = new MongoClient(uri);
@@ -20,7 +20,6 @@ const client = new MongoClient(uri);
 async function conexion_Mongo() {
   try {
     await client.connect();
-    console.log("Conexión exitosa a MongoDB");
     return client.db(DB_Nombre); // Retorna la BD lista para usar
   } catch (err) {
     console.error('Error conectando a MongoDB:', err);

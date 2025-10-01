@@ -35,16 +35,17 @@ async function registrarAuditoria(trabajadorId, nombreUsuario, accion, direccion
 
 const obtenerAuditoriaPorUsuario = async (req, res) => {
     try {
-        const { usuarioId } = req.params;
-        if (!usuarioId) {
-            return res.status(400).json({ message: 'Se requiere el ID del usuario.' });
-        }
-
+        const usuarioId = req.params.usuarioId || req.query.usuarioId;
         const db = await conexion_Mongo();
         const auditoriaCollection = db.collection('auditoria_logs');
 
+        let query = {};
+        if(usuarioId){
+            query.trabajadorId = isNaN(usuarioId)? usuarioId: parseInt(usuarioId);
+        }
+
         // Buscamos todos los logs del usuario y los ordenamos por fecha, del más reciente al más antiguo
-        const logs = await auditoriaCollection.find({ trabajadorId: parseInt(usuarioId) })
+        const logs = await auditoriaCollection.find(query)
                                               .sort({ timestamp: -1 })
                                               .toArray();
 

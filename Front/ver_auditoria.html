@@ -11,57 +11,34 @@
     <style>
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            background-color: #f8f9fa;
             min-height: 100vh;
             overflow-x: hidden;
         }
-        .timeline { 
-            list-style: none; 
-            padding: 20px 0 20px; 
-            position: relative; 
+        .main-card {
+            background-color: white;
+            border: none;
+            border-radius: .75rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        .timeline:before {
-            top: 0; bottom: 0; 
-            position: absolute; 
-            content: " ";
-            width: 3px; 
-            background-color: #eeeeee; 
-            left: 50px; 
-            margin-left: -1.5px;
+        .card-header-custom {
+            background-color: #fff;
+            border-bottom: 1px solid #dee2e6;
+            padding: 1.5rem;
         }
-        .timeline-item { 
-            margin-bottom: 20px; 
-            position: relative; 
+        .table-hover tbody tr:hover {
+            background-color: #f1f3f5;
         }
-        .timeline-icon {
-            position: absolute; 
-            top: 0; left: 50px;
-            width: 40px; 
-            height: 40px;
-            margin-left: -20px;
-            background-color: #667eea;
-            color: white; 
-            border-radius: 50%;
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
+        .table th {
+            font-weight: 600;
+            color: #495057;
         }
-        .timeline-body {
-            margin-left: 90px;
-            background: white; 
-            border-radius: 6px;
-            padding: 20px; 
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            position: relative;
+        .table td {
+            vertical-align: middle;
         }
-        .timeline-body:before {
-            content: " "; 
-            height: 0; 
-            width: 0; 
-            position: absolute;
-            top: 15px; 
-            right: 100%;
-            border: 10px solid transparent; 
-            border-right-color: white;
+        .action-badge {
+            font-size: 0.8em;
+            padding: 0.4em 0.7em;
         }
         .welcome-section {
             background: white;
@@ -301,31 +278,50 @@
             </nav>
         </div>
     </div>
-    <div class="container mt-5">
-        <h1 class="mb-4">Visor de Auditoría del Sistema</h1>
-        
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row align-items-end">
-                    <div class="row align-items-end">
-                        <div class="col-md-6">
-                            <label for="user-select" class="form-label fw-bold">Seleccionar Usuario</label>
-                            <select id="user-select" class="form-select">
-                                <option selected disabled>Cargando usuarios...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <div id="user-role-display" class="h5 text-muted"></div>
-                        </div>
+    <div class="top-bar d-flex align-items-center"> ... </div>
+
+    <main class="container-fluid mt-4">
+        <div class="main-card">
+            <div class="card-header-custom">
+                <div class="d-flex flex-wrap justify-content-between align-items-center">
+                    <h3 class="mb-2 mb-md-0"><i class="fas fa-clipboard-list me-2 text-primary"></i>Registro de Auditoría</h3>
+                    
+                    <div class="d-flex align-items-center" style="min-width: 300px;">
+                        <select id="filtro-usuario" class="form-select me-2">
+                            <option value="">Todos los usuarios</option>
+                        </select>
+                        <button id="btn-limpiar" class="btn btn-outline-secondary" title="Limpiar filtro">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="ps-4">Usuario</th>
+                                <th scope="col">Acción</th>
+                                <th scope="col">Rol</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Hora</th>
+                                <th scope="col">Dirección IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-log-body">
+                            </tbody>
+                    </table>
+                </div>
+                <div id="loading-state" class="text-center p-5 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div id="timeline-container">
-            <p class="text-muted text-center">Seleccione un usuario para ver su línea de tiempo de actividad.</p>
-        </div>
-    </div>
+    </main>
 
 
     <script>
@@ -335,6 +331,8 @@
         }
 
         window.addEventListener('load', async () =>{
+            inicializarFiltros();
+            cargarAuditoria();
             try{
                 // se obtienen los datos del usuario desde el servidor
                 const response = await fetch('/api/perfil');
@@ -408,87 +406,82 @@
             window.location.replace('login.html');
         }
         
-        const userSelect = document.getElementById('user-select');
-        const timelineContainer = document.getElementById('timeline-container');
-        const userRoleDisplay = document.getElementById('user-role-display');
+        const filtroUsuario = document.getElementById('filtro-usuario');
+        const btnLimpiar = document.getElementById('btn-limpiar');
+        const auditLogBody = document.getElementById('audit-log-body');
+        const loadingState = document.getElementById('loading-state');
 
-        let listaDeUsuarios = [];
-
-        // Al cargar la página, llenamos el selector de usuarios
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                const response = await fetch('/api/usuarios/lista');
-                const data = await response.json();
-                if (!response.ok) throw new Error('No se pudo cargar la lista de usuarios.');
-
-                listaDeUsuarios = data;
-                console.log('Usuarios cargados:', listaDeUsuarios);
-                
-                userSelect.innerHTML = '<option selected disabled>-- Seleccione un usuario --</option>';
-                listaDeUsuarios.forEach(user => {
-                    const option = document.createElement('option');
-                    option.value = user.id;
-                    option.textContent = `${user.id}- ${user.nombre} ${user.apellido}`;
-                    userSelect.appendChild(option);
-                });
-
-            } catch (error) {
-                userSelect.innerHTML = `<option selected disabled>${error.message}</option>`;
-            }
-        });
-
-        // Cuando el usuario selecciona a alguien, cargamos su línea de tiempo
-        userSelect.addEventListener('change', async () => {
-            const userId = userSelect.value;
-            if (!userId) return;
+        async function cargarAuditoria(usuarioId = null) {
+            loadingState.classList.remove('d-none');
+            auditLogBody.innerHTML = '';
             
-            const usuarioSeleccionado = listaDeUsuarios.find(user => user.id == userId);
-            if (usuarioSeleccionado) {
-            // Mostramos el rol en el nuevo elemento HTML
-            userRoleDisplay.innerHTML = `<strong>Rol:</strong> <span class="badge bg-primary">${usuarioSeleccionado.rol}</span>`;
-            } else {
-                userRoleDisplay.textContent = '';
+            let url = '/api/auditoria';
+            if (usuarioId) {
+                url += `?usuarioId=${usuarioId}`;
             }
 
-            timelineContainer.innerHTML = '<p class="text-center">Cargando registros...</p>';
-
             try {
-                const response = await fetch(`/api/auditoria/${userId}`);
-                if (!response.ok) throw new Error('No se pudo cargar la auditoría para este usuario.');
-
+                const response = await fetch(url);
                 const logs = await response.json();
                 
+                if (!response.ok) throw new Error('No se pudo cargar la auditoría.');
+
                 if (logs.length === 0) {
-                    timelineContainer.innerHTML = '<p class="text-muted text-center">Este usuario no tiene registros de actividad.</p>';
+                    auditLogBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted p-5">No hay registros para mostrar.</td></tr>';
                     return;
                 }
 
-                // Construimos la línea de tiempo
-                let timelineHTML = '<ul class="timeline">';
                 logs.forEach(log => {
-                    const icon = log.accion.includes('INICIO') ? 'fa-sign-in-alt' : 'fa-sign-out-alt';
-                    timelineHTML += `
-                        <li class="timeline-item">
-                            <div class="timeline-icon"><i class="fas ${icon}"></i></div>
-                            <div class="timeline-body">
-                                <h5 class="fw-bold">${log.accion.replace('_', ' ')}</h5>
-                                <p class="text-muted mb-1">
-                                    <i class="fas fa-clock me-2"></i>${new Date(log.timestamp).toLocaleString()}
-                                </p>
-                                <p class="mb-0">
-                                    <i class="fas fa-network-wired me-2"></i>IP: ${log.direccionIp}
-                                </p>
-                            </div>
-                        </li>
+                    const tr = document.createElement('tr');
+                    
+                    const fecha = new Date(log.timestamp);
+                    const accionFormateada = log.accion.replace(/_/g, ' ').toLowerCase();
+
+                    tr.innerHTML = `
+                        <td class="ps-4"><strong>${log.nombreUsuario}</strong></td>
+                        <td><span class="badge bg-secondary action-badge">${accionFormateada}</span></td>
+                        <td>${log.rol || 'N/A'}</td>
+                        <td>${fecha.toLocaleDateString()}</td>
+                        <td>${fecha.toLocaleTimeString()}</td>
+                        <td>${log.direccionIp}</td>
                     `;
+                    auditLogBody.appendChild(tr);
                 });
-                timelineHTML += '</ul>';
-                timelineContainer.innerHTML = timelineHTML;
 
             } catch (error) {
-                timelineContainer.innerHTML = `<p class="alert alert-danger">${error.message}</p>`;
+                auditLogBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger p-5">${error.message}</td></tr>`;
+            } finally {
+                loadingState.classList.add('d-none');
             }
+        }
+
+        // Función para cargar los usuarios en el filtro
+        async function inicializarFiltros() {
+            try {
+                const response = await fetch('/api/usuarios/lista');
+                const usuarios = await response.json();
+                if (!response.ok) return;
+                usuarios.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = `#${user.id} - ${user.nombre} ${user.apellido}`;
+                    filtroUsuario.appendChild(option);
+                });
+            } catch (error) {
+                console.error("No se pudieron cargar los usuarios para el filtro:", error);
+            }
+        }
+
+        // Event Listeners
+        filtroUsuario.addEventListener('change', () => {
+            cargarAuditoria(filtroUsuario.value);
         });
+
+        btnLimpiar.addEventListener('click', () => {
+            filtroUsuario.value = ''; // Resetea el select a "Todos los usuarios"
+            cargarAuditoria();
+        });
+        
     </script>
 </body>
 </html>
