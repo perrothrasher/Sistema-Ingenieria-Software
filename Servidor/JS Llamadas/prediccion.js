@@ -118,27 +118,6 @@ function proyectarSiguienteMes(ordenAsc){
   };
 }
 
-// ---------- Helpers GridFS ----------
-
-// Descarga el archivo completo de GridFS a Buffer
-async function descargarArchivoGridFS(db, fileId) {
-  const bucket = new GridFSBucket(db, { bucketName: 'archivos' });
-  const chunks = [];
-  return await new Promise((resolve, reject) => {
-    bucket.openDownloadStream(fileId)
-      .on('data', (d) => chunks.push(d))
-      .on('error', reject)
-      .on('end', () => resolve(Buffer.concat(chunks)));
-  });
-}
-
-// Lista de archivos del bucket 'archivos.files' (puedes filtrar por patrón si quieres)
-async function listarArchivosExcel(db) {
-  const colFiles = db.collection('archivos.files');
-  // Filtra solo .xlsx (termina en .xlsx)
-  return await colFiles.find({ filename: { $regex: /\.xlsx$/i } }).toArray();
-}
-
 // =========== ENDPOINTS ===========
 
 // POST /prediccion/entrenar  -> lee Excels desde GridFS y guarda resumen mensual en Mongo
