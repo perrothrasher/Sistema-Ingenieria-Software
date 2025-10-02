@@ -419,13 +419,6 @@
     </div>
 
     <script>
-        // Función isDev
-        function isDev(){
-            try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
-            catch(_) { return true; }
-        }
-
-        // Autenticación y permisos
         window.addEventListener('load', async () =>{
             try{
                 const response = await fetch('/api/perfil');

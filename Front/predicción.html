@@ -10,6 +10,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="config_server.js"></script>
 
+  <!-- === AÑADIDO: librerías para gráfico y exportaciones === -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
     /* === estilos de tu maqueta, sin cambios en los cards === */
     .top-bar{background:#fff;height:60px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
@@ -232,6 +237,22 @@
         <div class="chart-container">
           <h5 class="mb-3"><i class="fas fa-chart-bar text-success"></i> Resultados de la Predicción</h5>
           <div id="predictionResults"></div>
+
+          <!-- === AÑADIDO: acciones de reporte (no reemplaza nada) === -->
+          <hr class="my-3">
+          <div class="d-flex gap-2">
+            <button id="btnVerReporte" class="btn btn-outline-primary" disabled>
+              <i class="fas fa-chart-line me-1"></i> Ver gráfico y reporte
+            </button>
+            <button id="btnDescargarPDF" class="btn btn-outline-danger" disabled>
+              <i class="fas fa-file-pdf me-1"></i> Descargar PDF
+            </button>
+            <button id="btnDescargarXLSX" class="btn btn-outline-success" disabled>
+              <i class="fas fa-file-excel me-1"></i> Descargar XLSX
+            </button>
+          </div>
+          <!-- === FIN AÑADIDO === -->
+
         </div>
       </div>
     </div>
@@ -452,8 +473,173 @@ function generatePrediction(){ predictor.proyectar(); }
 function entrenarModelo(){ predictor.entrenar(); }
 function refreshPredictions(){ predictor.renderPredictionHistory(); predictor.updateMetrics(); predictor.showAlert('success','Datos actualizados'); }
 function showComingSoon(){ predictor.showAlert('info','Próximamente'); }
+
+/* === AÑADIDO: Extensión no intrusiva para reporte/gráfico/export === */
+
+// Almacena la última predicción y habilita botones sin modificar showResults original
+(function(){
+  const btnVer  = () => document.getElementById('btnVerReporte');
+  const btnPDF  = () => document.getElementById('btnDescargarPDF');
+  const btnXLSX = () => document.getElementById('btnDescargarXLSX');
+
+  // Parchear showResults para guardar predicción y habilitar botones
+  const _origShow = StaffPredictionSystem.prototype.showResults;
+  StaffPredictionSystem.prototype.showResults = function(js){
+    _origShow.call(this, js);
+    window.__lastPrediction = js; // disponible global para export
+    if (btnVer())  btnVer().disabled  = false;
+    if (btnPDF())  btnPDF().disabled  = false;
+    if (btnXLSX()) btnXLSX().disabled = false;
+  };
+
+  // Eventos botones (delegados tras DOMContentLoaded)
+  document.addEventListener('DOMContentLoaded', ()=>{
+    btnVer()?.addEventListener('click', openReportModal);
+    btnPDF()?.addEventListener('click', downloadPDF);
+    btnXLSX()?.addEventListener('click', downloadXLSX);
+    document.getElementById('btnPDFModal')?.addEventListener('click', downloadPDF);
+    document.getElementById('btnXLSXModal')?.addEventListener('click', downloadXLSX);
+  });
+
+  let chartModalInstance = null;
+
+  function openReportModal(){
+    const js = window.__lastPrediction; if(!js) return;
+
+    // Resumen textual
+    const resumenHTML = `
+      <p class="mb-1"><strong>Resumen:</strong> ${js.resumen || '—'}</p>
+      <p class="mb-1"><strong>Base:</strong> ${js.mes_base.anio}-${String(js.mes_base.mes).padStart(2,'0')}
+        · Capacidad óptima: ${Number(js.mes_base.capacidad_optima||0).toFixed(2)}</p>
+      <p class="mb-1"><strong>Proyección:</strong> ${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}
+        · Producción ${js.mes_siguiente.produccion_total}
+        · Reales ${js.mes_siguiente.trabajadores_reales}
+        · Necesarios ${js.mes_siguiente.trabajadores_necesarios}</p>
+      <p class="text-muted small"><strong>Regla:</strong> ${js.reporte?.regla || '—'} · <strong>Nota:</strong> ${js.reporte?.notas || '—'}</p>
+    `;
+    document.getElementById('predictionSummary').innerHTML = resumenHTML;
+
+    // Gráfico
+    try{
+      const ctx = document.getElementById('empleadosChartModal').getContext('2d');
+      if(chartModalInstance){ chartModalInstance.destroy(); }
+      chartModalInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: js.serie_empleados?.labels || [],
+          datasets: [
+            { label: 'Trabajadores reales', data: js.serie_empleados?.reales || [], tension: 0.3 },
+            { label: 'Trabajadores necesarios', data: js.serie_empleados?.necesarios || [], tension: 0.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'top' } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }catch(e){ console.warn('No se pudo renderizar el gráfico', e); }
+
+    // Mostrar modal
+    const modalEl = document.getElementById('reporteModal');
+    const bsModal = new bootstrap.Modal(modalEl);
+    bsModal.show();
+  }
+
+  function downloadPDF(){
+    const js = window.__lastPrediction; if(!js) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+    doc.setFontSize(14);
+    doc.text('Reporte de Predicción de Dotación', 40, 40);
+
+    const txt = [
+      js.resumen || '—',
+      `Base: ${js.mes_base.anio}-${String(js.mes_base.mes).padStart(2,'0')} · Capacidad óptima: ${Number(js.mes_base.capacidad_optima||0).toFixed(2)}`,
+      `Proyección: ${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')} · Producción ${js.mes_siguiente.produccion_total} · Reales ${js.mes_siguiente.trabajadores_reales} · Necesarios ${js.mes_siguiente.trabajadores_necesarios}`,
+      `Regla: ${js.reporte?.regla || '—'} · Nota: ${js.reporte?.notas || '—'}`
+    ].join('\n');
+
+    doc.setFontSize(11);
+    const y0 = 70;
+    const lines = doc.splitTextToSize(txt, 515);
+    doc.text(lines, 40, y0);
+
+    const canvas = document.getElementById('empleadosChartModal');
+    if (canvas) {
+      const dataURL = canvas.toDataURL('image/png', 1.0);
+      doc.addImage(dataURL, 'PNG', 40, y0 + lines.length*14 + 14, 515, 260);
+    }
+
+    const fileName = `reporte_prediccion_${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}.pdf`;
+    doc.save(fileName);
+  }
+
+  function downloadXLSX(){
+    const js = window.__lastPrediction; if(!js) return;
+
+    const rowsResumen = [
+      ['Reporte de Predicción de Dotación', ''],
+      ['Mes base', `${js.mes_base.anio}-${String(js.mes_base.mes).padStart(2,'0')}`],
+      ['Capacidad óptima (base)', Number(js.mes_base.capacidad_optima||0)],
+      ['Mes proyectado', `${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}`],
+      ['Producción esperada', js.mes_siguiente.produccion_total],
+      ['Trabajadores reales', js.mes_siguiente.trabajadores_reales],
+      ['Trabajadores necesarios', js.mes_siguiente.trabajadores_necesarios],
+      ['Estado', js.mes_siguiente.estado_regla || js.mes_siguiente.estado_modelo || ''],
+      ['Regla', js.reporte?.regla || ''],
+      ['Notas', js.reporte?.notas || '']
+    ];
+
+    const header = ['Mes', 'Reales', 'Necesarios'];
+    const tabla = (js.serie_empleados?.labels || []).map((lab, i) => [
+      lab,
+      js.serie_empleados.reales?.[i] ?? null,
+      js.serie_empleados.necesarios?.[i] ?? null
+    ]);
+
+    const wb = XLSX.utils.book_new();
+    const ws1 = XLSX.utils.aoa_to_sheet(rowsResumen);
+    const ws2 = XLSX.utils.aoa_to_sheet([header, ...tabla]);
+
+    XLSX.utils.book_append_sheet(wb, ws1, 'Resumen');
+    XLSX.utils.book_append_sheet(wb, ws2, 'SerieEmpleados');
+
+    const file = `reporte_prediccion_${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}.xlsx`;
+    XLSX.writeFile(wb, file);
+  }
+})();
 </script>
+
+<!-- === AÑADIDO: Modal de reporte (no interfiere con tu layout) === -->
+<div class="modal fade" id="reporteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-file-alt me-2"></i>Reporte de predicción
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <canvas id="empleadosChartModal" height="140"></canvas>
+        </div>
+        <div id="predictionSummary" class="text-muted"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline-danger" id="btnPDFModal">
+          <i class="fas fa-file-pdf me-1"></i> Descargar PDF
+        </button>
+        <button class="btn btn-outline-success" id="btnXLSXModal">
+          <i class="fas fa-file-excel me-1"></i> Descargar XLSX
+        </button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
-
-

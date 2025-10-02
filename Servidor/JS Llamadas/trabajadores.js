@@ -1,6 +1,8 @@
 const connection = require('./db_conection.js'); 
 const bcrypt = require('bcryptjs');
 const { registrarAuditoria } = require('./auditoria.js');
+const PDFDocument = require('pdfkit');
+const path = require('path');
 
 // Ruta para obtener todos los trabajadores.
 function obtenerTrabajadores(req, res){
@@ -142,9 +144,85 @@ function listarTrabajadores(req, res){
     });
 };
 
+async function generarReporteTrabajadores(req,res){
+    try{
+    const [rows] = await connection.promise().query(`
+            SELECT t.id, p.nombre, p.apellido, p.rut, p.telefono, p.correo, r.nombre AS rol,
+                u.direccion, u.ciudad
+                FROM Trabajador t
+                JOIN Persona p ON t.persona_id = p.id
+                JOIN Rol r ON t.rol_id = r.id
+                JOIN Ubicacion u ON p.ubicacion_id = u.id
+        `);
+    const trabajadores = rows;
+
+    // Crear un nuevo documento PDF
+    const doc = new PDFDocument({ margin: 50 });
+
+    // Configurar la respuesta del navegador para descargar el PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=reporte-trabajadores.pdf');
+    doc.pipe(res);
+    
+    // Logo de la empresa
+    const LogoPath = path.join(__dirname, '..', '..', 'Front', 'assets', 'totalcheck-logo.png');
+
+    // Dibujar el logo
+    doc.image(LogoPath, 50, 45, { width: 100 });
+    
+    // Información de la empresa
+    doc.fontSize(10)
+           .text(
+                `Fanor Velasco 85, Piso 3\n` +
+                `+56 2 2617 9200\n` +
+                `contacto@totalcheck.cl`,
+                { align: 'right' }
+           );   
+    doc.moveDown(4);
+
+    // Contenido del PDF
+    doc.fontSize(25).text('Reporte de Trabajadores Contratados', {align: 'center'});
+    doc.moveDown(0.5);
+
+    // Linea divisoria
+    doc.strokeColor("#aaaaaa")
+           .lineWidth(1)
+           .moveTo(50, doc.y)
+           .lineTo(550, doc.y)
+           .stroke();
+    doc.moveDown();
+
+    // Iterar sobre los trabajadores y agregarlos al PDF
+    trabajadores.forEach((trabajador, index) =>{
+      doc.fontSize(14).text(`${index + 1}. ${trabajador.nombre} ${trabajador.apellido}`, { underline: true });
+      doc.fontSize(10).text(`RUT: ${trabajador.rut}`);
+      doc.fontSize(10).text(`Rol: ${trabajador.rol}`);
+      doc.fontSize(10).text(`Correo: ${trabajador.correo}`);
+      doc.fontSize(10).text(`Teléfono: ${trabajador.telefono}`);
+      doc.fontSize(10).text(`Dirección: ${trabajador.direccion}`);
+      doc.fontSize(10).text(`Ciudad: ${trabajador.ciudad}`);
+      doc.moveDown();
+    });
+    // --- Finalización del contenido del PDF ---
+    doc.end();
+
+    // Registrar evento en la auditoría
+    const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+    const ip = req.ip || req.connection.remoteAddress;
+    registrarAuditoria(
+      userId, `${userNombre} ${userApellido}`, 'Reporte de Trabajadores Generado', ip, rol
+    );
+    
+  }catch(error){
+    console.error('Error al generar el reporte PDF:', error);
+    res.status(500).json({ message: 'Error al generar el reporte PDF' });
+  }
+};
+
 module.exports = {
     obtenerTrabajadores,
     editarTrabajadores,
     eliminarTrabajadores,
-    listarTrabajadores
+    listarTrabajadores,
+    generarReporteTrabajadores
 };
