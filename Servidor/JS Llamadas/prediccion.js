@@ -1,5 +1,7 @@
 // JS Llamadas/prediccion.js
-// Lee Excels desde MongoDB (GridFS) y proyecta el mes siguiente
+// Lee Excels desde MongoDB (GridFS) y proyecta SOLO el primer mes faltante del último año con datos.
+// Si intentan predecir un mes que YA TIENE informe, devuelve error.
+// Si intentan saltarse un hueco previo (ej. falta el 9 y piden 10), devuelve error.
 
 const { Router } = require('express');
 const ExcelJS = require('exceljs');
@@ -7,8 +9,7 @@ const { GridFSBucket } = require('mongodb');
 
 const router = Router();
 
-// === Colección donde se guarda el RESUMEN mensual ===
-// (ajústala si prefieres otro nombre)
+// === Colección destino (donde guardaste el resumen mensual) ===
 const COLECCION_MESES = 'venta_e_ingreso_por_usuario';
 
 // === Meses en español -> número ===
@@ -19,25 +20,21 @@ const mapaMes = {
 };
 
 // === Bucket de GridFS (puede tener espacios) ===
-// .env: GFS_BUCKET=venta e ingreso por usuario
 const BUCKET = (process.env.GFS_BUCKET && String(process.env.GFS_BUCKET).trim()) || 'archivos';
 
-/* =========================================================================
-   Parser del nombre: 1er token = mes, 2do token = año
-   Tolerante a tildes, comillas, guiones/underscores y espacios extra
-   ========================================================================= */
+/* ========= 1) Parser nombre ========= */
 function extraerMesAnioDesdeNombre(nombre) {
   if (!nombre) return null;
 
   let s = String(nombre)
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quita tildes
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/[“”"']/g, '')     // quita comillas
-    .replace(/[_-]+/g, ' ')     // _ y - -> espacio
-    .replace(/\s+/g, ' ')       // colapsa espacios
+    .replace(/[“”"']/g, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 
-  // quita extensión (maneja espacios antes del punto)
+  // quita extensión
   s = s.replace(/\s*\.(xlsx|xls|xlsm)\s*$/i, '');
 
   const tokens = s.split(' ').filter(Boolean);
@@ -53,10 +50,7 @@ function extraerMesAnioDesdeNombre(nombre) {
   return { mes, anio: parseInt(anioStr, 10) };
 }
 
-/* =========================================================================
-   Lectura del Excel desde Buffer (descargado de GridFS)
-   Resumen robusto: suma todos los números que aparezcan
-   ========================================================================= */
+/* ========= 2) Resumen Excel ========= */
 async function resumirExcelDesdeBuffer(buffer) {
   const libro = new ExcelJS.Workbook();
   await libro.xlsx.load(buffer);
@@ -93,9 +87,7 @@ async function resumirExcelDesdeBuffer(buffer) {
   return { filas_utiles, suma_numeros };
 }
 
-/* =========================================================================
-   Proyección: promedio móvil (3) + tendencia
-   ========================================================================= */
+/* ========= 3) Proyección (cálculo) ========= */
 function proyectarSiguienteMes(ordenAsc) {
   if (!ordenAsc.length) return { ok: false, error: 'Sin datos entrenados' };
 
@@ -141,32 +133,24 @@ function proyectarSiguienteMes(ordenAsc) {
   };
 }
 
-/* =========================================================================
-   Helpers: detección de colecciones GridFS (casos no estándar) y descarga
-   ========================================================================= */
+/* ========= 4) GridFS helpers ========= */
 async function detectarColeccionesGridFS(db) {
   const names = await db.listCollections().toArray();
   const colNames = names.map(n => n.name);
 
-  // Estándar
-  const filesStd  = `${BUCKET}.files`;
+  const filesStd = `${BUCKET}.files`;
   const chunksStd = `${BUCKET}.chunks`;
 
-  let filesCollName  = colNames.includes(filesStd)  ? filesStd  : null;
+  let filesCollName = colNames.includes(filesStd) ? filesStd : null;
   let chunksCollName = colNames.includes(chunksStd) ? chunksStd : null;
 
-  // Caso "plano": metadatos sin .files
-  if (!filesCollName && colNames.includes(BUCKET)) {
-    filesCollName = BUCKET; // p.ej. "venta e ingreso por usuario"
-  }
+  if (!filesCollName && colNames.includes(BUCKET)) filesCollName = BUCKET;
 
-  // Si no hay chunks estándar, busca cualquiera que termine en .chunks
   if (!chunksCollName) {
     const candidatas = colNames.filter(n => /\.chunks$/i.test(n));
     if (candidatas.includes(chunksStd)) chunksCollName = chunksStd;
     else if (candidatas.length) chunksCollName = candidatas[0];
   }
-
   return { filesCollName, chunksCollName };
 }
 
@@ -180,7 +164,6 @@ async function listarArchivosExcel(db) {
 async function descargarArchivoGridFS(db, fileId) {
   const { filesCollName, chunksCollName } = await detectarColeccionesGridFS(db);
 
-  // Si es bucket estándar, usa GridFSBucket directo
   if (filesCollName === `${BUCKET}.files` && chunksCollName === `${BUCKET}.chunks`) {
     const bucket = new GridFSBucket(db, { bucketName: BUCKET });
     const chunks = [];
@@ -192,32 +175,21 @@ async function descargarArchivoGridFS(db, fileId) {
     });
   }
 
-  // Fallback: concatenar manualmente los chunks de la colección detectada
-  if (!chunksCollName) {
-    throw new Error('No se encontró colección .chunks para reconstruir el archivo.');
-  }
-
+  if (!chunksCollName) throw new Error('No se encontró colección .chunks para reconstruir el archivo.');
   const colChunks = db.collection(chunksCollName);
   const cursor = colChunks.find({ files_id: fileId }).sort({ n: 1 });
-
   const parts = [];
   for await (const ch of cursor) {
     const buf = Buffer.isBuffer(ch.data) ? ch.data : Buffer.from(ch.data.buffer);
     parts.push(buf);
   }
-
-  if (!parts.length) {
-    throw new Error(`No hay chunks para fileId=${fileId} en ${chunksCollName}`);
-  }
-
+  if (!parts.length) throw new Error(`No hay chunks para fileId=${fileId} en ${chunksCollName}`);
   return Buffer.concat(parts);
 }
 
-/* =========================================================================
-   ENDPOINTS
-   ========================================================================= */
+/* ========= 5) ENDPOINTS ========= */
 
-// POST /prediccion/entrenar  -> lee Excels desde GridFS y guarda resumen mensual
+// Entrenar
 router.post('/entrenar', async (req, res) => {
   try {
     await req.app.locals.mongoReady;
@@ -236,11 +208,7 @@ router.post('/entrenar', async (req, res) => {
 
     for (const file of archivos) {
       const info = extraerMesAnioDesdeNombre(file.filename);
-      if (!info) {
-        console.warn(`[Entrenar] No pude extraer mes/año desde: ${file.filename}`);
-        omitidos++;
-        continue;
-      }
+      if (!info) { console.warn(`[Entrenar] No pude extraer mes/año desde: ${file.filename}`); omitidos++; continue; }
 
       const buffer = await descargarArchivoGridFS(db, file._id);
       const { filas_utiles, suma_numeros } = await resumirExcelDesdeBuffer(buffer);
@@ -272,7 +240,10 @@ router.post('/entrenar', async (req, res) => {
   }
 });
 
-// GET /prediccion/proyectar?anio=&mes=
+// Proyectar (reglas:
+// 1) Solo se puede predecir el PRIMER mes faltante del ÚLTIMO año con datos.
+// 2) Si piden un mes que YA TIENE informe => error (no hay predicción que hacer).
+// 3) Si faltan meses previos y piden un mes posterior => error.)
 router.get('/proyectar', async (req, res) => {
   try {
     await req.app.locals.mongoReady;
@@ -284,18 +255,128 @@ router.get('/proyectar', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'Ejecuta /prediccion/entrenar primero' });
     }
 
+    // Orden cronológico
     meses.sort((a, b) => (a.anio - b.anio) || (a.mes - b.mes));
 
-    const { anio, mes } = req.query;
-    let hasta = meses;
-    if (anio && mes) {
-      const idx = meses.findIndex(m => m.anio == Number(anio) && m.mes == Number(mes));
-      if (idx === -1) return res.status(404).json({ ok: false, error: 'Mes base no encontrado' });
-      hasta = meses.slice(0, idx + 1);
+    const exists = (a, m) => meses.some(x => x.anio === a && x.mes === m);
+
+    // Último año con datos
+    const years = [...new Set(meses.map(m => m.anio))].sort((a,b)=>a-b);
+    const lastYear = years[years.length-1];
+
+    // Meses presentes en ese año y prefijo contiguo
+    const monthsInLast = new Set(meses.filter(m => m.anio===lastYear).map(m => m.mes));
+    let contiguousLen = 0;
+    for (let mm=1; mm<=12; mm++){
+      if (monthsInLast.has(mm)) contiguousLen++;
+      else break;
     }
 
-    const resp = proyectarSiguienteMes(hasta);
+    if (contiguousLen === 0) {
+      return res.status(400).json({
+        ok: false,
+        error: `No hay informes previos en ${lastYear}. Sube al menos "Enero ${lastYear}" antes de predecir.`
+      });
+    }
+
+    // Primer mes faltante del último año con datos
+    let targetYear = lastYear;
+    let targetMonth = contiguousLen + 1;
+    if (targetMonth > 12) { targetMonth = 1; targetYear = lastYear + 1; }
+
+    // Validar parámetros solicitados por el usuario (si los envía)
+    const qAnio = req.query.anio ? Number(req.query.anio) : null;
+    const qMes  = req.query.mes  ? Number(req.query.mes)  : null;
+
+    if (qAnio && qMes) {
+      // (NUEVO) Si el mes pedido YA EXISTE como informe, error directo:
+      if (exists(qAnio, qMes)) {
+        return res.status(400).json({
+          ok: false,
+          error: `El mes ${qAnio}-${String(qMes).padStart(2,'0')} ya tiene informe cargado. No hay predicción que hacer.`
+        });
+      }
+
+      // Reglas de huecos: no se puede saltar el primer faltante
+      if (qAnio === lastYear) {
+        if (qMes !== targetMonth) {
+          if (qMes > targetMonth) {
+            return res.status(400).json({
+              ok: false,
+              error: `No se puede predecir ${qAnio}-${String(qMes).padStart(2,'0')}: falta el informe del mes ${String(targetMonth).padStart(2,'0')} de ${lastYear}.`
+            });
+          }
+          // qMes < targetMonth y no existe => es un hueco antes del primer faltante (no debería ocurrir si contiguousLen es correcto)
+          if (!monthsInLast.has(qMes)) {
+            return res.status(400).json({
+              ok: false,
+              error: `El mes ${String(qMes).padStart(2,'0')} de ${qAnio} no tiene informe y está antes del primer faltante (${String(targetMonth).padStart(2,'0')}). Sube primero los meses previos.`
+            });
+          }
+        }
+      } else if (qAnio === lastYear + 1) {
+        // Solo permitido si lastYear tiene 12/12 y piden enero del siguiente
+        if (!(contiguousLen === 12 && qMes === 1)) {
+          return res.status(400).json({
+            ok: false,
+            error: `Solo puede predecirse ${lastYear+1}-01 porque ${lastYear} ya tiene 12 meses.`
+          });
+        }
+      } else {
+        return res.status(400).json({
+          ok: false,
+          error: `La predicción se limita al primer mes faltante del último año con datos (${lastYear}).`
+        });
+      }
+
+      // A partir de aquí, los parámetros son válidos, pero forzamos el objetivo a lo permitido
+      targetYear = (qAnio === lastYear + 1 && contiguousLen === 12) ? (lastYear + 1) : lastYear;
+      targetMonth = (qAnio === lastYear + 1 && contiguousLen === 12) ? 1 : targetMonth;
+    }
+
+    // Serie completa para entrenar/estimar tendencia
+    const hasta = meses.slice();
+    if (!hasta.length) {
+      return res.status(400).json({ ok:false, error: 'Sin datos suficientes para proyectar.' });
+    }
+
+    let resp = proyectarSiguienteMes(hasta);
     if (!resp.ok) return res.status(400).json(resp);
+
+    // Sobrescribe con el mes objetivo permitido
+    resp.mes_siguiente.anio = targetYear;
+    resp.mes_siguiente.mes  = targetMonth;
+
+    // === Serie para gráfico (histórico + proyectado) ===
+    const labels = [];
+    const reales = [];
+    const necesarios = [];
+    for (const m of meses) {
+      labels.push(`${m.anio}-${String(m.mes).padStart(2,'0')}`);
+      const prod = Number(m.produccion_total || 0);
+      const nec = Math.max(1, Math.ceil(prod / 100)); // misma regla
+      necesarios.push(nec);
+      reales.push(Number(m.trabajadores_reales) || Math.max(1, Math.round(prod / 100)));
+    }
+    labels.push(`${resp.mes_siguiente.anio}-${String(resp.mes_siguiente.mes).padStart(2,'0')}`);
+    necesarios.push(resp.mes_siguiente.trabajadores_necesarios);
+    reales.push(resp.mes_siguiente.trabajadores_reales);
+    resp.serie_empleados = { labels, reales, necesarios };
+
+    // === Resumen + Reporte ===
+    const estado = resp.mes_siguiente.estado_regla;
+    const textoEstado = estado === 'sobre' ? 'sobredotación' : estado === 'sub' ? 'subdotación' : 'dotación adecuada';
+    resp.resumen =
+      `Predicción para ${resp.mes_siguiente.anio}-${String(resp.mes_siguiente.mes).padStart(2,'0')}: ` +
+      `producción esperada ${resp.mes_siguiente.produccion_total}, ` +
+      `necesarios ${resp.mes_siguiente.trabajadores_necesarios}, ` +
+      `reales base ${resp.mes_siguiente.trabajadores_reales} → ${textoEstado}.`;
+    resp.reporte = {
+      mes_base: resp.mes_base,
+      mes_proyectado: resp.mes_siguiente,
+      regla: 'Promedio móvil (3) + tendencia; productividad 100 unidades/empleado',
+      notas: `Se proyecta únicamente el primer mes faltante del año ${lastYear}. Si falta un mes previo, NO se permite predecir meses posteriores. Si el mes ya tiene informe, no hay predicción que hacer.`
+    };
 
     resp.mes_base.capacidad_optima = Number(resp.mes_base.capacidad_optima || 0);
     res.json(resp);
