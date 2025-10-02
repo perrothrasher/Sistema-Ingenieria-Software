@@ -3,13 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carga de Datos Históricos - Sistema</title>
-    
+    <title>Sistema de Gestión - Subir Archivos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="config_server.js"></script>
     
     <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
         
         .top-bar {
             background-color: white;
@@ -26,7 +31,7 @@
         
         .navbar {
             background-color: white;
-            padding: 0.1rem 1rem;
+            padding: 0.2rem 1rem;
         }
         
         .navbar-nav .nav-link {
@@ -42,7 +47,6 @@
             border: none;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-
         
         .metric-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -50,31 +54,31 @@
             color: white;
             transition: transform 0.3s ease;
         }
+        
         .metric-card:hover {
             transform: translateY(-5px);
         }
+        
         .metric-card.success {
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
         }
+        
         .metric-card.warning {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
+        
         .metric-card.info {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
+        
         .chart-container {
             background: white;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            padding: 20px;
+            padding: 30px;
             margin-bottom: 30px;
         }
-        .filter-section {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 30px;
-        }
+        
         .upload-area {
             border: 2px dashed #cbd5e1;
             transition: all 0.3s ease;
@@ -84,36 +88,127 @@
             text-align: center;
             cursor: pointer;
         }
-        .upload-area.dragover {
+        
+        .upload-area:hover {
             border-color: #4f46e5;
             background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
             transform: translateY(-2px);
         }
+        
         .progress-bar {
             transition: width 0.3s ease;
             background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
         }
+        
         .fade-in {
             animation: fadeIn 0.5s ease-in;
         }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        body {
-            overflow-x: hidden;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        
+        #preview-container {
+            margin-top: 20px;
+            min-height: 200px;
+            border-radius: 10px;
+            background: #f8fafc;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #preview-container iframe {
+            width: 100%;
+            height: 500px;
+            border: none;
+            border-radius: 8px;
+        }
+        
+        #preview-container img {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .file-info {
+            text-align: left;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .status-success {
+            color: #10b981;
+            font-weight: 600;
+            padding: 10px;
+            background: #d1fae5;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .status-error {
+            color: #ef4444;
+            font-weight: 600;
+            padding: 10px;
+            background: #fee2e2;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .status-loading {
+            color: #3b82f6;
+            font-weight: 600;
+            padding: 10px;
+            background: #dbeafe;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .list-group-item {
+            border: none;
+            border-radius: 10px !important;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .list-group-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
     </style>
 </head>
 <body>
-   <!-- Navbar -->
+    <!-- Navbar -->
     <div class="top-bar d-flex align-items-center">
         <div class="container-fluid">
             <nav class="navbar navbar-expand-lg w-100">
                 <a class="navbar-brand" href="#">
-    <img src="assets/totalcheck-logo.png" alt="TotalCheck Logo" style="height:30px; width:auto;">
-</a>
+                    <img src="assets/totalcheck-logo.png" alt="TotalCheck Logo" style="height:30px; width:auto;">
+                </a>
                 
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
@@ -169,6 +264,15 @@
                                     <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
                             </ul>
                         </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-chart-line"></i> Pruebas
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="prueba_SubirArchivos2.html">
+                                    <i class="fas fa-users"></i> Subir Archivos</a></li>
+                            </ul>
+                        </li>
                     </ul>
                     <ul class="navbar-nav">
                         <li class="nav-item dropdown">
@@ -182,43 +286,39 @@
                         </li>
                     </ul>
                 </div>
-      </nav>
-      </nav>
+            </nav>
         </div>
     </div>
 
-    
+    <!-- Contenido Principal -->
     <div class="container-fluid mt-4">
-        
+        <!-- Header Section -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h1 class="h2 mb-1">
-                            <i class="fas fa-upload text-primary"></i>
-                            Carga de Datos Históricos
+                            <i class="fas fa-cloud-upload-alt text-primary"></i>
+                            Gestión de Documentos
                         </h1>
-                        <p class="text-muted">Sube archivos Excel o CSV con datos históricos de dotación de personal</p>
+                        <p class="text-muted">Sube y administra tus documentos del sistema</p>
                     </div>
                     <div>
-                        <button class="btn btn-outline-primary me-2" onclick="refreshData()">
+                        <button class="btn btn-outline-primary me-2" onclick="location.reload()">
                             <i class="fas fa-sync-alt"></i> Actualizar
-                        </button>
-                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
-                            <i class="fas fa-plus"></i> Carga manual
                         </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        
+        <!-- Metrics Cards -->
         <div class="row mb-4" id="metricsCards">
-            <div class="col-xl-3 col-md-6 mb-4">
+            <div class="col-xl-4 col-md-6 mb-4">
                 <div class="metric-card p-4 h-100">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <div class="text-white-50 small">Archivos Cargados</div>
+                            <div class="text-white-50 small">Archivos Totales</div>
                             <div class="h4 mb-0 text-white font-weight-bold" id="totalFiles">0</div>
                         </div>
                         <div class="align-self-center">
@@ -227,21 +327,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
+            <div class="col-xl-4 col-md-6 mb-4">
                 <div class="metric-card success p-4 h-100">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <div class="text-white-50 small">Registros Procesados</div>
-                            <div class="h4 mb-0 text-white font-weight-bold" id="totalRecords">0</div>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-database fa-2x text-white-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="metric-card warning p-4 h-100">
                     <div class="d-flex justify-content-between">
                         <div>
                             <div class="text-white-50 small">Última Carga</div>
@@ -253,11 +340,11 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-3 col-md-6 mb-4">
+            <div class="col-xl-4 col-md-6 mb-4">
                 <div class="metric-card info p-4 h-100">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <div class="text-white-50 small">Estado</div>
+                            <div class="text-white-50 small">Estado del Sistema</div>
                             <div class="h6 mb-0 text-white font-weight-bold">Activo</div>
                         </div>
                         <div class="align-self-center">
@@ -268,148 +355,107 @@
             </div>
         </div>
 
-        <!-- Área de Carga -->
+        <!-- Upload Section -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="chart-container">
-                    <h5 class="mb-3">
-                        <i class="fas fa-cloud-upload-alt text-primary"></i>
-                        Cargar Archivos
+                    <h5 class="mb-4">
+                        <i class="fas fa-upload text-primary"></i>
+                        Subir Nuevo Documento
                     </h5>
                     
-                    <div id="uploadArea" class="upload-area">
-                        <div class="mb-4">
-                            <i class="fas fa-file-upload fa-3x text-muted mb-3"></i>
+                    <form id="upload-form">
+                        <div class="upload-area" onclick="document.getElementById('file-input').click()">
+                            <div class="mb-4">
+                                <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            </div>
+                            <div class="h5 text-dark mb-2">
+                                Arrastra y suelta tu archivo aquí
+                            </div>
+                            <div class="text-muted mb-3">
+                                o <span class="text-primary fw-bold">haz clic para seleccionar</span>
+                            </div>
+                            <div class="small text-muted">
+                                Formatos soportados: PDF, Imágenes y otros documentos
+                            </div>
                         </div>
-                        <div class="h5 text-dark mb-2">
-                            Arrastra y suelta tus archivos aquí
+                        <input type="file" id="file-input" style="display: none;" required>
+                        
+                        <div id="preview-container">
+                            <p class="text-muted">La previsualización del archivo aparecerá aquí.</p>
                         </div>
-                        <div class="text-muted mb-3">
-                            o <span class="text-primary fw-bold">haz clic para seleccionar</span>
+                        
+                        <div id="status-message"></div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" id="upload-btn" class="btn btn-primary btn-lg" disabled>
+                                <i class="fas fa-check-circle me-2"></i>
+                                Confirmar y Subir
+                            </button>
                         </div>
-                        <div class="small text-muted">
-                            Formatos soportados: Excel (.xlsx, .xls) y CSV (.csv) • Máximo 10MB
-                        </div>
-                    </div>
-                    <input type="file" id="fileInput" class="d-none" accept=".xlsx,.xls,.csv" multiple>
+                    </form>
                 </div>
             </div>
         </div>
 
-        <!-- Progreso -->
-        <div id="progressSection" class="row mb-4 d-none">
-            <div class="col-12">
-                <div class="chart-container">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="fw-bold text-dark">Procesando archivo...</span>
-                        <span id="progressText" class="text-primary fw-bold">0%</span>
-                    </div>
-                    <div class="progress" style="height: 10px;">
-                        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Alertas -->
-        <div id="alertContainer"></div>
-
-        <!-- Historial de Cargas -->
+        <!-- Documents List -->
         <div class="row">
             <div class="col-12">
                 <div class="chart-container">
-                    <h5 class="mb-3">
-                        <i class="fas fa-history text-info"></i>
-                        Historial de Cargas
+                    <h5 class="mb-4">
+                        <i class="fas fa-folder-open text-info"></i>
+                        Lista de Documentos Almacenados
                     </h5>
-                    <div id="uploadHistory">
+                    <div id="lista-archivos" class="list-group">
                         <div class="text-center text-muted py-5">
                             <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-                            <p class="fw-bold mb-1">No hay archivos cargados aún</p>
-                            <p class="small text-muted">Los archivos aparecerán aquí una vez que los subas</p>
+                            <p class="fw-bold mb-1" id="loading-message">Cargando archivos...</p>
+                            <p class="small text-muted">Los documentos aparecerán aquí</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Modal: Ingreso Manual de Operaciones Históricas -->
-    <div class="modal fade" id="modalIngresoManual" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title"><i class="fas fa-pen-to-square me-2"></i>Ingreso manual de operación histórica</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-
-        <div class="modal-body">
-            <form id="form-op-historica" class="row g-3">
-            <div class="col-md-4">
-                <label class="form-label">Fecha <span class="text-danger">*</span></label>
-                <input type="date" name="fecha" class="form-control" required>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Cliente ID</label>
-                <input type="number" name="cliente_id" class="form-control">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Tipo</label>
-                <input type="text" name="tipo" class="form-control" placeholder="Venta, Devolución, etc.">
-            </div>
-            <div class="col-md-4">
-                <label class="form-label">Monto</label>
-                <input type="number" step="0.01" name="monto" class="form-control">
-            </div>
-            <div class="col-md-8">
-                <label class="form-label">Descripción</label>
-                <input type="text" name="descripcion" class="form-control">
-            </div>
-            </form>
-            <div id="op-manual-alert" class="mt-2 d-none"></div>
-        </div>
-
-        <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button id="btn-guardar-op" class="btn btn-primary">
-            <i class="fas fa-save me-1"></i> Guardar
-            </button>
-        </div>
-        </div>
-    </div>
-    </div>
 
     <script>
-        function isDev(){
-            try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
-            catch(_) { return true; }
-        }
-
         window.addEventListener('load', async () =>{
             try{
-                // se obtienen los datos del usuario desde el servidor
                 const response = await fetch('/api/perfil');
 
                 if (!response.ok){
                     if (isDev()) {
                         console.warn('Dev mode: perfil no disponible, se omite redirección al login');
+                        document.getElementById('welcomeMessage').innerText = 'Usuario (Dev)';
+                        verificarAdmin('Soporte TI');
+                        return;
                     } else {
                         window.location.href = 'login.html';
                         return;
                     }
-                } else {
-                    const usuario = await response.json();
-                    if (usuario.nombre && usuario.apellido){
-                        document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
-                    }
-                    verificarAdmin(usuario.rol);
                 }
+
+                const usuario = await response.json();
+                if (usuario.nombre && usuario.apellido){
+                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+                verificarAdmin(usuario.rol);
+
             } catch (error){
                 console.error('Error de autenticación: ', error);
-                if (!isDev()) window.location.href = 'login.html';
+                if (isDev()) {
+                    console.warn('Dev mode: se omite redirección al login');
+                    document.getElementById('welcomeMessage').innerText = 'Usuario (Dev)';
+                    verificarAdmin('Soporte TI');
+                } else {
+                    window.location.href = 'login.html';
+                }
             }
+            
+            // Cargar lista de archivos
+            cargarListaArchivos();
         });
 
-        // PERMISOS
         function verificarAdmin(rol){
             console.log("Rol del usuario: ", rol);
 
@@ -440,300 +486,238 @@
         }
 
         async function logout() {
-            try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
-            try { sessionStorage.clear(); localStorage.clear(); } catch (e) {}
+            await fetch ('/logout', {method: 'POST'});
+            window.location.href = 'login.html'
+        }
+
+        // Variables del formulario
+        const uploadForm = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const previewContainer = document.getElementById('preview-container');
+        const uploadBtn = document.getElementById('upload-btn');
+        const statusMessage = document.getElementById('status-message');
+
+        let selectedFile = null;
+
+        // Event Listener para la selección de archivo
+        fileInput.addEventListener('change', (event) => {
+            selectedFile = event.target.files[0];
+            if (!selectedFile) {
+                resetPreview();
+                uploadBtn.disabled = true;
+                return;
+            }
+            
+            generatePreview(selectedFile);
+            uploadBtn.disabled = false;
+        });
+
+        // Event Listener para el envío del formulario
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            if (!selectedFile) {
+                showStatus('Por favor, selecciona un archivo.', 'error');
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            showStatus('Subiendo archivo...', 'loading');
+
+            const formData = new FormData();
+            formData.append('miArchivo', selectedFile);
+            
             try {
-                document.cookie.split(';').forEach(c => {
-                    const eqPos = c.indexOf('=');
-                    const name = (eqPos > -1 ? c.substring(0, eqPos) : c).trim();
-                    if (name) document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                const response = await fetch('/api/archivos/upload', {
+                    method: 'POST',
+                    body: formData
                 });
-            } catch (e) {}
-            window.location.replace('login.html');
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Error en el servidor');
+                }
+                
+                showStatus(`Éxito: ${result.message}`, 'success');
+                resetForm();
+                cargarListaArchivos();
+                updateMetrics();
+
+            } catch (error) {
+                console.error('Error al subir el archivo:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            } finally {
+                if (selectedFile) {
+                    uploadBtn.disabled = false;
+                }
+            }
+        });
+
+        // Funciones auxiliares
+        function generatePreview(file) {
+            previewContainer.innerHTML = '';
+            const objectURL = URL.createObjectURL(file);
+
+            if (file.type === 'application/pdf') {
+                const iframe = document.createElement('iframe');
+                iframe.src = objectURL;
+                previewContainer.appendChild(iframe);
+            } else if (file.type.startsWith('image/')) {
+                const img = document.createElement('img');
+                img.src = objectURL;
+                previewContainer.appendChild(img);
+            } else {
+                const fileInfo = document.createElement('div');
+                fileInfo.classList.add('file-info');
+                const sizeInMB = (file.size / 1024 / 1024).toFixed(2);
+                fileInfo.innerHTML = `
+                    <h3>${file.name}</h3>
+                    <p><strong>Tipo:</strong> ${file.type || 'Desconocido'}</p>
+                    <p><strong>Tamaño:</strong> ${sizeInMB} MB</p>
+                    <p>No se puede previsualizar este tipo de archivo.</p>
+                `;
+                previewContainer.appendChild(fileInfo);
+            }
+        }
+
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-${type}`;
         }
         
-        class HistoricalDataUploader {
-            constructor() {
-                this.uploadArea = document.getElementById('uploadArea');
-                this.fileInput = document.getElementById('fileInput');
-                this.progressSection = document.getElementById('progressSection');
-                this.progressBar = document.getElementById('progressBar');
-                this.progressText = document.getElementById('progressText');
-                this.alertContainer = document.getElementById('alertContainer');
-                this.uploadHistory = document.getElementById('uploadHistory');
-                this.uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles') || '[]');
-                
-                this.initializeEventListeners();
-                this.renderUploadHistory();
-                this.updateMetrics();
-            }
+        function resetPreview() {
+            previewContainer.innerHTML = '<p class="text-muted">La previsualización del archivo aparecerá aquí.</p>';
+        }
 
-            initializeEventListeners() {
-                this.uploadArea.addEventListener('click', () => {
-                    this.fileInput.click();
-                });
+        function resetForm() {
+            uploadForm.reset();
+            selectedFile = null;
+            uploadBtn.disabled = true;
+            resetPreview();
+            setTimeout(() => showStatus('', ''), 5000);
+        }
 
-                this.fileInput.addEventListener('change', (e) => {
-                    this.handleFiles(e.target.files);
-                });
+        async function cargarListaArchivos() {
+            const listaContainer = document.getElementById('lista-archivos');
+            const loadingMessage = document.getElementById('loading-message');
 
-                this.uploadArea.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    this.uploadArea.classList.add('dragover');
-                });
+            try {
+                const response = await fetch('/api/archivos/lista');
 
-                this.uploadArea.addEventListener('dragleave', (e) => {
-                    e.preventDefault();
-                    this.uploadArea.classList.remove('dragover');
-                });
-
-                this.uploadArea.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    this.uploadArea.classList.remove('dragover');
-                    this.handleFiles(e.dataTransfer.files);
-                });
-            }
-
-            handleFiles(files) {
-                Array.from(files).forEach(file => {
-                    if (this.validateFile(file)) {
-                        this.uploadFile(file);
-                    }
-                });
-            }
-
-            validateFile(file) {
-                const validTypes = [
-                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    'application/vnd.ms-excel',
-                    'text/csv'
-                ];
-                const maxSize = 10 * 1024 * 1024;
-
-                if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
-                    this.showAlert('error', `Formato de archivo no válido: ${file.name}. Solo se permiten archivos Excel (.xlsx, .xls) y CSV (.csv).`);
-                    return false;
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al cargar la lista de archivos.');
                 }
 
-                if (file.size > maxSize) {
-                    this.showAlert('error', `El archivo ${file.name} es demasiado grande. El tamaño máximo permitido es 10MB.`);
-                    return false;
-                }
-
-                return true;
-            }
-
-            async uploadFile(file) {
-                this.showProgress();
+                const archivos = await response.json();
                 
-                try {
-                    for (let progress = 0; progress <= 100; progress += 10) {
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                        this.updateProgress(progress);
-                    }
+                listaContainer.innerHTML = '';
 
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-
-                    const uploadRecord = {
-                        id: Date.now(),
-                        name: file.name,
-                        size: this.formatFileSize(file.size),
-                        uploadDate: new Date().toLocaleString('es-ES'),
-                        status: 'success',
-                        records: Math.floor(Math.random() * 10000) + 1000
-                    };
-
-                    this.uploadedFiles.unshift(uploadRecord);
-                    localStorage.setItem('uploadedFiles', JSON.stringify(this.uploadedFiles));
-
-                    this.hideProgress();
-                    this.showAlert('success', `¡Archivo "${file.name}" cargado exitosamente! Se procesaron ${uploadRecord.records} registros.`);
-                    this.renderUploadHistory();
-                    this.updateMetrics();
-
-                } catch (error) {
-                    this.hideProgress();
-                    this.showAlert('error', `Error al cargar el archivo "${file.name}". Por favor, verifica el formato e intenta nuevamente.`);
-                }
-
-                this.fileInput.value = '';
-            }
-
-            showProgress() {
-                this.progressSection.classList.remove('d-none');
-                this.progressSection.classList.add('fade-in');
-            }
-
-            hideProgress() {
-                this.progressSection.classList.add('d-none');
-                this.updateProgress(0);
-            }
-
-            updateProgress(progress) {
-                this.progressBar.style.width = `${progress}%`;
-                this.progressText.textContent = `${progress}%`;
-            }
-
-            showAlert(type, message) {
-                const alertId = Date.now();
-                const alertClass = type === 'success' 
-                    ? 'alert-success' 
-                    : 'alert-danger';
-                
-                const iconClass = type === 'success'
-                    ? 'fa-check-circle'
-                    : 'fa-exclamation-triangle';
-
-                const alertHTML = `
-                    <div id="alert-${alertId}" class="alert ${alertClass} alert-dismissible fade show mb-4" role="alert">
-                        <i class="fas ${iconClass} me-2"></i>
-                        ${message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                `;
-
-                this.alertContainer.insertAdjacentHTML('beforeend', alertHTML);
-
-                setTimeout(() => {
-                    const alert = document.getElementById(`alert-${alertId}`);
-                    if (alert) alert.remove();
-                }, 5000);
-            }
-
-            renderUploadHistory() {
-                if (this.uploadedFiles.length === 0) {
-                    this.uploadHistory.innerHTML = `
+                if (archivos.length === 0) {
+                    listaContainer.innerHTML = `
                         <div class="text-center text-muted py-5">
                             <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-                            <p class="fw-bold mb-1">No hay archivos cargados aún</p>
-                            <p class="small text-muted">Los archivos aparecerán aquí una vez que los subas</p>
+                            <p class="fw-bold mb-1">No hay archivos para mostrar</p>
+                            <p class="small text-muted">Los documentos aparecerán aquí una vez que los subas</p>
                         </div>
                     `;
                     return;
                 }
 
-                const historyHTML = this.uploadedFiles.map(file => `
-                    <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded border">
+                archivos.forEach(archivo => {
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                    item.id = `file-${archivo.id}`;
+
+                    const fileInfo = `
                         <div class="d-flex align-items-center">
                             <div class="me-3">
-                                <div class="bg-success bg-opacity-10 rounded p-2">
-                                    <i class="fas fa-file-excel text-success"></i>
+                                <div class="bg-primary bg-opacity-10 rounded p-2">
+                                    <i class="fas fa-file text-primary"></i>
                                 </div>
                             </div>
                             <div>
-                                <p class="mb-1 fw-bold">${file.name}</p>
-                                <p class="small text-muted mb-0">${file.size} • ${file.records.toLocaleString()} registros • ${file.uploadDate}</p>
+                                <h5 class="mb-1">${archivo.filename}</h5>
+                                <small class="text-muted">Subido: ${new Date(archivo.uploadDate).toLocaleString()}</small>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-success me-2">Exitoso</span>
-                            <button onclick="uploader.removeFile(${file.id})" class="btn btn-sm btn-outline-danger">
-                                <i class="fas fa-trash"></i>
+                    `;
+                    
+                    const actionButtons = `
+                        <div>
+                            <a href="/api/archivos/ver/${encodeURIComponent(archivo.filename)}" class="btn btn-primary btn-sm me-2" download>
+                                <i class="fas fa-download"></i> Descargar
+                            </a>
+                            <button class="btn btn-danger btn-sm btn-eliminar" data-id="${archivo.id}" data-filename="${archivo.filename}">
+                                <i class="fas fa-trash-alt"></i> Eliminar
                             </button>
                         </div>
-                    </div>
-                `).join('');
+                    `;
 
-                this.uploadHistory.innerHTML = historyHTML;
-            }
+                    item.innerHTML = fileInfo + actionButtons;
+                    listaContainer.appendChild(item);
+                });
 
-            removeFile(fileId) {
-                this.uploadedFiles = this.uploadedFiles.filter(file => file.id !== fileId);
-                localStorage.setItem('uploadedFiles', JSON.stringify(this.uploadedFiles));
-                this.renderUploadHistory();
-                this.updateMetrics();
-            }
+                updateMetrics();
 
-            updateMetrics() {
-                const totalFiles = this.uploadedFiles.length;
-                const totalRecords = this.uploadedFiles.reduce((sum, file) => sum + file.records, 0);
-                const lastUpload = this.uploadedFiles.length > 0 
-                    ? new Date(this.uploadedFiles[0].uploadDate).toLocaleDateString('es-ES')
-                    : 'Sin cargas';
-
-                document.getElementById('totalFiles').textContent = totalFiles;
-                document.getElementById('totalRecords').textContent = totalRecords.toLocaleString();
-                document.getElementById('lastUpload').textContent = lastUpload;
-            }
-
-            formatFileSize(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            } catch (error) {
+                loadingMessage.textContent = `Error: ${error.message}`;
+                loadingMessage.className = 'alert alert-danger';
+                console.error('Error:', error);
             }
         }
 
-        let uploader;
-        document.addEventListener('DOMContentLoaded', () => {
-            uploader = new HistoricalDataUploader();
+        document.getElementById('lista-archivos').addEventListener('click', async (event) => {
+            if (event.target.classList.contains('btn-eliminar') || event.target.parentElement.classList.contains('btn-eliminar')) {
+                
+                const button = event.target.closest('.btn-eliminar');
+                const fileId = button.dataset.id;
+                const filename = button.dataset.filename;
+
+                if (!confirm(`¿Estás seguro de que deseas eliminar el archivo "${filename}"? Esta acción no se puede deshacer.`)) {
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/archivos/${fileId}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'No se pudo eliminar el archivo.');
+                    }
+
+                    const itemParaEliminar = document.getElementById(`file-${fileId}`);
+                    if (itemParaEliminar) {
+                        itemParaEliminar.remove();
+                    }
+                    
+                    alert(`Archivo "${filename}" eliminado correctamente.`);
+                    updateMetrics();
+
+                } catch (error) {
+                    console.error('Error al eliminar:', error);
+                    alert(`Error: ${error.message}`);
+                }
+            }
         });
 
-        function refreshData() {
-            uploader.renderUploadHistory();
-            uploader.updateMetrics();
-            uploader.showAlert('success', 'Datos actualizados correctamente');
+        function updateMetrics() {
+            const fileItems = document.querySelectorAll('#lista-archivos .list-group-item');
+            const totalFiles = fileItems.length;
+            
+            document.getElementById('totalFiles').textContent = totalFiles;
+            
+            if (totalFiles > 0) {
+                const lastItem = fileItems[0];
+                const dateText = lastItem.querySelector('small').textContent.replace('Subido: ', '');
+                document.getElementById('lastUpload').textContent = new Date(dateText).toLocaleDateString('es-ES');
+            } else {
+                document.getElementById('lastUpload').textContent = 'Sin cargas';
+            }
         }
-
-        function showComingSoon() {
-            uploader.showAlert('info', 'Esta funcionalidad estará disponible próximamente');
-        }
-
     </script>
-    <script>
-  // 1) Reenganchar el botón "Nueva Carga" para abrir el modal de ingreso manual
-  document.addEventListener('DOMContentLoaded', () => {
-    const nuevoBtn = Array.from(document.querySelectorAll('button.btn.btn-primary'))
-      .find(b => b.textContent.trim().includes('Carga manual'));
-
-    if (nuevoBtn) {
-      nuevoBtn.onclick = (e) => {
-        e.preventDefault();
-        const modal = new bootstrap.Modal(document.getElementById('modalIngresoManual'));
-        modal.show();
-      };
-    }
-    
-    // 2) Guardar operación histórica (POST al backend)
-    const alertBox = document.getElementById('op-manual-alert');
-    document.getElementById('btn-guardar-op').addEventListener('click', async (e) => {
-      e.preventDefault();
-      alertBox.className = 'd-none';
-
-      const form = document.getElementById('form-op-historica');
-      const data = Object.fromEntries(new FormData(form).entries());
-      if (!data.fecha) {
-        showMsg('danger', 'La fecha es obligatoria');
-        return;
-      }
-      if (data.cliente_id === '') delete data.cliente_id;
-      if (data.monto === '') delete data.monto;
-
-      try {
-        const r = await fetch(`${URL_BASE}/operacion-historica`, {//debo conectarlo con historicos.js y con op_hist_manual.js?
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        const json = await r.json();
-
-        if (!r.ok) throw new Error(json.message || 'Error al guardar');
-        showMsg('success', json.message || 'Operación guardada');
-
-        form.reset();
-      } catch (err) {
-        showMsg('danger', err.message);
-      }
-    });
-
-    function showMsg(type, text) {
-      alertBox.className = `alert alert-${type}`;
-      alertBox.textContent = text;
-      alertBox.classList.remove('d-none');
-    }
-  });
-</script>
-
 </body>
 </html>
