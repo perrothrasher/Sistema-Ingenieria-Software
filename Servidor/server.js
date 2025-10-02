@@ -31,7 +31,7 @@ const { registrarAuditoria } = require('./JS Llamadas/auditoria.js');
 const auditoriaRoutes = require('./JS Llamadas/auditoria_rutas.js');
 const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente, generarReporteClientes } = require('./JS Llamadas/cliente.js');
 const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores, listarTrabajadores, generarReporteTrabajadores } = require('./JS Llamadas/trabajadores.js'); 
-const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion, generarReporteDotacion } = require('./JS Llamadas/dotacion.js');
+const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion, generarReporteDotacion, eliminarDotacion } = require('./JS Llamadas/dotacion.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
@@ -136,6 +136,8 @@ app.get('/get-dotaciones-edicion', obtenerDotacionesParaEdicion);
 app.put('/editarDotacion/:id', editarDotacion);
 // Ruta para generar reporte PDF de dotaciones
 app.get('/api/dotacion/reporte', verificarToken, generarReporteDotacion);
+// Ruta para eliminar una dotación
+app.delete('/eliminarDotacion/:id', verificarToken, eliminarDotacion);
 /////////////////////////////////////////////////
 
 // HISTÓRICOS 

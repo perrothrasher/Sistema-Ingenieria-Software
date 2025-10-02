@@ -289,22 +289,37 @@
                     <form id="filtro-form" class="d-flex align-items-center">
                         <select id="filtro-accion" class="form-select me-2" style="width: 200px;">
                             <option value="">Todas las acciones</option>
-                            <option value="Inicio de Sesión">Inicio de Sesión</option>
-                            <option value="Cierre de sesión">Cierre de Sesión</option>
-                            <option value="Cliente Creado">Cliente Creado</option>
-                            <option value="Cliente Editado">Cliente Editado</option>
-                            <option value="Cliente Eliminado">Cliente Eliminado</option>
-                            <option value="Trabajador Creado">Trabajador Creado</option>
-                            <option value="Trabajador Editado">Trabajador Editado</option>
-                            <option value="Trabajador Eliminado">Trabajador Eliminado</option>
-                            <option value="Dotación Creada">Dotación Creada</option>
-                            <option value="Dotación Editada">Dotación Editada</option>
+                            <button id="btn-limpiar" type="button" class="btn btn-outline-secondary" title="Limpiar filtros">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <optgroup label ="Acciones de sesión">
+                                <option value="Inicio de Sesión">Inicio de Sesión</option>
+                                <option value="Cierre de sesión">Cierre de Sesión</option>
+                            </optgroup>
+                            <optgroup label="Clientes">
+                                <option value="Cliente Creado">Cliente Creado</option>
+                                <option value="Cliente Editado">Cliente Editado</option>
+                                <option value="Cliente Eliminado">Cliente Eliminado</option>
+                            </optgroup>
+                            <optgroup label="Trabajadores">
+                                <option value="Trabajador Creado">Trabajador Creado</option>
+                                <option value="Trabajador Editado">Trabajador Editado</option>
+                                <option value="Trabajador Eliminado">Trabajador Eliminado</option>
+                            </optgroup>
+                            <optgroup label="Dotación">
+                                <option value="Dotación Creada">Dotación Creada</option>
+                                <option value="Dotación Editada">Dotación Editada</option>
+                                <option value="Dotación Eliminada">Dotación Eliminada</option>
+                            </optgroup>
+                            <optgroup label="Reportes">
+                                <option value="Reporte de Clientes Generado">Clientes</option>
+                                <option value="Reporte de Trabajadores Generado">Trabajadores</option>
+                                <option value="Reporte de Dotaciones Generado">Dotación</option>
+                            </optgroup>
                             </select>
-
                         <select id="filtro-usuario" class="form-select me-2" style="width: 250px;">
                             <option value="">Todos los usuarios</option>
                         </select>
-
                         <button id="btn-limpiar" type="button" class="btn btn-outline-secondary" title="Limpiar filtros">
                             <i class="fas fa-times"></i>
                         </button>

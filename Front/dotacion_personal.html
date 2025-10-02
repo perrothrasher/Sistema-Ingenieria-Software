@@ -550,6 +550,9 @@
                             <button type="button" class="btn btn-success btn-sm" onclick="editarDotacion(${dotacion.id})">
                                 <i class="fas fa-edit me-1"></i>Editar
                             </button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarDotacion(${dotacion.id})">
+                                <i class="fas fa-trash-alt me-1"></i>Eliminar
+                            </button>
                         </td>
                         `;
                         dotacionBody.appendChild(tr);
@@ -566,6 +569,30 @@
         // Función para editar una dotación
         function editarDotacion(id) {
             window.location.href = `editar3.html?id=${id}`;
+        }
+
+        async function eliminarDotacion(id){
+            if(!confirm('¿Está seguro de que desea eliminar esta dotación? Esta acción no se puede deshacer.')){
+                return;
+            }
+
+            try{
+                const response = await fetch(`/eliminarDotacion/${id}`,{
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (response.ok){
+                    alert('Dotación eliminada exitosamente');
+                    cargarDotacion();
+                } else{
+                    alert(result.message || 'Error al eliminar la dotación');
+                }
+            }catch(error){
+                console.error('Error al eliminar la dotación:', error);
+                alert('Ocurrió un error de red al intentar eliminar la dotación.');
+            }
         }
         // Inicialización
         document.addEventListener('DOMContentLoaded', () => {

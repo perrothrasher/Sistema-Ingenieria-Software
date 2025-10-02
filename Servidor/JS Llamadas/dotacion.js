@@ -129,6 +129,26 @@ function editarDotacion(req, res){
     );
 };
 
+// Eliminar dotacion
+function eliminarDotacion(req, res){
+    const {id} = req.params;
+    const sql = `DELETE FROM DotacionPersonal WHERE id = ?`;
+
+    connection.execute(sql, [id], (err, results) => {
+        if (err){
+            return res.status(500).json({ message: 'Error al eliminar la dotación'});
+        }
+        // Registrar evento en la auditoría
+        const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+        const ip = req.ip || req.connection.remoteAddress;
+        registrarAuditoria(
+            userId, `${userNombre} ${userApellido}`, 'Dotación Eliminada', ip, rol,
+            {dotacionIdEliminada: id} // Datos adicionales del evento
+        );
+        res.status(200).json({ message: 'Dotación eliminada exitosamente' });
+    })
+};
+
 // Generar reportes con las dotaciones
 async function generarReporteDotacion(req, res){
     try{
@@ -282,5 +302,6 @@ module.exports = {
     obtenerDotaciones,
     editarDotacion,
     obtenerDotacionesParaEdicion,
-    generarReporteDotacion
+    generarReporteDotacion,
+    eliminarDotacion
     };
