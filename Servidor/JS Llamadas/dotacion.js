@@ -3,6 +3,7 @@ const connection = require('./db_conection.js');
 const { registrarAuditoria } = require('./auditoria.js');
 const PDFDocument = require('pdfkit');
 const path = require('path');
+const {ChartJSNodeCanvas} = require('chartjs-node-canvas');
 
 function registrarDotacion(req, res){
   const { anio, mes, TipoContrato_id, cantidad_personal, carga_horaria } = req.body;
@@ -145,6 +146,65 @@ async function generarReporteDotacion(req, res){
                 ORDER BY d.id ASC
         `);
         const dotaciones = rows;
+        
+        // Procesar graficos
+        const labels = [...new Set(dotaciones.map(d => `${d.mes.substring(0, 3)} ${d.anio}`))]; // Ej: ["Ene 2024", "Feb 2024"]
+        const dataFullTime = [];
+        const dataPartTime = [];
+
+        labels.forEach(label =>{
+            const [mesLabel, anioLabel] = label.split(' ');
+            
+            const dotacionFull = dotaciones.find(d => `${d.mes.substring(0, 3)} ${d.anio}` === label && d.tipo_contrato === 'Full Time');
+            dataFullTime.push(dotacionFull ? dotacionFull.cantidad_personal : 0);
+
+            const dotacionPart = dotaciones.find(d => `${d.mes.substring(0, 3)} ${d.anio}` === label && d.tipo_contrato === 'Part Time');
+            dataPartTime.push(dotacionPart ? dotacionPart.cantidad_personal : 0);
+        });
+
+        // Configuración del gráfico
+        const width = 800; // ancho en píxeles
+        const height = 600; // alto en píxeles
+        const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height });
+
+        const configuration = {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Personal Part Time',
+                        data: dataPartTime,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Personal Full Time',
+                        data: dataFullTime,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Evolución de la Dotación de Personal',
+                        font: { size: 20 }
+                    }
+                },
+                scales: {
+                    x: { stacked: true }, // Apilar en el eje X
+                    y: { stacked: true, beginAtZero: true } // Apilar en el eje Y
+                }
+            }
+        };
+
+        const chartImageBuffer = await chartJSNodeCanvas.renderToBuffer(configuration);
 
         // Crear nuevo documento PDF
         const doc = new PDFDocument({ margin: 50 });
@@ -189,6 +249,18 @@ async function generarReporteDotacion(req, res){
             doc.fontSize(10).text(`Carga Horaria: ${dotacion.carga_horaria} hrs`);
             doc.moveDown();
         });
+
+        doc.moveDown(2);
+
+        doc.fontSize(16).text('Visualización Gráfica', { align: 'center' });
+        doc.moveDown();
+
+        doc.image(chartImageBuffer, {
+            fit: [500, 400],
+            align: 'center',
+            valign: 'center'
+        });
+
         // --- Finalización del contenido del PDF ---
         doc.end();
 
