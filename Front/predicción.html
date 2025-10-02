@@ -358,7 +358,12 @@ class StaffPredictionSystem{
   async entrenar(){
     try{
       this.showProgress('Preparando entrenamiento…',15);
-      const r=await fetch(`${URL_BASE}/prediccion/entrenar`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+      const r= await fetch(`${URL_BASE}/prediccion/entrenar`,
+        {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({})
+      });
+s
       const js=await r.json();
       this.hideProgress();
       if(!r.ok||!js.ok) throw new Error(js.error||js.mensaje||'Fallo al entrenar');

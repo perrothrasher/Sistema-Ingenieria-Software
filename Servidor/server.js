@@ -149,7 +149,7 @@ app.put('/historicos/:tipo/:id', actualizarHistorico);          // CU19 (editar)
 
 // ===== NUEVO: montar rutas de predicción SIN tocar lo demás =====
 const prediccionRouter = require('./JS Llamadas/prediccion.js'); // <- nuevo archivo con la lógica de IA
-app.use('/prediccion', prediccionRouter);
+app.use('/prediccion', verificarToken,prediccionRouter);
 // ================================================================
 
 const httpsOptions ={

@@ -6,6 +6,7 @@
 const { Router } = require('express');
 const ExcelJS = require('exceljs');
 const { GridFSBucket } = require('mongodb');
+const {registrarAuditoria} = require('./auditoria.js');
 
 const router = Router();
 
@@ -232,6 +233,12 @@ router.post('/entrenar', async (req, res) => {
       );
       procesados++;
     }
+    // Auditoria
+    const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+    const ip = req.ip || req.connection.remoteAddress;
+      registrarAuditoria(
+        userId, `${userNombre} ${userApellido}`, 'Modelo Entrenado', ip, rol
+      );
 
     res.json({ ok: true, mensaje: 'Entrenamiento completado desde GridFS', procesados, omitidos });
   } catch (e) {
@@ -379,6 +386,14 @@ router.get('/proyectar', async (req, res) => {
     };
 
     resp.mes_base.capacidad_optima = Number(resp.mes_base.capacidad_optima || 0);
+
+    // Auditoria
+    const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+    const ip = req.ip || req.connection.remoteAddress;
+      registrarAuditoria(
+        userId, `${userNombre} ${userApellido}`, 'Proyección Generada', ip, rol
+      );
+
     res.json(resp);
   } catch (e) {
     console.error('[Proyectar] ', e);
