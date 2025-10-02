@@ -29,7 +29,7 @@ const login = require('./JS Llamadas/login.js'); // Iniciar sesión
 const verificarToken = require('./JS Llamadas/authMiddleware.js');
 const { registrarAuditoria } = require('./JS Llamadas/auditoria.js');
 const auditoriaRoutes = require('./JS Llamadas/auditoria_rutas.js');
-const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente } = require('./JS Llamadas/cliente.js');
+const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente, generarReporteClientes } = require('./JS Llamadas/cliente.js');
 const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores, listarTrabajadores } = require('./JS Llamadas/trabajadores.js'); 
 const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion } = require('./JS Llamadas/dotacion.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
@@ -118,6 +118,8 @@ app.get('/get-clientes', obtenerClientes);
 app.put('/editarCliente/:id', editarClientes);
 // Ruta para eliminar un cliente
 app.delete('/eliminarCliente/:id', eliminarCliente);
+// Ruta para generar reporte PDF de clientes
+app.get('/api/clientes/reporte', verificarToken, generarReporteClientes);
 /////////////////////////////////////////////////
 
 // DOTACIÓN
