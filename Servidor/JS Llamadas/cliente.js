@@ -216,17 +216,26 @@ async function generarReporteClientes(req, res){
 
     // Dibujar el logo
     doc.image(LogoPath, 50, 45, { width: 100 });
-    doc.moveDown(3);
+
+    // Información de la empresa
+    doc.fontSize(10)
+           .text(
+                `Fanor Velasco 85, Piso 3\n` +
+                `+56 2 2617 9200\n` +
+                `contacto@totalcheck.cl`,
+                { align: 'right' }
+           );   
+    doc.moveDown(4);
 
     // Contenido del PDF
     doc.fontSize(25).text('Reporte de Clientes', {align: 'center'});
-    doc.moveDown(1);
+    doc.moveDown(0.5);
 
     // Linea divisoria
     doc.strokeColor("#aaaaaa")
            .lineWidth(1)
-           .moveTo(50, 125)
-           .lineTo(550, 125)
+           .moveTo(50, doc.y)
+           .lineTo(550, doc.y)
            .stroke();
     doc.moveDown(2);
 
@@ -248,7 +257,7 @@ async function generarReporteClientes(req, res){
     registrarAuditoria(
       userId, `${userNombre} ${userApellido}`, 'Reporte de Clientes Generado', ip, rol
     );
-    
+
   }catch(error){
     console.error('Error al generar el reporte PDF:', error);
     res.status(500).json({ message: 'Error al generar el reporte PDF' });

@@ -295,6 +295,10 @@
         </div>
     </div>
     <script>
+        function isDev(){
+            try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
+            catch(_) { return true; }
+        }
         window.addEventListener('load', async () =>{
             try{
                 // se obtienen los datos del usuario desde el servidor
