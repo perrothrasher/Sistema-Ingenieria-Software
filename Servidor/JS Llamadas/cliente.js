@@ -241,6 +241,14 @@ async function generarReporteClientes(req, res){
     });
     // --- Finalización del contenido del PDF ---
     doc.end();
+
+    // Registrar evento en la auditoría
+    const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+    const ip = req.ip || req.connection.remoteAddress;
+    registrarAuditoria(
+      userId, `${userNombre} ${userApellido}`, 'Reporte de Clientes Generado', ip, rol
+    );
+    
   }catch(error){
     console.error('Error al generar el reporte PDF:', error);
     res.status(500).json({ message: 'Error al generar el reporte PDF' });
