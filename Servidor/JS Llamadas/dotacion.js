@@ -234,13 +234,13 @@ async function generarReporteDotacion(req, res){
         res.setHeader('Content-Disposition', 'attachment; filename=reporte-dotaciones.pdf');
         doc.pipe(res);
 
-        // Logo de la empresa
+        // logo de la empresa
         const LogoPath = path.join(__dirname, '..', '..', 'Front', 'assets', 'totalcheck-logo.png');
 
-        // Dibujar el logo
+        // dibujar el logo
         doc.image(LogoPath, 50, 45, { width: 100 });
 
-        // Información de la empresa
+        // información de la empresa
         doc.fontSize(10)
             .text(
                     `Fanor Velasco 85, Piso 3\n` +
@@ -250,11 +250,11 @@ async function generarReporteDotacion(req, res){
             );   
         doc.moveDown(4);
 
-        // Contenido del PDF
+        // contenido del PDF
         doc.fontSize(25).text('Reporte de Dotación Actual', {align: 'center'});
         doc.moveDown(0.5);
 
-        // Linea divisoria
+        // linea divisoria
         doc.strokeColor("#aaaaaa")
             .lineWidth(1)
             .moveTo(50, doc.y)
@@ -262,7 +262,7 @@ async function generarReporteDotacion(req, res){
             .stroke();
         doc.moveDown(2);
 
-        // Iterar sobre las dotaciones y agregarlas al PDF
+        // iterar sobre las dotaciones y agregarlas al PDF
         dotaciones.forEach((dotacion, index) =>{
             doc.fontSize(14).text(`${index + 1}. ${dotacion.anio} ${dotacion.mes} ${dotacion.tipo_contrato}`, { underline: true });
             doc.fontSize(10).text(`Cantidad de Personal: ${dotacion.cantidad_personal}`);
@@ -281,10 +281,10 @@ async function generarReporteDotacion(req, res){
             valign: 'center'
         });
 
-        // --- Finalización del contenido del PDF ---
+        // --- finalización del contenido del PDF ---
         doc.end();
 
-        // Registrar evento en la auditoría
+        // registrar evento en la auditoría
         const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
         const ip = req.ip || req.connection.remoteAddress;
         registrarAuditoria(
