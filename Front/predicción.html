@@ -137,7 +137,7 @@
       </div>
     </div>
 
-    <!-- === MÉTRICAS (idénticas a tu diseño) === -->
+    <!-- === MÉTRICAS === -->
     <div class="row mb-4" id="metricsCards">
       <div class="col-xl-3 col-md-6 mb-4">
         <div class="metric-card p-4 h-100">
@@ -177,7 +177,6 @@
           <div class="d-flex justify-content-between">
             <div>
               <div class="text-white-50 small">Modelo IA</div>
-              <!-- Mantengo el texto EXACTO de tu maqueta -->
               <div class="h6 mb-0 text-white" id="modeloIAEstado">Activo</div>
             </div>
             <div class="align-self-center"><i class="fas fa-robot fa-2x text-white-50"></i></div>
@@ -238,7 +237,7 @@
           <h5 class="mb-3"><i class="fas fa-chart-bar text-success"></i> Resultados de la Predicción</h5>
           <div id="predictionResults"></div>
 
-          <!-- === AÑADIDO: acciones de reporte (no reemplaza nada) === -->
+          <!-- === acciones de reporte === -->
           <hr class="my-3">
           <div class="d-flex gap-2">
             <button id="btnVerReporte" class="btn btn-outline-primary" disabled>
@@ -251,7 +250,6 @@
               <i class="fas fa-file-excel me-1"></i> Descargar XLSX
             </button>
           </div>
-          <!-- === FIN AÑADIDO === -->
 
         </div>
       </div>
@@ -295,7 +293,7 @@
             }
         });
 
-        // PERMISOS
+        // Permisos
         function verificarAdmin(rol){
             console.log("Rol del usuario: ", rol);
 
@@ -337,7 +335,7 @@
             } catch (e) {}
             window.location.replace('login.html');
         }
-/* === JS: backend integrado, SIN tocar los 4 cards de métricas === */
+/* === backend integrado === */
 class StaffPredictionSystem{
   constructor(){
     this.progressSection=document.getElementById('progressSection');
@@ -350,7 +348,6 @@ class StaffPredictionSystem{
     this.predictionResults=document.getElementById('predictionResults');
     this.totalPredEl=document.getElementById('totalPredictions');
     this.lastPredEl=document.getElementById('lastPrediction');
-    // OJO: NO tocamos el texto del card “Modelo IA Activo”
     this.predictions=JSON.parse(localStorage.getItem('staffPredictions')||'[]');
     this.renderPredictionHistory(); this.updateMetrics();
   }
@@ -385,7 +382,7 @@ s
       const r=await fetch(url); const js=await r.json(); this.hideProgress();
       if(!r.ok||!js.ok) throw new Error(js.error||js.mensaje||'Fallo en proyección');
 
-      // Historial (solo números y fecha; sin tocar cards de arriba)
+      // Historial
       const item={id:Date.now(),createdDate:new Date().toLocaleString('es-CL'),resumen:`${js.mes_base.anio}-${js.mes_base.mes} → ${js.mes_siguiente.anio}-${js.mes_siguiente.mes}`,estado:js.mes_siguiente.estado_modelo||js.mes_siguiente.estado_regla};
       this.predictions.unshift(item); localStorage.setItem('staffPredictions',JSON.stringify(this.predictions));
       this.renderPredictionHistory(); this.updateMetrics();
@@ -479,7 +476,6 @@ function entrenarModelo(){ predictor.entrenar(); }
 function refreshPredictions(){ predictor.renderPredictionHistory(); predictor.updateMetrics(); predictor.showAlert('success','Datos actualizados'); }
 function showComingSoon(){ predictor.showAlert('info','Próximamente'); }
 
-/* === AÑADIDO: Extensión no intrusiva para reporte/gráfico/export === */
 
 // Almacena la última predicción y habilita botones sin modificar showResults original
 (function(){
@@ -497,7 +493,7 @@ function showComingSoon(){ predictor.showAlert('info','Próximamente'); }
     if (btnXLSX()) btnXLSX().disabled = false;
   };
 
-  // Eventos botones (delegados tras DOMContentLoaded)
+  // Eventos botones 
   document.addEventListener('DOMContentLoaded', ()=>{
     btnVer()?.addEventListener('click', openReportModal);
     btnPDF()?.addEventListener('click', downloadPDF);
@@ -617,7 +613,7 @@ function showComingSoon(){ predictor.showAlert('info','Próximamente'); }
 })();
 </script>
 
-<!-- === AÑADIDO: Modal de reporte (no interfiere con tu layout) === -->
+<!-- === Modal de reporte === -->
 <div class="modal fade" id="reporteModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content bg-dark text-light">
