@@ -160,11 +160,11 @@
         }
     </style>
     <style>
-        /* Desactivar efectos en la página de inicio */
+        /* Desactiva los efectos en la página de inicio */
         .fade-in { animation: none !important; }
         .action-card { transition: none !important; }
         .action-card:hover { transform: none !important; box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; }
-        /* Apariencia tipo botón */
+        /* Muestra la aparencia en tipo botón */
         .action-card {
             border: 1px solid rgba(0,0,0,0.1);
             border-radius: 8px;
@@ -265,9 +265,9 @@
         </div>
     </div>
 
-    <!-- Main Content -->
+    <!-- Principal -->
     <div class="container-fluid mt-4">
-        <!-- Welcome Section -->
+        <!-- Bienvenida -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="welcome-section fade-in">
@@ -281,7 +281,7 @@
             </div>
         </div>
 
-        <!-- Quick Stats -->
+        <!-- Estadisticas rapidas -->
         <div class="row mb-4">
             <div class="col-md-3 mb-3">
                 <div class="stats-card fade-in" style="animation-delay: 0.1s;">
@@ -317,7 +317,7 @@
             </div>
         </div>
 
-        <!-- Action Cards -->
+        <!-- Tarjetas de accion -->
         <div class="row">
             <div class="col-lg-6 col-xl-4 mb-4">
                 <button class="action-card primary fade-in" onclick="location.href='registro_cliente.html'" style="animation-delay: 0.5s;">
@@ -413,12 +413,12 @@
 
     <footer style="background: linear-gradient(135deg, #1e5a8e 0%, #2d7ab8 100%); color: white; padding: 60px 0 30px 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
   <div style="max-width: 1400px; margin: 0 auto; padding: 0 40px;">
-    <!-- Logo Section -->
+    <!-- Logo -->
     <div style="text-align: center; margin-bottom: 40px;">
       <img src="assets/logo-footer.png" alt="TotalCheck Logo" style="height: 60px; width: auto;">
     </div>
 
-    <!-- Contact Info Section -->
+    <!-- Informacion de contacto -->
     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 60px; margin-bottom: 40px;">
       <!-- Chile -->
       <div style="padding: 0 20px;">
@@ -475,7 +475,7 @@
       </div>
     </div>
 
-    <!-- Copyright Section -->
+    <!-- Seccion Copyright -->
     <div style="border-top: 1px solid rgba(255, 255, 255, 0.2); padding: 30px 15px 0; text-align: center;">
       <p style="margin: 0; font-size: 15px; opacity: 0.9;">
         <span style="opacity: 0.7;">TotalCheck ©2019. Todos los derechos reservados.</span>
@@ -492,10 +492,10 @@
 
         window.addEventListener('load', async () =>{
             try{
-                // se obtienen los datos del usuario desde el servidor
+                // Se obtienen los datos del usuario desde el servidor
                 const response = await fetch('/api/perfil');
 
-                // Modo desarrollo: si no hay backend, no redirigir
+                // Modo desarrollo: si no hay backend, no va a redirigir
                 if (!response.ok){
                     if (isDev()) {
                         console.warn('Dev mode: perfil no disponible, se omite redirección al login');
@@ -521,7 +521,7 @@
             }
         });
 
-        // PERMISOS
+        // Permisos
         function verificarAdmin(rol){
             console.log("Rol del usuario: ", rol);
 
