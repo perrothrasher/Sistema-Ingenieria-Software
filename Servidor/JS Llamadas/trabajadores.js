@@ -8,13 +8,36 @@ const path = require('path');
 function obtenerTrabajadores(req, res){
     const id = req.query.id;
     const sql = `
-        SELECT t.id, t.usuario, t.contrasena, p.nombre, p.apellido, p.rut, p.telefono, p.correo, r.nombre AS rol,
-        u.direccion, u.ciudad, u.region_id AS region_id, g.nombre AS Region, u.postal, r.id AS rol_id
-        FROM Trabajador t
-        JOIN Persona p ON t.persona_id = p.id
-        JOIN Rol r ON t.rol_id = r.id
-        JOIN Ubicacion u ON p.ubicacion_id = u.id
-        JOIN Region g ON u.region_id = g.id;
+        SELECT 
+            t.id, 
+            t.usuario, 
+            t.contrasena, 
+            p.nombre, 
+            p.apellido, 
+            p.rut, 
+            p.telefono, 
+            p.correo, 
+            r.nombre AS rol,
+            u.direccion, 
+            u.ciudad, 
+            u.region_id AS region_id, 
+            g.nombre AS Region, 
+            u.postal, 
+            r.id AS rol_id, 
+            c.id AS tipo_contrato_id,
+            c.nombre AS tipo_contrato_nombre 
+        FROM 
+            Trabajador t
+        JOIN 
+            Persona p ON t.persona_id = p.id
+        JOIN 
+            Rol r ON t.rol_id = r.id
+        LEFT JOIN 
+            TipoContrato c ON t.tipo_contrato_id = c.id 
+        JOIN 
+            Ubicacion u ON p.ubicacion_id = u.id
+        JOIN 
+            Region g ON u.region_id = g.id;
     `;
 
     connection.query(sql, [id], (err, results) => {
@@ -144,6 +167,38 @@ function listarTrabajadores(req, res){
     });
 };
 
+function actualizarTipoContrato(req, res) {
+    const { id } = req.params;
+    const { tipo_contrato_id } = req.body;
+
+    if (!tipo_contrato_id) {
+        return res.status(400).json({ message: 'El ID del tipo de contrato es requerido.' });
+    }
+
+    const sql = 'UPDATE Trabajador SET tipo_contrato_id = ? WHERE id = ?';
+
+    connection.execute(sql, [tipo_contrato_id, id], (err, result) => {
+        if (err) {
+            console.error('Error al actualizar el tipo de contrato:', err);
+            return res.status(500).json({ message: 'Error interno al actualizar el contrato.' });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Trabajador no encontrado.' });
+        }
+
+        // Opcional: Registrar en auditoría
+        const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
+        const ip = req.ip || req.connection.remoteAddress;
+        registrarAuditoria(
+          userId, `${userNombre} ${userApellido}`, 'Tipo de Contrato Actualizado', ip, rol,
+          { trabajadorId: id, nuevoContratoId: tipo_contrato_id }
+        );
+
+        res.status(200).json({ message: 'Tipo de contrato actualizado con éxito.' });
+    });
+}
+
 async function generarReporteTrabajadores(req,res){
     try{
     const [rows] = await connection.promise().query(`
@@ -224,5 +279,6 @@ module.exports = {
     editarTrabajadores,
     eliminarTrabajadores,
     listarTrabajadores,
-    generarReporteTrabajadores
+    generarReporteTrabajadores,
+    actualizarTipoContrato
 };

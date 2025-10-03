@@ -30,7 +30,7 @@ const verificarToken = require('./JS Llamadas/authMiddleware.js');
 const { registrarAuditoria } = require('./JS Llamadas/auditoria.js');
 const auditoriaRoutes = require('./JS Llamadas/auditoria_rutas.js');
 const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente, generarReporteClientes } = require('./JS Llamadas/cliente.js');
-const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores, listarTrabajadores, generarReporteTrabajadores } = require('./JS Llamadas/trabajadores.js'); 
+const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores, listarTrabajadores, generarReporteTrabajadores, actualizarTipoContrato } = require('./JS Llamadas/trabajadores.js'); 
 const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion, generarReporteDotacion, eliminarDotacion } = require('./JS Llamadas/dotacion.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
@@ -108,6 +108,8 @@ app.delete('/eliminarTrabajador/:id', eliminarTrabajadores);
 app.get('/api/usuarios/lista', verificarToken, listarTrabajadores);
 // Ruta para generar reporte PDF de trabajadores
 app.get('/api/trabajadores/reporte', verificarToken, generarReporteTrabajadores);
+// Ruta para actualizar tipo de contrato de un trabajador
+app.put('/api/trabajadores/:id/contrato', verificarToken, actualizarTipoContrato);
 /////////////////////////////////////////////////
 
 // CLIENTES

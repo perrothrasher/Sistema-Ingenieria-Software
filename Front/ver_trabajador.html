@@ -351,7 +351,42 @@
             } catch (e) {}
             window.location.replace('login.html');
         }
-        
+    
+    // Función para actualizar el tipo de contrato
+    async function actualizarContrato(selectElement, trabajadorId) {
+        const tipoContratoId = selectElement.value;
+
+        // Evitar llamadas si el valor no es válido (ej. "Seleccionar...")
+        if (!tipoContratoId) return;
+
+        try {
+            const response = await fetch(`/api/trabajadores/${trabajadorId}/contrato`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Asegúrate de incluir headers de autenticación si son necesarios
+                },
+                body: JSON.stringify({ tipo_contrato_id: tipoContratoId })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                console.log('Contrato actualizado:', result.message); 
+                // Cambia el color del texto a negro como confirmación visual
+                selectElement.style.color = 'black'; 
+            } else {
+                // Si el servidor responde con un error, lo mostramos
+                throw new Error(result.message || 'Error al actualizar el contrato.');
+            }
+        } catch (error) {
+            console.error('Error al actualizar el contrato:', error);
+            alert(`Error: ${error.message}`);
+            // Opcional: recargar los datos para revertir el cambio visual en el menú
+            cargarTrabajadores(); 
+        }
+    }
+
     // Cargar los trabajadores desde el backend
     async function cargarTrabajadores() {
       const loadingSpinner = document.getElementById('loadingSpinner');
@@ -381,11 +416,21 @@
           // Actualizar contador
           totalTrabajadores.textContent = data.trabajadores.length;
 
+          const opcionesContrato = `
+            <option value="1">Full Time</option>
+            <option value="2">Part Time</option>
+          `;
           // Iterar sobre los datos de los trabajadores y mostrarlos en la tabla
           data.trabajadores.forEach((trabajador, index) => {
             const tr = document.createElement('tr');
             tr.style.animationDelay = `${index * 0.1}s`;
             tr.classList.add('fade-in');
+            const selectContrato = `
+              <select class="form-select" onchange="actualizarContrato(this, '${trabajador.id}')" ${trabajador.tipo_contrato_id ? '' : 'style="color: gray;"'}>
+                  <option value="" disabled ${!trabajador.tipo_contrato_id ? 'selected' : ''}>Seleccionar...</option>
+                  ${opcionesContrato.replace(`value="${trabajador.tipo_contrato_id}"`, `value="${trabajador.tipo_contrato_id}" selected`)}
+              </select>
+            `;
             tr.innerHTML = `
               <td>
                 <div class="d-flex align-items-center">
@@ -400,6 +445,7 @@
                 <i class="fas fa-envelope text-muted me-2"></i>
                 ${trabajador.correo}
               </td>
+              <td>${selectContrato}</td>
               <td>
                 <button type="button" class="btn btn-action btn-view" disabled title="Ver detalles del trabajador">
                   <i class="fas fa-eye me-1"></i>Ver
