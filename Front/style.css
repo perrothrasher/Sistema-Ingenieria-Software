@@ -76,9 +76,8 @@ button:hover {
   text-align: center;
   font-weight: bold;
 }
-/* (Se elimina navbar antiguo basado en listas para evitar conflictos con Bootstrap) */
 
-/* NAVBAR (Unificado desde historial.html) */
+/* NAVBAR */
 .top-bar {
   background-color: white;
   height: 60px;
