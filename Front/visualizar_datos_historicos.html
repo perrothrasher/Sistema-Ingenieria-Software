@@ -230,7 +230,7 @@
         </div>
     </div>
 
-    <!-- Contenido Principal -->
+    <!-- contenido principal -->
     <div class="container-fluid mt-4">
         <!-- Header -->
         <div class="row mb-4">
@@ -263,7 +263,7 @@
             </div>
         </div>
 
-        <!-- Filtros -->
+        <!-- filtros -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="filter-section">
@@ -314,7 +314,7 @@
             </div>
         </div>
 
-        <!-- Cards de Métricas -->
+        <!-- cards de métricas -->
         <div class="row mb-4" id="metricsCards">
             <div class="col-xl-3 col-md-6 mb-4">
                 <div class="metric-card p-4 h-100">
@@ -370,7 +370,7 @@
             </div>
         </div>
 
-        <!-- Gráficos -->
+        <!-- gráficos -->
         <div class="row mb-4">
             <div class="col-lg-8 mb-4">
                 <div class="chart-container">
@@ -396,7 +396,7 @@
             </div>
         </div>
 
-        <!-- Tabla de Datos -->
+        <!-- tabla de datos -->
         <div class="row">
             <div class="col-12">
                 <div class="chart-container">
@@ -425,7 +425,7 @@
             </div>
         </div>
 
-        <!-- Loading Spinner -->
+        <!-- loading spinner -->
         <div class="loading-spinner text-center">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Cargando...</span>
@@ -433,7 +433,7 @@
             <p class="mt-2">Cargando datos históricos...</p>
         </div>
     </div>
-    <!-- Modal CU19: Editar Dotación Histórica -->
+    <!-- Editar Dotación Histórica -->
     <div class="modal fade" id="modalEditarDotacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
         <div class="modal-content">
@@ -483,7 +483,7 @@
 </div>
   
     <script>
-        /// AUTENTICACIÓN Y PERMISOS ESQUELETO
+        /// Autenticacion Y Permisos esqueleto
         function isDev(){
             try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
             catch(_) { return true; }
@@ -516,7 +516,7 @@
             }
         });
 
-        // PERMISOS
+        // Permisos
         function verificarAdmin(rol){
             console.log("Rol del usuario: ", rol);
 
@@ -554,7 +554,7 @@
                 window.location.href = 'login.html'
             }
         }
-        /// FIN AUTENTICACIÓN Y PERMISOS ESQUELETO
+        /// Fin autentiacion Y permisos esqueleto
         
         class HistoricalDataVisualization {
             constructor() {
@@ -603,7 +603,7 @@
                 try {
                     console.log('Iniciando sistema...');
                     
-                    // Verificar autenticación (TEMPORAL - COMENTADO PARA PRUEBAS)
+                    // Verificar autenticación
                     // if (!localStorage.getItem("auth")) {
                     //     window.location.href = "login.html";
                     //     return;
@@ -893,7 +893,7 @@
                 
                 const totalRecords = this.filteredData.length;
                 
-                // Calcular crecimiento (ejemplo simplificado)
+                // Calcular crecimiento
                 const growthRate = this.calculateGrowthRate();
 
                 document.getElementById('totalPersonal').textContent = totalPersonal.toLocaleString();
@@ -1019,7 +1019,7 @@
             return `${prefix}_${ts}.${ext}`;
         }
 
-        // Toma los datos actualmente visibles en la tabla (con filtros activos)
+        // Toma los datos actualmente visibles en la tabla
         function getVisibleRows() {
             if (!visualization?.dataTable) return [];
             return visualization.dataTable.rows({ search: 'applied' }).data().toArray();
