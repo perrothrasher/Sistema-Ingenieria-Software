@@ -248,10 +248,10 @@ async function generarReporteClientes(req, res){
       doc.fontSize(10).text(`Dirección: ${cliente.direccion}`);
       doc.moveDown();
     });
-    // --- Finalización del contenido del PDF ---
+    // --- finalización del contenido del PDF ---
     doc.end();
 
-    // Registrar evento en la auditoría
+    // registrar evento en la auditoría
     const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
     const ip = req.ip || req.connection.remoteAddress;
     registrarAuditoria(
@@ -264,7 +264,7 @@ async function generarReporteClientes(req, res){
   }
 };
 
-// Exportar las funciones correctamente
+// exportar las funciones correctamente
 module.exports = {
   registrarCliente,
   obtenerClientes,
