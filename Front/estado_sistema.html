@@ -3,569 +3,871 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estado del Sistema</title>
+    <title>Actualización de Datos - Sistema</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        .status-card {
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border-left: 5px solid #007bff;
-            background: white;
-        }
-        
-        .status-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-        
-        .status-card.updated {
-            border-left-color: #28a745;
-        }
-        
-        .status-card.warning {
-            border-left-color: #ffc107;
-        }
-        
-        .status-card.outdated {
-            border-left-color: #dc3545;
-        }
-        
-        .status-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-            margin-right: 20px;
-        }
-        
-        .status-icon.updated {
-            background: linear-gradient(135deg, #28a745, #20c997);
-        }
-        
-        .status-icon.warning {
-            background: linear-gradient(135deg, #ffc107, #fd7e14);
-        }
-        
-        .status-icon.outdated {
-            background: linear-gradient(135deg, #dc3545, #e83e8c);
-        }
-        
-        .status-icon.info {
-            background: linear-gradient(135deg, #007bff, #6f42c1);
-        }
-        
-        .timestamp {
-            font-family: 'Courier New', monospace;
-            background: #f8f9fa;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-        
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
-        
-        .indicator-green { background-color: #28a745; }
-        .indicator-yellow { background-color: #ffc107; }
-        .indicator-red { background-color: #dc3545; }
-        
-        .refresh-btn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #007bff, #6610f2);
-            border: none;
-            color: white;
-            font-size: 20px;
-            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
-            transition: all 0.3s ease;
-        }
-        
-        .refresh-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(0,123,255,0.4);
-        }
-        
-        .refresh-btn.spinning {
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .system-summary {
+        .metric-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
             border-radius: 15px;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+        .metric-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .metric-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .metric-card.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .filter-section {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .update-form-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             padding: 30px;
             margin-bottom: 30px;
         }
-        
         .fade-in {
             animation: fadeIn 0.5s ease-in;
         }
-        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+        body {
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-active {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-inactive {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .search-container {
+            position: relative;
+        }
+        .search-container .form-control {
+            padding-left: 2.5rem;
+        }
+        .search-container .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        .form-section-title {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        .btn-action {
+            min-width: 100px;
+        }
+        .record-selected {
+            background-color: #e0e7ff !important;
         }
     </style>
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-sm">
+    <div class="top-bar d-flex align-items-center">
         <div class="container-fluid">
-            <div class="navbar-logo">Sistema</div>
-            <ul class="navbar-links">
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+            <nav class="navbar navbar-expand-lg w-100">
+                <a class="navbar-brand" href="#">
+                    <img src="assets/totalcheck-logo.png" alt="TotalCheck Logo" style="height:35px; width:auto;">
+                </a>
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
-                </button>  
-                <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                    <div class="dropdown">
-                        <a class="btn" href="index.html" role="button">
-                            <i class="fas fa-home"></i> Inicio
-                        </a>
-                    </div>
-                    <div class="dropdown">
-                        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-chart-line"></i> Análisis
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
-                                <i class="fas fa-chart-bar"></i> Datos Históricos</a></li>
-                            <li><a class="dropdown-item" href="estado_sistema.html">
-                                <i class="fas fa-server"></i> Estado del Sistema</a></li>
-                        </ul>
-                    </div>
-                    <div class="dropdown">
-                        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-users"></i> Gestión
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="ver_cliente.html">Ver Clientes</a></li>
-                            <li><a class="dropdown-item" href="ver_trabajador.html">Ver Trabajadores</a></li>
-                            <li><a class="dropdown-item" href="dotacion_personal.html">Dotación Personal</a></li>
-                        </ul>
-                    </div>
-                    <div class="dropdown ms-auto">
-                        <a class="btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="logout()">
-                                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
-                        </ul>
-                    </div>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.html">
+                                <i class="fas fa-home"></i> Inicio
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="editar_cliente.html">
+                                    <i class="fas fa-user-edit"></i> Editar Clientes</a></li>
+                                <li><a class="dropdown-item" href="ver_cliente.html">
+                                    <i class="fas fa-users"></i> Ver Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="editar_trabajador.html">
+                                    <i class="fas fa-user-tie"></i> Editar Trabajador</a></li>
+                                <li><a class="dropdown-item" href="ver_trabajador.html">
+                                    <i class="fas fa-users-cog"></i> Ver Trabajadores</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item active" href="actualizacion-datos.html">
+                                    <i class="fas fa-sync-alt"></i> Actualización de Datos</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-plus"></i> Agregar
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="registro_cliente.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Clientes</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="registro2.html">
+                                    <i class="fas fa-user-plus"></i> Agregar Trabajador</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-chart-line"></i> Dotación
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="dotacion_personal.html">
+                                    <i class="fas fa-users"></i> Agregar Dotación</a></li>
+                                <li><a class="dropdown-item" href="carga_datos_historicos.html">
+                                    <i class="fas fa-upload"></i> Cargar Datos</a></li>
+                                <li><a class="dropdown-item" href="visualizar_datos_historicos.html">
+                                    <i class="fas fa-chart-bar"></i> Visualizar Datos</a></li>
+                                <li><a class="dropdown-item" href="predicción.html">
+                                    <i class="fas fa-crystal-ball"></i> Ver Predicción</a></li>
+                                <li><a class="dropdown-item" href="historial.html">
+                                    <i class="fas fa-history"></i> Ver Historial</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> <span id="welcomeMessage">Usuario</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    </ul>
                 </div>
-            </ul>
+            </nav>
         </div>
-    </nav>
+    </div>
 
-    <!-- Contenido Principal -->
     <div class="container-fluid mt-4">
         <!-- Header -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="system-summary text-center">
-                    <h1 class="mb-3">
-                        <i class="fas fa-server"></i>
-                        Estado del Sistema
-                    </h1>
-                    <p class="mb-3">Monitor en tiempo real del estado de actualización de datos</p>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h4 id="systemStatus">🟢 Sistema Operativo</h4>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="h2 mb-1">
+                            <i class="fas fa-sync-alt text-primary"></i>
+                            Actualización de Datos
+                        </h1>
+                        <p class="text-muted">Busca y actualiza registros del sistema de forma rápida y segura</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary me-2" onclick="limpiarFormulario()">
+                            <i class="fas fa-eraser"></i> Limpiar
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Actualizar Lista
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Métricas -->
+        <div class="row mb-4" id="metricsCards">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="metric-card p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Total Registros</div>
+                            <div class="h4 mb-0 text-white font-weight-bold" id="totalRegistros">0</div>
                         </div>
-                        <div class="col-md-4">
-                            <h5>Última Verificación</h5>
-                            <p id="lastCheck" class="mb-0">--:--:--</p>
+                        <div class="align-self-center">
+                            <i class="fas fa-database fa-2x text-white-50"></i>
                         </div>
-                        <div class="col-md-4">
-                            <h5>Tiempo Activo</h5>
-                            <p id="uptime" class="mb-0">Calculando...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="metric-card success p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Actualizados Hoy</div>
+                            <div class="h4 mb-0 text-white font-weight-bold" id="actualizadosHoy">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="metric-card warning p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Pendientes Revisión</div>
+                            <div class="h4 mb-0 text-white font-weight-bold" id="pendientesRevision">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x text-white-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="metric-card info p-4 h-100">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="text-white-50 small">Este Mes</div>
+                            <div class="h4 mb-0 text-white font-weight-bold" id="esteMes">0</div>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar fa-2x text-white-50"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Cards de Estado -->
-        <div class="row" id="statusCards">
-            <!-- Las cards se generan dinámicamente -->
+        <!-- Filtros de Búsqueda -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="filter-section">
+                    <h5 class="mb-3">
+                        <i class="fas fa-search text-primary"></i>
+                        Buscar Registro para Actualizar
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo de Registro</label>
+                            <select class="form-select" id="tipoRegistro" onchange="actualizarCamposBusqueda()">
+                                <option value="">Seleccione un tipo</option>
+                                <option value="cliente">Cliente</option>
+                                <option value="trabajador">Trabajador</option>
+                                <option value="dotacion">Dotación Personal</option>
+                                <option value="actividad">Actividad</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Buscar por ID</label>
+                            <div class="search-container">
+                                <input type="text" class="form-control" id="busquedaId" placeholder="Ingrese ID del registro">
+                                <i class="fas fa-hashtag search-icon"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Buscar por Nombre/Descripción</label>
+                            <div class="search-container">
+                                <input type="text" class="form-control" id="busquedaTexto" placeholder="Ingrese nombre o descripción">
+                                <i class="fas fa-search search-icon"></i>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" id="estadoBusqueda">
+                                <option value="">Todos los estados</option>
+                                <option value="activo">Activo</option>
+                                <option value="inactivo">Inactivo</option>
+                                <option value="pendiente">Pendiente</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha Desde</label>
+                            <input type="date" class="form-control" id="fechaDesde">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha Hasta</label>
+                            <input type="date" class="form-control" id="fechaHasta">
+                        </div>
+                        <div class="col-12 d-flex align-items-end">
+                            <button class="btn btn-primary me-2" onclick="buscarRegistros()">
+                                <i class="fas fa-search"></i> Buscar Registros
+                            </button>
+                            <button class="btn btn-outline-secondary" onclick="limpiarBusqueda()">
+                                <i class="fas fa-eraser"></i> Limpiar Búsqueda
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Tabla de Detalles -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
+        <div class="row">
+            <!-- Tabla de Resultados -->
+            <div class="col-lg-6 mb-4">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0">
-                            <i class="fas fa-list"></i>
-                            Detalle de Actualizaciones
+                            <i class="fas fa-list text-info"></i>
+                            Resultados de Búsqueda
                         </h5>
+                        <span class="text-muted">Seleccione un registro para editar</span>
                     </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>Módulo</th>
-                                        <th>Estado</th>
-                                        <th>Última Actualización</th>
-                                        <th>Registros</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detailsTable">
-                                    <!-- Se llena dinámicamente -->
-                                </tbody>
-                            </table>
+                    
+                    <div class="table-container" style="max-height: 500px;">
+                        <table class="table table-hover">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tipo</th>
+                                    <th>Nombre/Descripción</th>
+                                    <th>Estado</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaResultados">
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-5">
+                                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                        <p class="fw-bold mb-1">No hay resultados para mostrar</p>
+                                        <p class="small text-muted">Utiliza los filtros para buscar registros específicos</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Actualización -->
+            <div class="col-lg-6 mb-4">
+                <div class="update-form-section">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0">
+                            <i class="fas fa-edit text-success"></i>
+                            Formulario de Actualización
+                        </h5>
+                        <span class="badge bg-secondary" id="registroSeleccionadoBadge">Ningún registro seleccionado</span>
+                    </div>
+
+                    <div id="formularioActualizacion">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Seleccione un registro de la tabla para comenzar a editar
                         </div>
+
+                        <!-- Formulario dinámico que se llenará según el tipo de registro -->
+                        <form id="formActualizar" style="display: none;">
+                            <input type="hidden" id="registroId">
+                            <input type="hidden" id="registroTipo">
+
+                            <div class="form-section-title">
+                                <h6 class="text-primary mb-0">Información General</h6>
+                            </div>
+
+                            <div id="camposDinamicos">
+                                <!-- Los campos se generarán dinámicamente según el tipo de registro -->
+                            </div>
+
+                            <div class="form-section-title mt-4">
+                                <h6 class="text-primary mb-0">Estado y Observaciones</h6>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Estado</label>
+                                    <select class="form-select" id="estadoRegistro" required>
+                                        <option value="activo">Activo</option>
+                                        <option value="inactivo">Inactivo</option>
+                                        <option value="pendiente">Pendiente</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha de Actualización</label>
+                                    <input type="date" class="form-control" id="fechaActualizacion" readonly>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Observaciones</label>
+                                    <textarea class="form-control" id="observaciones" rows="3" placeholder="Ingrese observaciones sobre esta actualización..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-outline-secondary btn-action" onclick="cancelarActualizacion()">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                                <button type="button" class="btn btn-warning btn-action" onclick="previsualizarCambios()">
+                                    <i class="fas fa-eye"></i> Previsualizar
+                                </button>
+                                <button type="submit" class="btn btn-success btn-action">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Historial de Cambios -->
+                <div class="chart-container mt-4">
+                    <h6 class="mb-3">
+                        <i class="fas fa-history text-warning"></i>
+                        Historial de Cambios del Registro
+                    </h6>
+                    <div id="historialCambios">
+                        <p class="text-muted text-center py-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Seleccione un registro para ver su historial
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Botón de Actualizar -->
-    <button class="refresh-btn" onclick="refreshSystemStatus()" title="Actualizar Estado">
-        <i class="fas fa-sync-alt"></i>
-    </button>
+    <!-- Modal de Previsualización -->
+    <div class="modal fade" id="modalPrevisualizacion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-eye me-2"></i>
+                        Previsualización de Cambios
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalPrevisualizacionContent">
+                    <!-- Contenido dinámico -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmarActualizacion()">
+                        <i class="fas fa-check"></i> Confirmar y Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación -->
+    <div class="modal fade" id="modalConfirmacion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Actualización Exitosa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-check-circle text-success fa-4x mb-3"></i>
+                    <h5>¡Registro actualizado correctamente!</h5>
+                    <p class="text-muted">Los cambios han sido guardados en el sistema</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-        class SystemStatusMonitor {
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/perfil');
+                if (!response.ok) {
+                    console.warn('Dev mode: perfil no disponible, se omite redirección al login');
+                } else {
+                    const usuario = await response.json();
+                    if (usuario.nombre && usuario.apellido) {
+                        document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                    }
+                    verificarAdmin(usuario.rol);
+                }
+            } catch (error) {
+                console.error('Error de autenticación: ', error);
+                console.warn('Dev mode: se omite redirección al login');
+            }
+            
+            // Establecer fecha actual
+            document.getElementById('fechaActualizacion').valueAsDate = new Date();
+        });
+
+        function verificarAdmin(rol) {
+            console.log("Rol del usuario: ", rol);
+            // Implementar lógica de permisos según rol
+        }
+
+        async function logout() {
+            try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
+            try { sessionStorage.clear(); localStorage.clear(); } catch (e) {}
+            try {
+                document.cookie.split(';').forEach(c => {
+                    const eqPos = c.indexOf('=');
+                    const name = (eqPos > -1 ? c.substring(0, eqPos) : c).trim();
+                    if (name) document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                });
+            } catch (e) {}
+            window.location.replace('login.html');
+        }
+
+        class ActualizacionDatos {
             constructor() {
-                this.startTime = new Date();
-                this.modules = [
-                    {
-                        id: 'clients',
-                        name: 'Clientes',
-                        icon: 'fas fa-users',
-                        endpoint: `${URL_BASE}/get-clientes`,
-                        lastUpdate: null,
-                        recordCount: 0,
-                        status: 'info'
-                    },
-                    {
-                        id: 'workers',
-                        name: 'Trabajadores',
-                        icon: 'fas fa-user-tie',
-                        endpoint: `${URL_BASE}/get-trabajadores`,
-                        lastUpdate: null,
-                        recordCount: 0,
-                        status: 'info'
-                    },
-                    {
-                        id: 'dotation',
-                        name: 'Dotación Personal',
-                        icon: 'fas fa-chart-bar',
-                        endpoint: `${URL_BASE}/get-dotaciones`,
-                        lastUpdate: null,
-                        recordCount: 0,
-                        status: 'info'
-                    },
-                    {
-                        id: 'system',
-                        name: 'Sistema General',
-                        icon: 'fas fa-cogs',
-                        endpoint: null,
-                        lastUpdate: new Date(),
-                        recordCount: 1,
-                        status: 'updated'
-                    }
-                ];
-                
-                this.init();
+                this.registroSeleccionado = null;
+                this.cambiosPendientes = {};
+                this.initializeEventListeners();
+                this.updateMetrics();
             }
 
-            async init() {
-                // Verificar autenticación
-                if (!localStorage.getItem("auth")) {
-                    window.location.href = "login.html";
-                    return;
-                }
-
-                this.displayUserName();
-                await this.checkAllModules();
-                this.renderStatusCards();
-                this.renderDetailsTable();
-                this.startUptimeCounter();
-                this.updateLastCheck();
-                
-                // Auto-refresh cada 30 segundos
-                setInterval(() => {
-                    this.checkAllModules();
-                }, 30000);
-            }
-
-            displayUserName() {
-                const nombre = localStorage.getItem("nombre");
-                const apellido = localStorage.getItem("apellido");
-                if (nombre && apellido) {
-                    document.getElementById('welcomeMessage').textContent = `${nombre} ${apellido}`;
-                }
-            }
-
-            async checkAllModules() {
-                console.log('Verificando estado de todos los módulos...');
-                
-                for (let module of this.modules) {
-                    if (module.endpoint) {
-                        await this.checkModuleStatus(module);
-                    }
-                }
-                
-                this.renderStatusCards();
-                this.renderDetailsTable();
-                this.updateSystemStatus();
-                this.updateLastCheck();
-            }
-
-            async checkModuleStatus(module) {
-                try {
-                    const response = await fetch(module.endpoint);
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        
-                        // Determinar el array de datos según el endpoint
-                        let records = [];
-                        if (data.clientes) records = data.clientes;
-                        else if (data.trabajadores) records = data.trabajadores;
-                        else if (data.dotaciones) records = data.dotaciones;
-                        
-                        module.recordCount = records.length;
-                        module.lastUpdate = new Date();
-                        module.status = 'updated';
-                        
-                        console.log(`${module.name}: ${records.length} registros encontrados`);
-                    } else {
-                        module.status = 'warning';
-                        console.warn(`${module.name}: Respuesta ${response.status}`);
-                    }
-                } catch (error) {
-                    module.status = 'outdated';
-                    console.error(`${module.name}: Error de conexión`, error);
-                }
-            }
-
-            renderStatusCards() {
-                const container = document.getElementById('statusCards');
-                container.innerHTML = '';
-
-                this.modules.forEach(module => {
-                    const card = this.createStatusCard(module);
-                    container.appendChild(card);
+            initializeEventListeners() {
+                document.getElementById('formActualizar').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.guardarCambios();
                 });
             }
 
-            createStatusCard(module) {
-                const col = document.createElement('div');
-                col.className = 'col-lg-3 col-md-6 mb-4';
-                
-                const lastUpdateText = module.lastUpdate ? 
-                    this.formatDateTime(module.lastUpdate) : 
-                    'Sin datos';
-                
-                const statusText = this.getStatusText(module.status);
-                const timeAgo = module.lastUpdate ? 
-                    this.getTimeAgo(module.lastUpdate) : 
-                    'N/A';
+            updateMetrics() {
+                document.getElementById('totalRegistros').textContent = '0';
+                document.getElementById('actualizadosHoy').textContent = '0';
+                document.getElementById('pendientesRevision').textContent = '0';
+                document.getElementById('esteMes').textContent = '0';
+            }
 
-                col.innerHTML = `
-                    <div class="status-card ${module.status} p-4 h-100 fade-in">
-                        <div class="d-flex align-items-center">
-                            <div class="status-icon ${module.status}">
-                                <i class="${module.icon}"></i>
+            seleccionarRegistro(id, tipo, nombre, estado) {
+                this.registroSeleccionado = { id, tipo, nombre, estado };
+                
+                // Actualizar badge
+                document.getElementById('registroSeleccionadoBadge').textContent = `${tipo} - ${nombre}`;
+                document.getElementById('registroSeleccionadoBadge').className = 'badge bg-primary';
+                
+                // Mostrar formulario
+                document.querySelector('.alert-info').style.display = 'none';
+                document.getElementById('formActualizar').style.display = 'block';
+                
+                // Llenar campos
+                document.getElementById('registroId').value = id;
+                document.getElementById('registroTipo').value = tipo;
+                document.getElementById('estadoRegistro').value = estado;
+                
+                // Generar campos dinámicos según tipo
+                this.generarCamposDinamicos(tipo);
+                
+                // Cargar historial
+                this.cargarHistorial(id);
+                
+                // Resaltar fila seleccionada
+                document.querySelectorAll('#tablaResultados tr').forEach(tr => tr.classList.remove('record-selected'));
+                event.target.closest('tr').classList.add('record-selected');
+            }
+
+            generarCamposDinamicos(tipo) {
+                const container = document.getElementById('camposDinamicos');
+                let html = '';
+                
+                switch(tipo) {
+                    case 'cliente':
+                        html = `
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="nombre" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">RUT</label>
+                                    <input type="text" class="form-control" id="rut" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-control" id="telefono">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Dirección</label>
+                                    <input type="text" class="form-control" id="direccion">
+                                </div>
                             </div>
-                            <div class="flex-grow-1">
-                                <h5 class="mb-2">${module.name}</h5>
-                                <p class="mb-1">
-                                    <span class="status-indicator indicator-${this.getIndicatorColor(module.status)}"></span>
-                                    ${statusText}
-                                </p>
-                                <div class="timestamp">${lastUpdateText}</div>
-                                <small class="text-muted">${timeAgo} • ${module.recordCount} registros</small>
+                        `;
+                        break;
+                    case 'trabajador':
+                        html = `
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nombre</label>
+                                    <input type="text" class="form-control" id="nombre" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Apellido</label>
+                                    <input type="text" class="form-control" id="apellido" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">RUT</label>
+                                    <input type="text" class="form-control" id="rut" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Cargo</label>
+                                    <input type="text" class="form-control" id="cargo" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Teléfono</label>
+                                    <input type="tel" class="form-control" id="telefono">
+                                </div>
                             </div>
+                        `;
+                        break;
+                    case 'dotacion':
+                        html = `
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Área</label>
+                                    <input type="text" class="form-control" id="area" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Cantidad Personal</label>
+                                    <input type="number" class="form-control" id="cantidad" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha Inicio</label>
+                                    <input type="date" class="form-control" id="fechaInicio" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha Fin</label>
+                                    <input type="date" class="form-control" id="fechaFin">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="descripcion" rows="2"></textarea>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                    case 'actividad':
+                        html = `
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label">Nombre de Actividad</label>
+                                    <input type="text" class="form-control" id="nombreActividad" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha</label>
+                                    <input type="date" class="form-control" id="fecha" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Responsable</label>
+                                    <input type="text" class="form-control" id="responsable" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="descripcion" rows="3"></textarea>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                }
+                
+                container.innerHTML = html;
+            }
+
+            cargarHistorial(id) {
+                const historialHTML = `
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Registro creado</h6>
+                                <small class="text-muted">Hace 30 días</small>
+                            </div>
+                            <p class="mb-1 small">Usuario: Admin Sistema</p>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">Última actualización</h6>
+                                <small class="text-muted">Hace 5 días</small>
+                            </div>
+                            <p class="mb-1 small">Usuario: Juan Pérez</p>
+                            <small class="text-muted">Cambios: Estado actualizado</small>
                         </div>
                     </div>
                 `;
-
-                return col;
+                document.getElementById('historialCambios').innerHTML = historialHTML;
             }
 
-            renderDetailsTable() {
-                const tbody = document.getElementById('detailsTable');
-                tbody.innerHTML = '';
-
-                this.modules.forEach(module => {
-                    const row = document.createElement('tr');
-                    const lastUpdate = module.lastUpdate ? 
-                        this.formatDateTime(module.lastUpdate) : 
-                        'Sin datos';
-                    
-                    row.innerHTML = `
-                        <td>
-                            <i class="${module.icon} me-2"></i>
-                            ${module.name}
-                        </td>
-                        <td>
-                            <span class="badge bg-${this.getStatusBadgeColor(module.status)}">
-                                ${this.getStatusText(module.status)}
-                            </span>
-                        </td>
-                        <td class="timestamp">${lastUpdate}</td>
-                        <td>${module.recordCount} registros</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary" onclick="systemMonitor.refreshModule('${module.id}')">
-                                <i class="fas fa-sync-alt"></i>
-                            </button>
-                        </td>
-                    `;
-                    
-                    tbody.appendChild(row);
-                });
-            }
-
-            async refreshModule(moduleId) {
-                const module = this.modules.find(m => m.id === moduleId);
-                if (module && module.endpoint) {
-                    await this.checkModuleStatus(module);
-                    this.renderStatusCards();
-                    this.renderDetailsTable();
-                    this.updateSystemStatus();
-                }
-            }
-
-            updateSystemStatus() {
-                const allUpdated = this.modules.every(m => m.status === 'updated');
-                const hasWarnings = this.modules.some(m => m.status === 'warning');
-                const hasErrors = this.modules.some(m => m.status === 'outdated');
+            async guardarCambios() {
+                // Aquí se implementaría la lógica de guardado con el backend
+                console.log('Guardando cambios...');
                 
-                let statusText = '🟢 Sistema Operativo';
-                if (hasErrors) statusText = '🔴 Problemas Detectados';
-                else if (hasWarnings) statusText = '🟡 Advertencias';
+                // Simular guardado exitoso
+                const modal = new bootstrap.Modal(document.getElementById('modalConfirmacion'));
+                modal.show();
                 
-                document.getElementById('systemStatus').textContent = statusText;
-            }
-
-            updateLastCheck() {
-                const now = new Date();
-                document.getElementById('lastCheck').textContent = this.formatTime(now);
-            }
-
-            startUptimeCounter() {
-                const updateUptime = () => {
-                    const now = new Date();
-                    const diff = now - this.startTime;
-                    const hours = Math.floor(diff / (1000 * 60 * 60));
-                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                    
-                    document.getElementById('uptime').textContent = 
-                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                };
+                // Actualizar métricas
+                this.updateMetrics();
                 
-                updateUptime();
-                setInterval(updateUptime, 1000);
+                // Limpiar formulario después de cerrar modal
+                setTimeout(() => {
+                    this.limpiarFormulario();
+                }, 2000);
             }
 
-            getStatusText(status) {
-                const statusMap = {
-                    'updated': 'Actualizado',
-                    'warning': 'Advertencia',
-                    'outdated': 'Desactualizado',
-                    'info': 'Verificando...'
-                };
-                return statusMap[status] || 'Desconocido';
-            }
-
-            getIndicatorColor(status) {
-                const colorMap = {
-                    'updated': 'green',
-                    'warning': 'yellow',
-                    'outdated': 'red',
-                    'info': 'yellow'
-                };
-                return colorMap[status] || 'red';
-            }
-
-            getStatusBadgeColor(status) {
-                const colorMap = {
-                    'updated': 'success',
-                    'warning': 'warning',
-                    'outdated': 'danger',
-                    'info': 'info'
-                };
-                return colorMap[status] || 'secondary';
-            }
-
-            formatDateTime(date) {
-                return date.toLocaleString('es-ES', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
-            }
-
-            formatTime(date) {
-                return date.toLocaleTimeString('es-ES');
-            }
-
-            getTimeAgo(date) {
-                const now = new Date();
-                const diff = now - date;
-                const minutes = Math.floor(diff / (1000 * 60));
-                
-                if (minutes < 1) return 'Ahora mismo';
-                if (minutes < 60) return `Hace ${minutes} min`;
-                
-                const hours = Math.floor(minutes / 60);
-                if (hours < 24) return `Hace ${hours}h`;
-                
-                const days = Math.floor(hours / 24);
-                return `Hace ${days} días`;
+            limpiarFormulario() {
+                this.registroSeleccionado = null;
+                document.getElementById('formActualizar').reset();
+                document.getElementById('formActualizar').style.display = 'none';
+                document.querySelector('.alert-info').style.display = 'block';
+                document.getElementById('registroSeleccionadoBadge').textContent = 'Ningún registro seleccionado';
+                document.getElementById('registroSeleccionadoBadge').className = 'badge bg-secondary';
+                document.getElementById('historialCambios').innerHTML = `
+                    <p class="text-muted text-center py-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Seleccione un registro para ver su historial
+                    </p>
+                `;
+                document.querySelectorAll('#tablaResultados tr').forEach(tr => tr.classList.remove('record-selected'));
             }
         }
 
-        // Variables globales
-        let systemMonitor;
-
+        let actualizacionApp;
         document.addEventListener('DOMContentLoaded', () => {
-            systemMonitor = new SystemStatusMonitor();
+            actualizacionApp = new ActualizacionDatos();
         });
 
-        function refreshSystemStatus() {
-            const btn = document.querySelector('.refresh-btn');
-            btn.classList.add('spinning');
+        function actualizarCamposBusqueda() {
+            const tipo = document.getElementById('tipoRegistro').value;
+            console.log('Tipo seleccionado:', tipo);
+        }
+
+        function buscarRegistros() {
+            const tipo = document.getElementById('tipoRegistro').value;
             
-            systemMonitor.checkAllModules().then(() => {
-                setTimeout(() => {
-                    btn.classList.remove('spinning');
-                }, 1000);
-            });
+            if (!tipo) {
+                alert('Por favor seleccione un tipo de registro');
+                return;
+            }
+            
+            // Simular resultados de búsqueda
+            const resultadosHTML = `
+                <tr onclick="actualizacionApp.seleccionarRegistro('001', '${tipo}', 'Ejemplo 1', 'activo')">
+                    <td>001</td>
+                    <td><span class="badge bg-primary">${tipo}</span></td>
+                    <td>Ejemplo 1</td>
+                    <td><span class="status-badge status-active">Activo</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></button></td>
+                </tr>
+                <tr onclick="actualizacionApp.seleccionarRegistro('002', '${tipo}', 'Ejemplo 2', 'activo')">
+                    <td>002</td>
+                    <td><span class="badge bg-primary">${tipo}</span></td>
+                    <td>Ejemplo 2</td>
+                    <td><span class="status-badge status-active">Activo</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></button></td>
+                </tr>
+            `;
+            
+            document.getElementById('tablaResultados').innerHTML = resultadosHTML;
+        }
+
+        function limpiarBusqueda() {
+            document.getElementById('tipoRegistro').value = '';
+            document.getElementById('busquedaId').value = '';
+            document.getElementById('busquedaTexto').value = '';
+            document.getElementById('estadoBusqueda').value = '';
+            document.getElementById('fechaDesde').value = '';
+            document.getElementById('fechaHasta').value = '';
+            
+            document.getElementById('tablaResultados').innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <p class="fw-bold mb-1">No hay resultados para mostrar</p>
+                        <p class="small text-muted">Utiliza los filtros para buscar registros específicos</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function limpiarFormulario() {
+            actualizacionApp.limpiarFormulario();
+        }
+
+        function cancelarActualizacion() {
+            if (confirm('¿Está seguro de cancelar? Los cambios no guardados se perderán.')) {
+                actualizacionApp.limpiarFormulario();
+            }
+        }
+
+        function previsualizarCambios() {
+            const tipo = document.getElementById('registroTipo').value;
+            const estado = document.getElementById('estadoRegistro').value;
+            
+            let cambiosHTML = `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Revise cuidadosamente los cambios antes de confirmar
+                </div>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Campo</th>
+                            <th>Valor Actual</th>
+                            <th>Nuevo Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Estado</strong></td>
+                            <td><span class="status-badge status-active">Activo</span></td>
+                            <td><span class="status-badge status-active">${estado}</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('modalPrevisualizacionContent').innerHTML = cambiosHTML;
+            const modal = new bootstrap.Modal(document.getElementById('modalPrevisualizacion'));
+            modal.show();
+        }
+
+        function confirmarActualizacion() {
+            bootstrap.Modal.getInstance(document.getElementById('modalPrevisualizacion')).hide();
+            actualizacionApp.guardarCambios();
+        }
+
+        function refreshData() {
+            actualizacionApp.updateMetrics();
+            buscarRegistros();
         }
     </script>
 </body>
