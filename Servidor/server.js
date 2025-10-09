@@ -162,7 +162,6 @@ const httpsOptions ={
 const puerto = 8090;
 
 // Si se cuenta con un certificado SSL, usar HTTPS
-
 https.createServer(httpsOptions, app).listen(puerto, () =>{
   console.log(`¡Servidor HTTPS seguro corriendo en el puerto ${puerto}!`);
   console.log(`Accede en: https://localhost:${puerto}/login.html`);
@@ -174,10 +173,4 @@ app.locals.mongoReady = (async () => {
   return db;
 })();
 
-process.on('SIGINT', () => process.exit(0)); // opcional: tu helper mantiene el cliente
-/* 
-app.listen(puerto, () => {
-  //console.log('Servidor en ejecución en el puerto ' + puerto);
-  console.log('Link: http://localhost:'+ puerto+'/login.html');
-});
-*/
+process.on('SIGINT', () => process.exit(0)); // opcional: helper mantiene el cliente
