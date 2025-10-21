@@ -17,9 +17,9 @@ app.use(express.json());
 app.use(cookieParser());
 /////////////////////////////////////////////////
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017';
-const MONGO_DB  = process.env.MONGO_DB  || 'IngenieriaSoftware';
-const PUERTO    = process.env.PORT      || 8090;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017'; // ELIMINAR
+const MONGO_DB  = process.env.MONGO_DB  || 'IngenieriaSoftware'; // ELIMINAR
+const PUERTO    = process.env.PORT      || 8090; // ELIMINAR
 
 /////////////////////////////////////////////////
 const corsOptions = require('./JS Llamadas/cors_config.js'); // Configuración de CORS.
