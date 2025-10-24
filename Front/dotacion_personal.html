@@ -12,8 +12,6 @@
     <script src="config_server.js"></script>
     
     <style>
-        
-
         body {
             overflow-x: hidden;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
@@ -161,6 +159,47 @@
                 padding: 20px;
             }
         }
+        .table-group-header {
+            background-color: #f8f9fa; /* Un gris muy claro */
+            border-top: 2px solid #667eea; /* Color primario para separar */
+        }
+        .table-group-header td {
+            background-color: #f8f9fa;
+            border-top: 2px solid #667eea;
+            font-size: 1.1rem;
+            font-weight: bold;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            text-align: left;    
+            padding-left: 1.5rem;
+        }
+        .action-buttons-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px; 
+        }
+        .btn-circle {
+            width: 38px;  
+            height: 38px; 
+            border-radius: 50% !important; 
+            padding: 0 !important; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-circle .btn-text {
+            display: none;
+        }
+        .btn-circle .fas {
+            margin-right: 0 !important;
+            font-size: 0.9rem;
+        }
+        .btn-circle.btn-danger {
+        background: linear-gradient(135deg, #e53935 0%, #f44336 100%);
+        border: none;
+        color: white;
+        }
     </style>
 </head>
 <body>
@@ -264,13 +303,22 @@
         <!-- Formulario de registro -->
         <div class="row mb-4">
             <div class="col-12">
-                <div class="form-card fade-in">
-                    <h5 class="mb-4 text-start">
-                        <i class="fas fa-plus-circle text-primary me-2"></i>
+                <a class="btn btn-primary d-flex justify-content-between align-items-center w-100 p-3"
+                    data-bs-toggle="collapse" 
+                    href="#formularioColapsable" 
+                    role="button" 
+                    aria-expanded="true" 
+                    aria-controls="formularioColapsable">
+
+                    <h5 class="mb-0 text-white">
+                        <i class="fas fa-plus-circle me-2"></i>
                         Registrar Nueva Dotación
-                    </h5>
-                    
-                    <form id="dotacionForm">
+                    </h5> 
+                    <i class="fas fa-chevron-down text-white"></i>
+                </a>
+                    <div class="collapse" id="formularioColapsable">
+                        <div class="form-card fade-in">
+                            <form id="dotacionForm">
                         <div class="row g-3">
                             <!-- Mes -->
                             <div class="col-md-6">
@@ -377,6 +425,9 @@
                     </form>
                 </div>
             </div>
+
+        </div>
+    </div>
         </div>
 
         <!-- Tabla de dotaciones -->
@@ -396,7 +447,6 @@
                         <table class="table" id="dotacionTable">
                             <thead>
                                 <tr>
-                                    <th><i class="fas fa-calendar me-2"></i>Año</th>
                                     <th><i class="fas fa-calendar-alt me-2"></i>Mes</th>
                                     <th><i class="fas fa-file-contract me-2"></i>Tipo de Contrato</th>
                                     <th><i class="fas fa-users me-2"></i>Cantidad de Personal</th>
@@ -537,26 +587,56 @@
                     const dotacionBody = document.getElementById('dotacionBody');
                     dotacionBody.innerHTML = '';
 
-                    // Iterar sobre los datos de la dotación y mostrarlos en la tabla
-                    data.dotaciones.forEach(dotacion => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                        <td><strong>${dotacion.anio}</strong></td>
-                        <td><strong>${dotacion.mes}</strong></td>
-                        <td><span class="badge bg-info">${dotacion.tipo_contrato}</span></td>
-                        <td><i class="fas fa-users me-1"></i>${dotacion.cantidad_personal} personas</td>
-                        <td><i class="fas fa-clock me-1"></i>${dotacion.carga_horaria} horas</td>
-                        <td>
-                            <button type="button" class="btn btn-success btn-sm" onclick="editarDotacion(${dotacion.id})">
-                                <i class="fas fa-edit me-1"></i>Editar
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarDotacion(${dotacion.id})">
-                                <i class="fas fa-trash-alt me-1"></i>Eliminar
-                            </button>
-                        </td>
+                    // Agrupación de las dotaciones por año
+                    const dotacionesAgrupadas = data.dotaciones.reduce((acc, dotacion)=>{
+                        const anio = dotacion.anio;
+                        if(!acc[anio]){
+                            acc[anio] = [];
+                        }
+
+                        acc[anio].push(dotacion);
+                        return acc;
+                    }, {});
+
+                    const aniosOrdenados = Object.keys(dotacionesAgrupadas).sort((a, b) => b - a);
+                    // Obtener los años en orden descendente
+                    aniosOrdenados.forEach(anio =>{
+                        // encabezado de grupo por año
+                        const trAnio = document.createElement('tr');
+                        trAnio.className = 'table-group-header'; // La clase CSS que agregamos
+                        trAnio.innerHTML = `
+                            <td colspan="6">${anio}</td> 
                         `;
-                        dotacionBody.appendChild(tr);
+                        dotacionBody.appendChild(trAnio);
+
+                        // Filas de dotaciones para el año actual
+                        const dotacionesDeEsteAnio = dotacionesAgrupadas[anio];
+
+                        dotacionesDeEsteAnio.forEach(dotacion => {
+                            const tr = document.createElement('tr');
+                            // Tu código original para crear la fila
+                            tr.innerHTML = `
+                            <td>${dotacion.mes}</td>
+                            <td><span class="badge bg-info">${dotacion.tipo_contrato}</span></td>
+                            <td><i class="fas fa-users me-1"></i>${dotacion.cantidad_personal} personas</td>
+                            <td><i class="fas fa-clock me-1"></i>${dotacion.carga_horaria} horas</td>
+                            <td>
+                                <div class="action-buttons-container">
+                                    <button type="button" class="btn btn-success btn-sm btn-circle" title="Editar" onclick="editarDotacion(${dotacion.id})">
+                                        <i class="fas fa-edit"></i>
+                                        <span class="btn-text">Editar</span>
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm btn-circle" title="Eliminar" onclick="eliminarDotacion(${dotacion.id})">
+                                        <i class="fas fa-trash-alt"></i>
+                                        <span class="btn-text">Eliminar</span>
+                                    </button>
+
+                                </div>
+                            </td>
+                            `;
+                            dotacionBody.appendChild(tr);
                     });
+                });
                 } else{
                     alert('Error al cargar la dotación');
                 }

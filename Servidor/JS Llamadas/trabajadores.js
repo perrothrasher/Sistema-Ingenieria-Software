@@ -150,7 +150,7 @@ function eliminarTrabajadores(req, res){
     });
 };
 
-function listarTrabajadores(req, res){
+async function listarTrabajadores(req, res){
     const sql = `
         SELECT t.id, p.nombre, p.apellido, r.nombre AS rol
         FROM Trabajador t
@@ -158,13 +158,14 @@ function listarTrabajadores(req, res){
         JOIN Rol r ON t.rol_id = r.id
         ORDER BY p.nombre ASC
     `;
-    connection.query(sql, (err, results) => {
-        if (err) {
-            console.error("Error al listar nombres de usuarios:", err);
-            return res.status(500).json({ message: "Error interno del servidor." });
-        }
-        res.status(200).json(results);
-    });
+    try {
+        const [usuarios] = await connection.query(sql);
+        res.status(200).json(usuarios);
+    } catch (err) {
+        // ESTO es lo que está causando el error 500
+        console.error("Error al obtener lista de usuarios:", err); 
+        res.status(500).json({ message: "Error interno al consultar la base de datos", error: err.message });
+    }
 };
 
 function actualizarTipoContrato(req, res) {
