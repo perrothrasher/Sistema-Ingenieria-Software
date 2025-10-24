@@ -5,7 +5,6 @@ const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const https = require('https');
-const fs = require('fs');
 require('dotenv').config();
 
 /////////////////////////////////////////////////
@@ -154,23 +153,40 @@ const prediccionRouter = require('./JS Llamadas/prediccion.js'); // <- nuevo arc
 app.use('/prediccion', verificarToken,prediccionRouter);
 // ================================================================
 
-const httpsOptions ={
-  key: fs.readFileSync(path.join(__dirname, 'localhost+2-key.pem')),
-  cert: fs.readFileSync(path.join(__dirname, 'localhost+2.pem'))
-};
-
-const puerto = 8090;
-
-// Si se cuenta con un certificado SSL, usar HTTPS
-https.createServer(httpsOptions, app).listen(puerto, () =>{
-  console.log(`¡Servidor HTTPS seguro corriendo en el puerto ${puerto}!`);
-  console.log(`Accede en: https://localhost:${puerto}/login.html`);
-})
+// Inicialización del servidor HTTPS
+const CERT_COLLECTION = 'configuracion';
+const CERT_ID = 'ssl-localhost';
 
 app.locals.mongoReady = (async () => {
-  const db = await conexion_Mongo();     // obtiene la DB desde tu helper
-  app.locals.getDB = () => db;           // para que los routers hagan req.app.locals.getDB()
-  return db;
+  let db;
+  try{
+    db = await conexion_Mongo(); 
+    app.locals.getDB = () => db; 
+    console.log('Base de datos lista para las rutas.');
+
+    console.log(`Buscando certificados SSL en coleccion: ${CERT_COLLECTION}...`);
+    const sslConfig = await db.collection(CERT_COLLECTION).findOne({ _id: CERT_ID });
+
+    if (!sslConfig || !sslConfig.key || !sslConfig.cert) {
+      throw new Error(`No se encontró la configuración SSL con _id: ${CERT_ID} en la base de datos.`);
+    }
+
+    const httpsOptions = {
+      key: sslConfig.key,
+      cert: sslConfig.cert
+    };
+
+    https.createServer(httpsOptions, app).listen(PUERTO,()=>{
+      console.log(`¡Servidor HTTPS seguro corriendo en el puerto ${PUERTO}!`);
+      console.log(`Accede en: https://localhost:${PUERTO}/login.html`);
+    });
+
+    return db;
+    
+  } catch(err){
+    console.error('Error fatal durante el arranque del servidor:', err.message);
+    process.exit(1);
+  }
 })();
 
-process.on('SIGINT', () => process.exit(0)); // opcional: helper mantiene el cliente
+process.on('SIGINT', () => process.exit(0));
