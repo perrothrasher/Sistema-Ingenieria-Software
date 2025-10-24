@@ -299,26 +299,23 @@
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
 
-    async function cargarDotacion(){
+    async function cargarDotacion(id){ // <-- 'id' ya viene como parámetro
         try{
             const response = await fetch(`${URL_BASE}/get-dotaciones-edicion?id=${id}`);
             const data = await response.json();
 
-            if (data.dotaciones && data.dotaciones.length > 0){
-                const dotacion = data.dotaciones.find(dotacion => dotacion.id === parseInt(id));
+            if (response.ok && data.dotacion) {
+                
+                const dotacion = data.dotacion; 
 
-                // Rellenar el formulario con los datos de la dotación
-                const mesSelect = document.getElementById('mes');
-                mesSelect.value = dotacion.mes_id || '';
-
+                document.getElementById('mes').value = dotacion.mes_id || '';
                 document.getElementById('anio').value = dotacion.anio || '';
-
-                const contratoSelect = document.getElementById('tipo_contrato');
-                contratoSelect.value = dotacion.TipoContrato_id || '';
+                document.getElementById('tipo_contrato').value = dotacion.TipoContrato_id || '';
                 document.getElementById('cantidad_personal').value = dotacion.cantidad_personal || '';
                 document.getElementById('carga_horaria').value = dotacion.carga_horaria || '';
+
             } else {
-                alert('Dotación no encontrada');
+                alert(data.message || 'Dotación no encontrada');
             }
         } catch (error) {
             console.error('Error al obtener los datos de la dotación:', error);

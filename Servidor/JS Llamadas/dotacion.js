@@ -4,35 +4,43 @@ const { registrarAuditoria } = require('./auditoria.js');
 const PDFDocument = require('pdfkit');
 const path = require('path');
 const {ChartJSNodeCanvas} = require('chartjs-node-canvas');
+const e = require('express');
 
-function registrarDotacion(req, res){
+async function registrarDotacion(req, res){
   const { anio, mes, TipoContrato_id, cantidad_personal, carga_horaria } = req.body;
+  const {id: userId} = req.usuario;
 
   const sql = `
     INSERT INTO DotacionPersonal (anio, mes_id, TipoContrato_id, cantidad_personal, carga_horaria)
     VALUES (?, ?, ?, ?, ?)
   `;
+  
+  let conn;
+  try{
+    conn = await connection.getConnection();
+    await conn.beginTransaction();
 
-  connection.execute(
-    sql, [anio, mes, TipoContrato_id, cantidad_personal, carga_horaria],
-    (err, results) => {
-      if (err) {
-        console.error('Error en la consulta SQL:', err);
-        return res.status(500).json({ message: 'Error al registrar la dotación', error: err.message });
-      }
-      // Registrar evento en la auditoría
-        const {id, nombre, apellido, rol} = req.usuario;
-        const ip = req.ip || req.connection.remoteAddress;
-        registrarAuditoria(
-            id, `${nombre} ${apellido}`, 'Dotación Creada', ip, rol,
-            {dotacionId: results.insertId, mes: req.body.mes, anio: req.body.anio} // Datos adicionales del evento
-        );
-      res.status(200).json({ message: 'Dotación registrada exitosamente' });
-    }
-  );
+    // Establecer el ID del usuario actual para el trigger
+    await conn.execute('SET @current_user_id = ?', [userId]);
+
+    const [results] = await conn.execute(
+        sql, [anio, mes, TipoContrato_id, cantidad_personal, carga_horaria]
+    );
+
+    await conn.commit();
+
+    res.status(200).json({ message: 'Dotación registrada exitosamente', insertId: results.insertId});
+  }catch(err){
+    if (conn) await conn.rollback();
+    console.error('Error en la consulta SQL:', err);
+    return res.status(500).json({ message: 'Error al registrar la dotación', error: err.message });
+  } finally{
+    if (conn) conn.release();
+  }
 };
 
-function obtenerDotaciones(req, res){
+
+async function obtenerDotaciones(req, res){
     const id = req.query.id;
     const sql = `
         SELECT
@@ -48,22 +56,24 @@ function obtenerDotaciones(req, res){
         ORDER BY d.anio DESC, m.id DESC
     `;
 
-    connection.query(sql, [id], (err, results) => {
-        if (err) {
-        console.error('Error en la consulta SQL:', err);
-        return res.status(500).json({ message: 'Error al obtener las dotaciones', error: err.message });
-        }
+    try {
+        const [results] = await connection.query(sql);
+
         if (results.length > 0) {
             return res.status(200).json({ dotaciones: results });
-        } else{
+        } else {
             return res.status(404).json({ message: 'No se encontraron dotaciones' });
         }
-    });
+    } catch (err) {
+        console.error('Error en la consulta SQL:', err);
+        return res.status(500).json({ message: 'Error al obtener las dotaciones', error: err.message });
+    }
 };
 
 // Obtener dotacion para editar
-function obtenerDotacionesParaEdicion(req, res){
-    const id = req.query.id;
+async function obtenerDotacionesParaEdicion(req, res){
+    const {id} = req.params;
+
     const sql = `
         SELECT
         d.id,
@@ -78,26 +88,28 @@ function obtenerDotacionesParaEdicion(req, res){
         ORDER BY d.anio DESC, m.id DESC
     `;
 
-    connection.query(sql, [id], (err, results) => {
-        if (err) {
-        console.error('Error en la consulta SQL:', err);
-        return res.status(500).json({ message: 'Error al obtener las dotaciones', error: err.message });
-        }
+    try {
+        const [results] = await connection.query(sql, [id]); 
+
         if (results.length > 0) {
-            return res.status(200).json({ dotaciones: results });
-        } else{
-            return res.status(404).json({ message: 'No se encontraron dotaciones' });
+            return res.status(200).json({ dotacion: results[0] }); 
+        } else {
+            return res.status(404).json({ message: 'Dotación no encontrada' });
         }
-    });
+    } catch (err) {
+        console.error('Error en la consulta SQL:', err);
+        return res.status(500).json({ message: 'Error al obtener la dotación', error: err.message });
+    }
 };
 
 // Ruta para editar una dotación
-function editarDotacion(req, res){
-    const {id} = req.params;
+async function editarDotacion(req, res){
+    const {id: dotacionId} = req.params;
     const { anio, mes_id, TipoContrato_id, cantidad_personal, carga_horaria } = req.body;
+    const {id: userId} = req.usuario;
 
     console.log('Datos recibidos para actualizar la dotación:', {
-        id, mes_id, anio, TipoContrato_id, cantidad_personal, carga_horaria
+        dotacionId, mes_id, anio, TipoContrato_id, cantidad_personal, carga_horaria
     });
 
     const sql = `
@@ -110,43 +122,50 @@ function editarDotacion(req, res){
             d.carga_horaria = ? 
         WHERE d.id = ?; 
     `;
-    connection.execute(
-        sql, [mes_id, anio, TipoContrato_id, cantidad_personal, carga_horaria, id],
-        (err, results) => {
-            if (err) {
-                return res.status(500).json({ message: 'Error al actualizar la dotación', error: err.message });
-            }
-            console.log('Dotación actualizada:', results);
-            // Registrar evento en la auditoría
-            const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
-            const ip = req.ip || req.connection.remoteAddress;
-            registrarAuditoria(
-                userId, `${userNombre} ${userApellido}`, 'Dotación Editada', ip, rol,
-                {dotacionIdEditada: req.params.id} // Datos adicionales del evento
-            );
-            res.status(200).json({ message: 'Dotación actualizada exitosamente' });
-        }
-    );
+    let conn;
+    try {
+        conn = await connection.getConnection();
+        await conn.beginTransaction();
+        await conn.execute('SET @current_user_id = ?', [userId]);
+        const [results] = await conn.execute(
+            sql, [mes_id, anio, TipoContrato_id, cantidad_personal, carga_horaria, dotacionId]
+        );
+
+        await conn.commit();
+        console.log('Dotación actualizada:', results);
+        res.status(200).json({ message: 'Dotación actualizada exitosamente' });
+
+    } catch (err) {
+        if (conn) await conn.rollback();
+        return res.status(500).json({ message: 'Error al actualizar la dotación', error: err.message });
+    } finally {
+        if (conn) conn.release();
+    }
 };
 
 // Eliminar dotacion
-function eliminarDotacion(req, res){
-    const {id} = req.params;
+async function eliminarDotacion(req, res){
+    const {id: dotacionId} = req.params;
+    const {id: userId} = req.usuario;
+
     const sql = `DELETE FROM DotacionPersonal WHERE id = ?`;
 
-    connection.execute(sql, [id], (err, results) => {
-        if (err){
-            return res.status(500).json({ message: 'Error al eliminar la dotación'});
-        }
-        // Registrar evento en la auditoría
-        const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
-        const ip = req.ip || req.connection.remoteAddress;
-        registrarAuditoria(
-            userId, `${userNombre} ${userApellido}`, 'Dotación Eliminada', ip, rol,
-            {dotacionIdEliminada: id} // Datos adicionales del evento
-        );
+    let conn;
+    try {
+        conn = await connection.getConnection();
+        await conn.beginTransaction();
+        await conn.execute('SET @current_user_id = ?', [userId]);
+        const [results] = await conn.execute(sql, [dotacionId]);
+
+        await conn.commit();
         res.status(200).json({ message: 'Dotación eliminada exitosamente' });
-    })
+
+    } catch (err) {
+        if (conn) await conn.rollback();
+        return res.status(500).json({ message: 'Error al eliminar la dotación', error: err.message });
+    } finally {
+        if (conn) conn.release();
+    }
 };
 
 // Generar reportes con las dotaciones
