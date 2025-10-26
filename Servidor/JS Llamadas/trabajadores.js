@@ -5,7 +5,7 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 
 // Ruta para obtener todos los trabajadores.
-function obtenerTrabajadores(req, res){
+async function obtenerTrabajadores(req, res){
     const id = req.query.id;
     const sql = `
         SELECT 
@@ -40,18 +40,18 @@ function obtenerTrabajadores(req, res){
             Region g ON u.region_id = g.id;
     `;
 
-    connection.query(sql, [id], (err, results) => {
-        if (err){
-            console.error('Error en la consulta SQL:', err);  // Imprime el error en la consola
-            return res.status(500).json({ message: 'Error al obtener los trabajadores' });
+    try{
+        const [results] = await connection.query(sql);
+
+        if(results.length > 0){
+            return res.status(200).json({ trabajadores: results});
+        }else{
+            return res.status(404).json({message: 'No se encontraron trabajadores' });
         }
-        if (results.length > 0){
-            res.status(200).json({ trabajadores: results });
-        } else {
-            res.status(404).json({ message: 'Trabajador no encontrado' });
-        }
-        //console.log('Trabajadores obtenidos:', results);
-    });
+    }catch(err){
+        console.error('Error en la consulta SQL:', err);
+        return res.status(500).json({ message: 'Error al obtener los trabajadores', error: err.message });
+    }
 };
 
 // Ruta para editar un trabajador

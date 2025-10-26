@@ -4,71 +4,68 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 
 // Ruta para registrar un cliente.
-function registrarCliente(req, res){
+async function registrarCliente(req, res){
   const { nombre, apellido, rut,  direccion, comuna, correo, telefono, region_id, codigo_postal} = req.body;
+  const {id: userId} = req.usuario;
+
+  let conn;
   try{
+    conn = await connection.getConnection();
+    await conn.beginTransaction();
+
+    // ESTABLECER EL ID DEL USUARIO QUE LANZA EL TRIGGER
+    await conn.execute('SET @current_user_id = ?', [userId]);
+
     // Insertar la nueva ubicacion.
     const sqlUbicacion = `
       INSERT INTO Ubicacion (direccion, ciudad, region_id, postal)
       VALUES (?, ?, ?, ?);
     `;
-    connection.execute(sqlUbicacion, [direccion, comuna, region_id, codigo_postal], (err, result)=>{
-      if (err){
-        console.error('Error al insertar ubicación:', err);
-        connection.end();
-        return;
-      }
+    const [resultUbicacion] = await conn.execute(
+      sqlUbicacion, [direccion, comuna, region_id, codigo_postal]
+    );
+    const ubicacion_id = resultUbicacion.insertId;
 
-      // Obtener el insertId de la inserción.
-      const ubicacion_id = result.insertId;
-      console.log('El ID de la ubicación es:', ubicacion_id);
+    // Insertar la nueva persona.
+    const sqlPersona = `
+    INSERT INTO Persona (nombre, apellido, rut, telefono, correo, ubicacion_id)
+    VALUES (?, ?, ?, ?, ?, ?)
+    `;
 
-      // Insertar la nueva persona.
-      const sqlPersona = `
-      INSERT INTO Persona (nombre, apellido, rut, telefono, correo, ubicacion_id)
-      VALUES (?, ?, ?, ?, ?, ?)
-      `;
-      connection.execute(sqlPersona, [nombre, apellido, rut, telefono, correo, ubicacion_id], async (err, resultPersona)=>{
-        if (err){
-          console.error('Error al insertar persona:', err);
-          return res.status(500).json({ message: 'Error al registrar cliente: ' + err.message });
-        }
+    const [resultPersona] = await conn.execute(
+      sqlPersona, [nombre, apellido, rut, telefono, correo, ubicacion_id]
+    );
+    const persona_id = resultPersona.insertId;
 
-        // Obtener el ID de la persona insertada.
-        console.log('Persona insertada con ID:', resultPersona.insertId);
+    // Insertar el cliente.
+    const sqlCliente = `
+      INSERT INTO Cliente (persona_id)
+      VALUES (?)
+    `;
 
-        // Insertar el cliente.
-        const sqlCliente = `
-          INSERT INTO Cliente (persona_id)
-          VALUES (?)
-        `;
-        connection.execute(sqlCliente, [resultPersona.insertId], (err, resultCliente)=>{
-          if(err){
-            console.error('Error al insertar cliente:', err);
-            return res.status(500).json({ message: 'Error al registrar cliente: ' + err.message });
-          }
-          console.log('Cliente insertado con ID:', resultCliente.insertId);
+    const [resultCliente] = await conn.execute(
+      sqlCliente, [persona_id]
+    );
 
-          // Registrar evento en la auditoría
-          const {id, nombre, apellido, rol} = req.usuario;
-          const ip = req.ip || req.connection.remoteAddress;
-          registrarAuditoria(
-            id, `${nombre} ${apellido}`, 'Cliente Creado', ip, rol,
-            {clienteId: resultCliente.insertId} // Datos adicionales del evento
-          )
+    await conn.commit();
 
-        });
-        res.status(201).json({ message: 'Cliente registrado exitosamente' });
-      });
+    res.status(201).json({
+      message: 'Cliente registrado con éxito',
+      clienteId: resultCliente.insertId
     });
+
   } catch(error){
       console.error('Error al registrar cliente:', error);
       return res.status(500).json({ message: 'Error al registrar cliente: ' + error.message });
+  } finally{
+    if(conn){
+      conn.release();
+    }
   }
 };
 
 // Ruta para obtener todos los clientes.
-function obtenerClientes(req, res){
+async function obtenerClientes(req, res){
   const id = req.query.id;
   const sql = `
     SELECT
@@ -90,18 +87,18 @@ function obtenerClientes(req, res){
     JOIN Region r ON u.region_id = r.id;  
   `;
 
-  connection.query(sql, [id], (err, results) => {
-    if (err) {
-      console.error('Error en la consulta SQL:', err);  // Imprime el error en la consola
-      return res.status(500).json({ message: 'Error al obtener los clientes' });
+  try{
+    const [results] = await connection.query(sql);
+
+    if (results.length > 0){
+      return res.status(200).json({ clientes: results });
+    } else{
+      return res.status(404).json({message: 'No se encontraron clientes'});
     }
-    if (results.length > 0) {
-      res.status(200).json({ clientes: results });
-    } else {
-      res.status(404).json({ message: 'Cliente no encontrado' });
-    }
-    //console.log('Clientes obtenidos:', results); Aqui se imprimen los resultados en la consola del servidor
-  });
+  }catch(err){
+    console.error('Error en la consulta SQL:', err);
+    return res.status(500).json({ message: 'Error al obtener los clientes', error: err.message });
+  }
 };
 
 
