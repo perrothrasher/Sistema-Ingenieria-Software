@@ -327,6 +327,18 @@
                         </label>
                         <input type="text" class="form-control" id="direccion" name="direccion" required>
                     </div>
+                    <div class="form-group">
+                        <label for="tipo_contrato_id" class="form-label">
+                            <i class="fas fa-file-contract"></i>
+                            Tipo de Contrato
+                        </label>
+                        <select class="form-select" id="tipo_contrato_id" name="tipo_contrato_id" required>
+                            <option value="" disabled selected>Seleccione un contrato</option>
+                            <option value="1">Plazo Fijo</option>
+                            <option value="2">Indefinido</option>
+                            <option value="3">Honorarios</option> 
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Información del Sistema -->
@@ -459,6 +471,7 @@
             const rol = document.getElementById('rol').value; 
             const region_id = document.getElementById('region_id').value; 
             const codigo_postal = document.getElementById('codigo_postal').value;
+            const tipo_contrato_id = document.getElementById('tipo_contrato_id').value;
             
             console.log("Nombre:", nombre);
             console.log("Apellido:", apellido);
@@ -476,7 +489,8 @@
                 contrasena: contrasena,
                 rol: rol,
                 region_id: region_id,
-                codigo_postal: codigo_postal
+                codigo_postal: codigo_postal,
+                tipo_contrato_id: tipo_contrato_id
             };
 
             // Enviar la solicitud POST

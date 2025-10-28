@@ -55,17 +55,17 @@ async function obtenerTrabajadores(req, res){
 };
 
 // Ruta para editar un trabajador
-function editarTrabajadores(req, res){
-    const { id } = req.params; 
-    const { nombre, apellido, contrasena, rut, direccion, ciudad,  correo, telefono, rol_id, region_id, postal } = req.body;
-
-    console.log('Datos recibidos para actualizar trabajador:', req.body);
+async function editarTrabajadores(req, res){
+    const { id: trabajadorId } = req.params; 
+    const { nombre, apellido, contrasena, rut, direccion, ciudad,  correo, telefono, rol_id, region_id, postal, tipo_contrato_id } = req.body;
+    const { id: userId } = req.usuario;
 
     // Si la contraseña se ha proporcionado, encriptarla antes de actualizarla
     let hashedPassword = null;
     if (contrasena) {
-        hashedPassword = bcrypt.hashSync(contrasena, 10);  // Encriptar la contraseña
+        hashedPassword = await bcrypt.hash(contrasena, 10);  // Encriptar la contraseña
     }
+
     const sql = `
         UPDATE Persona p
         JOIN Trabajador t ON t.persona_id = p.id
@@ -81,51 +81,45 @@ function editarTrabajadores(req, res){
             u.postal = ?, 
             u.region_id = ?,
             t.rol_id = ?,
+            t.tipo_contrato_id = ?
             ${contrasena ? "t.contrasena = ?" : ""}
         WHERE t.id = ?
     `;
-    connection.execute(
-        sql, 
-        [
-            nombre, 
-            apellido, 
-            rut, 
-            telefono, 
-            correo, 
-            direccion, 
-            ciudad, 
-            postal, 
-            region_id, 
-            rol_id, 
-            ...(contrasena ? [hashedPassword] : []),
-            id
-        ], 
-        (err, result) => {
-            if (err) {
-                console.error('Error al actualizar el trabajador:', err);
-                return res.status(500).json({ message: 'Error al actualizar el trabajador' });
-            }
 
-            if (result.affectedRows === 0) {
-                return res.status(404).json({ message: 'Trabajador no encontrado' });
-            }
+    const params =[ nombre, apellido, rut, telefono, correo, direccion, ciudad, postal, region_id, rol_id, tipo_contrato_id ];
 
-            // Registrar evento en la auditoría
-            const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
-            const ip = req.ip || req.connection.remoteAddress;
-            registrarAuditoria(
-              userId, `${userNombre} ${userApellido}`, 'Trabajador Editado', ip, rol,
-              {trabajadorIdEditado: req.params.id} // Datos adicionales del evento
-            );
+    if (contrasena) {
+        params.push(hashedPassword);
+    }
+    params.push(trabajadorId);
 
-            res.status(200).json({ message: 'Trabajador actualizado con éxito' });
+    let conn;
+    try{
+        conn = await connection.getConnection();
+        await conn.beginTransaction();
+        await conn.execute('SET @current_user_id = ?', [userId]);
+
+        const [results] = await conn.execute(
+            sql, params);
+
+        await conn.commit();
+        if (results.affectedRows > 0){
+            return res.status(200).json({ message: 'Trabajador actualizado exitosamente' });
+        } else{
+            return res.status(404).json({ message: 'Trabajador no encontrado' });
         }
-    );
+    }catch(err){
+        if (conn) await conn.rollback();
+        return res.status(500).json({ message: 'Error al actualizar el trabajador', error: err.message });
+    } finally{
+        if (conn) conn.release();
+    }
 };
 
 // Ruta para eliminar un trabajador
-function eliminarTrabajadores(req, res){
-    const { id } = req.params;
+async function eliminarTrabajadores(req, res){
+    const { id: trabajadorId } = req.params;
+    const { id: userId } = req.usuario;
 
     const sql = `
         DELETE t, p, u
@@ -135,19 +129,27 @@ function eliminarTrabajadores(req, res){
         WHERE t.id = ?;
     `;
 
-    connection.execute(sql, [id], (err, results) => {
-        if (err){
-            return res.status(500).json({ message: 'Error al eliminar el trabajador' });
+    let conn;
+    try{
+        conn = await connection.getConnection();
+        await conn.beginTransaction();
+
+        await conn.execute('SET @current_user_id = ?', [userId]);
+        const [results] = await conn.execute(sql, [trabajadorId]);
+
+        await conn.commit();
+
+        if (results.affectedRows > 0){
+          res.status(200).json({ message: 'Trabajador eliminado con éxito' });
+        }else{
+          res.status(404).json({ message: 'No se encontró el trabajador con el ID proporcionado' });
         }
-        // Registrar evento en la auditoría
-        const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
-        const ip = req.ip || req.connection.remoteAddress;
-        registrarAuditoria(
-          userId, `${userNombre} ${userApellido}`, 'Trabajador Eliminado', ip, rol,
-          {trabajadorIdEliminado: id} // Datos adicionales del evento
-        );
-        res.status(200).json({ message: 'Trabajador eliminado exitosamente' });
-    });
+    }catch(err){
+        if (conn) await conn.rollback();
+        return res.status(500).json({ message: 'Error al eliminar el trabajador', error: err.message });
+    } finally{
+        if (conn) conn.release();
+    }
 };
 
 async function listarTrabajadores(req, res){

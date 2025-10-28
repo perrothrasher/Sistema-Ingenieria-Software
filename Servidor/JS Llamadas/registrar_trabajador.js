@@ -3,82 +3,79 @@ const connection = require('./db_conection.js');
 const { registrarAuditoria } = require('./auditoria.js');
 
 async function registrarTrabajador(req, res) {
-  const { nombre, apellido, rut, direccion, comuna,  correo, telefono, contrasena, rol, region_id, codigo_postal, usuario } = req.body;
+  const { nombre, apellido, rut, direccion, comuna,  correo, telefono, contrasena, rol, region_id, codigo_postal, usuario, tipo_contrato_id } = req.body;
+  const {id: userId} = req.usuario;
+
+  let conn;
   try {
-       // Cifrar la contraseña.
+    conn = await connection.getConnection();
+    await conn.beginTransaction();
+
+    // ESTABLECER EL ID DEL USUARIO QUE LANZA EL TRIGGER
+    await conn.execute('SET @current_user_id = ?', [userId]);
+
+    // Cifrar la contraseña.
     const hashedPassword = await bcrypt.hash(contrasena, 10);
-    console.log("Contraseña cifrada:", hashedPassword);
 
     // Paso 1: Insertar la nueva ubicación
     const sqlUbicacion = `
       INSERT INTO Ubicacion (direccion, ciudad, region_id, postal)
       VALUES (?, ?, ?, ?);
     `;
-    connection.execute(sqlUbicacion, [direccion, comuna, region_id, codigo_postal], (err, result) => {
-    if (err) {
-      console.error('Error al insertar:', err);
-      connection.end();
-      return;
-    }
-    // Obtener el insertId de la inserción
-    const ubicacion_id = result.insertId;
-    console.log('El ID de la ubicacion es:', ubicacion_id);
+    const [resultUbicacion] = await conn.execute(sqlUbicacion, [direccion, comuna, region_id, codigo_postal]);
+    const ubicacion_id = resultUbicacion.insertId;
 
     // Paso 2: Insertar la nueva persona
     const sqlPersona = `
       INSERT INTO Persona (nombre, apellido, rut, telefono, correo, ubicacion_id)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
-    connection.execute(sqlPersona, [nombre, apellido, rut, telefono, correo, ubicacion_id], async (err, resultPersona) => {
-      if (err){
-        console.error('Error al insertar persona:', err);
-        return res.status(500).json({ message: 'Error al registrar trabajador: ' + err.message });
-      }
+    const [resultPersona] = await conn.execute(
+      sqlPersona, [nombre, apellido, rut, telefono, correo, ubicacion_id]
+    );
+    const persona_id = resultPersona.insertId;
       
-      // Obtener el ID de la persona insertada
-      console.log('Persona insertada con ID:', resultPersona.insertId);
-
-      // Roles 
-      const roles = {
-      '1': 1, // Soporte TI
-      '2': 2, // Gerente
-      '3': 3 // Supervisor
-      };
+    // Roles 
+    const roles = {
+    '1': 1, // Soporte TI
+    '2': 2, // Gerente
+    '3': 3 // Supervisor
+    };
       
-      const rol_id = roles[rol];
-      console.log("Rol ID obtenido:", rol_id);
+    const rol_id = roles[rol];
 
-      if (!rol_id) {
-      return res.status(400).json({ message: 'Rol no válido' });
-      }
+    if (!rol_id) {
+      await conn.rollback();
+      return res.status(400).json({ message: 'Rol inválido proporcionado.' });
+    }
 
-      // Paso 4: Insertar el trabajador
-      const sqlTrabajador = `
-        INSERT INTO Trabajador (usuario, contrasena, persona_id, rol_id)
-        VALUES (?, ?, ?, ?)
-      `;
-      connection.execute(sqlTrabajador, [usuario, hashedPassword, resultPersona.insertId, rol_id], (err, resultTrabajador) => {
-        if (err) {
-          console.error('Error al insertar trabajador:', err);
-          return res.status(500).json({ message: 'Error al registrar trabajador: ' + err.message });
-        }
-        console.log('Trabajador insertado con ID:', resultTrabajador.insertId);
-        
-        // Registrar evento en la auditoría
-        const {id, nombre, apellido, rol} = req.usuario;
-        const ip = req.ip || req.connection.remoteAddress;
-        registrarAuditoria(
-          id, `${nombre} ${apellido}`, 'Trabajador Creado', ip, rol,
-          {nuevoTrabajadorId: resultTrabajador.insertId, nuevoUsuario: req.body.usuario} // Datos adicionales del evento
-        )
-      });
-      res.status(201).json({ message: 'Trabajador registrado exitosamente' });
+    // Paso 4: Insertar el trabajador
+    const sqlTrabajador = `
+      INSERT INTO Trabajador (usuario, contrasena, persona_id, rol_id, tipo_contrato_id)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    const [resultTrabajador] = await conn.execute(
+      sqlTrabajador, [usuario, hashedPassword, persona_id, rol_id, tipo_contrato_id]
+    );
+
+    await conn.commit();
+
+    res.status(201).json({
+      message: 'Trabajador registrado con éxito',
+      trabajadorId: resultTrabajador.insertId
     });
-  });
+
 } catch (error) {
+    if (conn){
+      await conn.rollback();
+    }
     console.error('Error al registrar trabajador:', error);
-    res.status(500).json({ message: 'Error al registrar trabajador: ' + error.message });
-  }
+    return res.status(500).json({ message: 'Error al registrar trabajador: ' + error.message });
+} finally{
+    if (conn){
+      conn.release();
+    }
+}
 };
 
 module.exports = registrarTrabajador;

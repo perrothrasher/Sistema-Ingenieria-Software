@@ -134,14 +134,11 @@ async function editarClientes(req, res){
     const [results] = await conn.execute(
       sql, [nombre, apellido, rut, telefono, correo, direccion, ciudad, postal, region_id, clienteId]
     );
-    console.log('Resultados de la actualización del cliente:', results);
 
     await conn.commit();
     if (results.affectedRows > 0){
-      console.log('Cliente actualizado con éxito', results);
       res.status(200).json({ message: 'Cliente actualizado con éxito' });
     }else{
-      console.log('No se encontró el cliente con el ID proporcionado');
       res.status(404).json({ message: 'No se encontró el cliente con el ID proporcionado' });
     }
   }catch(err){

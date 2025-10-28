@@ -163,6 +163,11 @@
         <option value="2">Gerente</option>
         <option value="3">Supervisor</option>
       </select>
+      <select id="tipo_contrato_id" name="tipo_contrato_id" required>
+        <option value="" disabled selected>Seleccione un contrato</option>
+        <option value="1">Full Time</option>
+        <option value="2">Part Time</option>
+      </select>
       <button type="submit">Actualizar Trabajador</button>
     </form>
   </div>
@@ -276,6 +281,7 @@
 
           const rolSelect = document.getElementById('rol_id');
           rolSelect.value = trabajador.rol_id|| '';
+          document.getElementById('tipo_contrato_id').value = trabajador.tipo_contrato_id || '';
         } else {
           alert('Trabajador no encontrado');
         }
@@ -302,10 +308,18 @@
         postal: document.getElementById('codigo_postal').value,
         region_id: document.getElementById('region_id').value,
         rol_id: document.getElementById('rol_id').value,
-        contrasena: document.getElementById('contrasena').value
+        tipo_contrato_id: document.getElementById('tipo_contrato_id').value
       };
 
-      console.log('Datos enviados para actualizar el trabajador:', updatedTrabajador);  // Verifica que los datos sean correctos
+      const contrasenaField = document.getElementById('contrasena');
+      if (!contrasenaField.disabled) {
+          if (contrasenaField.value) {
+            updatedTrabajador.contrasena = contrasenaField.value;
+          } else {
+            alert('Por favor, ingrese una nueva contraseña o no habilite el campo.');
+            return;
+          }
+      }
 
       try {
         const response = await fetch(`${URL_BASE}/editarTrabajador/${id}`, {
