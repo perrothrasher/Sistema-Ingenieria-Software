@@ -108,10 +108,6 @@ async function editarDotacion(req, res){
     const { anio, mes_id, TipoContrato_id, cantidad_personal, carga_horaria } = req.body;
     const {id: userId} = req.usuario;
 
-    console.log('Datos recibidos para actualizar la dotación:', {
-        dotacionId, mes_id, anio, TipoContrato_id, cantidad_personal, carga_horaria
-    });
-
     const sql = `
         UPDATE DotacionPersonal d
         JOIN TipoContrato t ON d.TipoContrato_id = t.id

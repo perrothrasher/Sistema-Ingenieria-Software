@@ -103,11 +103,11 @@ async function obtenerClientes(req, res){
 
 
 // Ruta para editar un cliente.
-function editarClientes(req, res){
-  const { id } = req.params;
+async function editarClientes(req, res){
+  const { id: clienteId } = req.params;
   const { nombre, apellido, rut, region_id, direccion, ciudad, postal, telefono, correo } = req.body;
+  const { id: userId} = req.usuario;
 
-  //console.log('Datos recibidos para actualizar cliente:', req.body); Aqui se imprimen los datos recibidos en la consola del servidor
   const sql = `
     UPDATE Persona p
     JOIN Cliente c ON c.persona_id = p.id
@@ -125,47 +125,38 @@ function editarClientes(req, res){
       u.region_id = ?
     WHERE c.id = ?
   `;
-  connection.execute(
-    sql,
-    [
-      nombre,
-      apellido,
-      rut,
-      telefono,
-      correo,
-      direccion,
-      ciudad,
-      postal,
-      region_id,
-      id
-    ],
-    (err, result) => {
-      if (err) {
-        console.error('Error al actualizar cliente:', err);
-        return res.status(500).json({ message: 'Error al actualizar el cliente' });
-      }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ message: 'Cliente no encontrado' });
-      }
+  let conn;
+  try{
+    conn = await connection.getConnection();
+    await conn.beginTransaction();
+    await conn.execute('SET @current_user_id = ?', [userId]);
+    const [results] = await conn.execute(
+      sql, [nombre, apellido, rut, telefono, correo, direccion, ciudad, postal, region_id, clienteId]
+    );
+    console.log('Resultados de la actualización del cliente:', results);
 
-      // Registrar evento en la auditoría
-      const{id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
-      const ip = req.ip || req.connection.remoteAddress;
-      registrarAuditoria(
-        userId, `${userNombre} ${userApellido}`, 'Cliente Editado', ip, rol,
-        {clienteId: id} // Datos adicionales del evento
-      );
-
+    await conn.commit();
+    if (results.affectedRows > 0){
+      console.log('Cliente actualizado con éxito', results);
       res.status(200).json({ message: 'Cliente actualizado con éxito' });
+    }else{
+      console.log('No se encontró el cliente con el ID proporcionado');
+      res.status(404).json({ message: 'No se encontró el cliente con el ID proporcionado' });
     }
-  );
+  }catch(err){
+    if (conn) await conn.rollback();
+    return res.status(500).json({ message: 'Error al actualizar el cliente', error: err.message });
+  } finally{
+    if (conn) conn.release();
+  }
 };
 
 
 // Ruta para eliminar un cliente.
-function eliminarCliente(req, res){
-  const { id } = req.params;
+async function eliminarCliente(req, res){
+  const { id: clienteId } = req.params;
+  const { id: userId } = req.usuario;
 
   const sql = `
     DELETE c, p, u
@@ -175,19 +166,21 @@ function eliminarCliente(req, res){
     WHERE c.id = ?;
   `;
 
-  connection.execute(sql, [id], (err, results) => {
-    if (err) {
-      return res.status(500).json({ message: 'Error al eliminar el cliente' });
-    }
-    // Registrar evento en la auditoría
-    const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
-    const ip = req.ip || req.connection.remoteAddress;
-    registrarAuditoria(
-      userId, `${userNombre} ${userApellido}`, 'Cliente Eliminado', ip, rol,
-      {clienteId: id} // Datos adicionales del evento
-    );
-    res.status(200).json({ message: 'Cliente eliminado exitosamente' });
-  });
+  let conn;
+  try{
+    conn = await connection.getConnection();
+    await conn.beginTransaction();
+    await conn.execute('SET @current_user_id = ?', [userId]);
+    const [results] = await conn.execute(sql, [clienteId]);
+
+    await conn.commit();
+    res.status(200).json({ message: 'Cliente eliminado con éxito' });
+  }catch(err){
+    if (conn) await conn.rollback();
+    return res.status(500).json({ message: 'Error al eliminar el cliente', error: err.message });
+  } finally{
+    if (conn) conn.release();
+  }
 };
 
 async function generarReporteClientes(req, res){
