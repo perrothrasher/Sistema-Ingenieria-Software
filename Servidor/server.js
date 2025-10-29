@@ -50,7 +50,7 @@ const { registrarAuditoria } = require('./JS Llamadas/auditoria.js');
 const auditoriaRoutes = require('./JS Llamadas/auditoria_rutas.js');
 const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente, generarReporteClientes } = require('./JS Llamadas/cliente.js');
 const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores, listarTrabajadores, generarReporteTrabajadores, actualizarTipoContrato } = require('./JS Llamadas/trabajadores.js'); 
-const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion, generarReporteDotacion, eliminarDotacion } = require('./JS Llamadas/dotacion.js');
+const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion, generarReporteDotacion, eliminarDotacion, reestablecerDotacion } = require('./JS Llamadas/dotacion.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
@@ -159,6 +159,8 @@ app.put('/editarDotacion/:id', editarDotacion);
 app.get('/api/dotacion/reporte', verificarToken, generarReporteDotacion);
 // Ruta para eliminar una dotación
 app.delete('/eliminarDotacion/:id', verificarToken, eliminarDotacion);
+// Ruta para reestablecer una dotación eliminada
+app.put('/reestablecerDotacion/:id', verificarToken, reestablecerDotacion);
 /////////////////////////////////////////////////
 
 // HISTÓRICOS 

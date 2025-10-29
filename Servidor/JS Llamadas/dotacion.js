@@ -72,30 +72,41 @@ async function obtenerDotaciones(req, res){
 
 // Obtener dotacion para editar
 async function obtenerDotacionesParaEdicion(req, res){
-    const {id} = req.params;
+    const {id} = req.query;
 
-    const sql = `
-        SELECT
-        d.id,
-        d.anio, 
-        d.mes_id, 
-        d.TipoContrato_id, 
-        d.cantidad_personal, 
-        d.carga_horaria
-        FROM DotacionPersonal d
-        JOIN TipoContrato t ON d.TipoContrato_id = t.id
-        JOIN Mes m ON d.mes_id = m.id
-        ORDER BY d.anio DESC, m.id DESC
+    const sqlActual = `
+       SELECT id, anio, mes_id, TipoContrato_id, cantidad_personal, carga_horaria
+        FROM DotacionPersonal
+        WHERE id = ?;
+    `;
+
+    const sqlAnterior= `
+        SELECT detalles_cambio
+        FROM auditoria_dotacionpersonal
+        WHERE dotacionpersonal_id = ? AND accion_id = 2 -- (accion 2 = Modificar)
+        ORDER BY fecha DESC
+        LIMIT 1;
     `;
 
     try {
-        const [results] = await connection.query(sql, [id]); 
+        const [resultsActual] = await connection.query(sqlActual, [id]);
+        const [resultsAnterior] = await connection.query(sqlAnterior, [id]);
 
-        if (results.length > 0) {
-            return res.status(200).json({ dotacion: results[0] }); 
-        } else {
-            return res.status(404).json({ message: 'Dotación no encontrada' });
+        if (resultsActual.length === 0) {
+            return res.status(404).json({ message: 'No se encontró la dotación' });
         }
+
+        const dotacionActual = resultsActual[0];
+        let datosAnteriores = null;
+
+        if (resultsAnterior.length > 0) {
+            datosAnteriores = resultsAnterior[0].detalles_cambio.valores_viejos;
+        }
+
+        return res.status(200).json({
+            dotacionActual: dotacionActual,
+            datosAnteriores: datosAnteriores
+        })
     } catch (err) {
         console.error('Error en la consulta SQL:', err);
         return res.status(500).json({ message: 'Error al obtener la dotación', error: err.message });
@@ -159,6 +170,46 @@ async function eliminarDotacion(req, res){
     } catch (err) {
         if (conn) await conn.rollback();
         return res.status(500).json({ message: 'Error al eliminar la dotación', error: err.message });
+    } finally {
+        if (conn) conn.release();
+    }
+};
+
+// Reestablecer dotacion
+async function reestablecerDotacion(req, res){
+    const {id: dotacionId} = req.params;
+    const { anio, mes_id, TipoContrato_id, cantidad_personal, carga_horaria } = req.body;
+    const {id: userId} = req.usuario;
+
+    const sql = `
+        UPDATE DotacionPersonal
+        SET mes_id = ?, 
+            anio = ?, 
+            TipoContrato_id = ?, 
+            cantidad_personal = ?, 
+            carga_horaria = ? 
+        WHERE id = ?; 
+    `;
+    let conn;
+    try {
+        conn = await connection.getConnection();
+        await conn.beginTransaction();
+
+        await conn.execute('SET @current_user_id = ?', [userId]);
+
+        await conn.execute('SET @accion_id_override = 4', []); 
+
+        const [results] = await conn.execute(
+            sql, [mes_id, anio, TipoContrato_id, cantidad_personal, carga_horaria, dotacionId]
+        );
+
+        await conn.commit();
+        res.status(200).json({ message: 'Dotación re-establecida exitosamente' });
+
+    } catch (err) {
+        if (conn) await conn.rollback();
+        console.error('Error al re-establecer la dotación:', err);
+        return res.status(500).json({ message: 'Error al re-establecer la dotación', error: err.message });
     } finally {
         if (conn) conn.release();
     }
@@ -318,5 +369,6 @@ module.exports = {
     editarDotacion,
     obtenerDotacionesParaEdicion,
     generarReporteDotacion,
-    eliminarDotacion
+    eliminarDotacion,
+    reestablecerDotacion
     };

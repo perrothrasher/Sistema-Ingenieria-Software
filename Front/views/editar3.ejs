@@ -11,151 +11,174 @@
   <script src="config_server.js"></script>
   <style>
     .form-container {
-      background-color: #f4f4f4;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      max-width: 600px;
-      margin: 20px auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      padding: 30px;
+      margin-top: 20px;
     }
-
-    .form-group {
-      margin-bottom: 1rem;
+    .form-container.disabled-form {
+      background-color: #e9ecef;
     }
-
-    label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 0.3rem;
+    .form-container h4 {
+      font-weight: 600;
+      color: #667eea;
+      border-bottom: 2px solid #e9ecef;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
     }
-
-    input, select {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-
-    button {
-      background-color: #007bff;
-      color: white;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 2rem;
-    }
-
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border: 1px solid #ccc;
-    }
-
-    th {
-      background-color: #5a67d8;
-      color: white;
-    }
-
-    td {
-      background-color: #f9f9f9;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    .action-buttons button {
-      background-color: #4a5568;
-      padding: 6px 12px;
-      font-size: 0.9rem;
-      border: none;
-      color: white;
-      border-radius: 4px;
-    }
-
-    .action-buttons button:hover {
-      background-color: #2d3748;
-    }
-
-    @media (max-width: 600px) {
-      table {
-        font-size: 14px;
-      }
+    .form-label {
+      font-weight: 600;
+      color: #495057;
     }
   </style>
 </head>
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container">
-    <h1><i class="fas fa-users-cog"></i> Gestión de Dotación de Personal</h1>
-    <form id="dotacionForm">
-      <!-- Seleccion de Mes y Año-->
-      <label for="mes">Mes:</label>
-      <select id="mes" name="mes" required>
-        <option value="" disabled selected>Seleccione un mes</option>
-        <option value="1">Enero</option>
-        <option value="2">Febrero</option>
-        <option value="3">Marzo</option>
-        <option value="4">Abril</option>
-        <option value="5">Mayo</option>
-        <option value="6">Junio</option>
-        <option value="7">Julio</option>
-        <option value="8">Agosto</option>
-        <option value="9">Septiembre</option>
-        <option value="10">Octubre</option>
-        <option value="11">Noviembre</option>
-        <option value="12">Diciembre</option>
-      </select>
+  <div class="container mt-4">
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="form-container disabled-form">
+          <h4 class="text-center">Valores antiguos (Revertir)</h4>
+          <form id="dotacionFormAntiguo">
+            <div class="mb-3">
+              <label for="mes_antiguo" class="form-label">Mes:</label>
+              <select id="mes_antiguo" class="form-select" disabled>
+                <option value="" disabled selected>Seleccione un mes</option>
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+            </div>
 
-      <label for="anio">Año:</label>
-      <select id="anio" name="anio" required>
-        <option value="" disabled selected>Seleccione un año</option>
-        <option value="2025">2025</option>
-        <option value="2024">2024</option>
-        <option value="2023">2023</option>
-        <option value="2022">2022</option>
-        <option value="2021">2021</option>
-        <option value="2020">2020</option>
-        <option value="2019">2019</option>
-        <option value="2018">2018</option>
-        <option value="2017">2017</option>
-        <option value="2016">2016</option>
-        <option value="2015">2015</option>
-        <option value="2014">2014</option>
-        <option value="2013">2013</option>
-        <option value="2012">2012</option>
-        <option value="2011">2011</option>
-        <option value="2010">2010</option>
-      </select>
-      <!-- Seleccion del tipo de contrato-->
-      <label for="tipo_contrato">Tipo de Contrato:</label>
-        <select id="tipo_contrato" name="tipo_contrato" required>
-          <option value="" disabled selected>Seleccione un tipo de contrato</option>
-          <option value="1">Full Time</option>
-          <option value="2">Part Time</option>
-        </select>
-      
-      <!--- Cantidad de personal--->
-      <label for="cantidad_personal">Cantidad de Personal:</label>
-      <input type="number" id="cantidad_personal" name="cantidad_personal" placeholder="Cantidad de personal" required min="1">
+            <div class="mb-3">
+              <label for="anio_antiguo" class="form-label">Año:</label>
+              <select id="anio_antiguo" class="form-select" disabled>
+                <option value="" disabled selected>Seleccione un año</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+                <option value="2020">2020</option>
+                <option value="2019">2019</option>
+                <option value="2018">2018</option>
+                <option value="2017">2017</option>
+                <option value="2016">2016</option>
+                <option value="2015">2015</option>
+                <option value="2014">2014</option>
+                <option value="2013">2013</option>
+                <option value="2012">2012</option>
+                <option value="2011">2011</option>
+                <option value="2010">2010</option>
+              </select>
 
-      <!-- Carga horaria-->
-       <label for="carga_horaria">Carga Horaria:</label>
-       <input type="number" id="carga_horaria" name="carga_horaria" placeholder="Carga horaria Mensual" required>
+            <div class="mb-3">
+              <label for="tipo_contrato_antiguo" class="form-label">Tipo de Contrato: </label>
+              <select id="tipo_contrato_antiguo" class="form-select" disabled>
+                <option value="" disabled selected>Seleccione un tipo de contrato</option>
+                <option value="1">Full Time</option>
+                <option value="2">Part Time</option>
+              </select>
+            </div>
 
-      <button type="submit">Actualizar Dotación</button>
-    </form>
+            <div class="mb-3">
+              <label for="cantidad_personal_antiguo" class="form-label">Cantidad de Personal:</label>
+              <input type="number" id="cantidad_personal_antiguo" class="form-control" placeholder="Cantidad de personal" disabled>
+            </div>
+
+            <div class="mb-3">
+              <label for="carga_horaria_antiguo" class="form-label">Carga Horaria:</label>
+              <input type="number" id="carga_horaria_antiguo" class="form-control" placeholder="Carga horaria Mensual" disabled>
+            </div>
+
+            <button type="button" id="reestablecerBtn" class="btn btn-warning w-100" disabled>
+              <i class="fas fa-undo"></i> Re-establecer Datos Antiguos
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+      <div class="col-lg-6">
+        <div class="form-container">
+          <h4 class="text-center">Valores Actuales</h4>
+          <form id="dotacionForm">
+            <div class="mb-3">
+              <label for="mes" class="form-label">Mes:</label>
+              <select id="mes" class="form-select" required>
+                <option value="" disabled selected>Seleccione un mes</option>
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="anio" class="form-label">Año:</label>
+              <select id="anio" class="form-select" required>
+                <option value="" disabled selected>Seleccione un año</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+                <option value="2020">2020</option>
+                <option value="2019">2019</option>
+                <option value="2018">2018</option>
+                <option value="2017">2017</option>
+                <option value="2016">2016</option>
+                <option value="2015">2015</option>
+                <option value="2014">2014</option>
+                <option value="2013">2013</option>
+                <option value="2012">2012</option>
+                <option value="2011">2011</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="tipo_contrato" class="form-label">Tipo de Contrato: </label>
+              <select id="tipo_contrato" class="form-select" required>
+                <option value="" disabled selected>Seleccione un tipo de contrato</option>
+                <option value="1">Full Time</option>
+                <option value="2">Part Time</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="cantidad_personal" class="form-label">Cantidad de Personal:</label>
+              <input type="number" id="cantidad_personal" class="form-control" placeholder="Cantidad de personal" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="carga_horaria" class="form-label">Carga Horaria:</label>
+              <input type="number" id="carga_horaria" class="form-control" placeholder="Carga horaria Mensual" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="fas fa-save"></i> Guardar Cambios
+            </button>
+          </div>
+        </div>
   </div>
-
   <script>
     function isDev(){
       try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
@@ -232,22 +255,49 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
+    
+    let datosViejosparaReestablecer = null;
 
-    async function cargarDotacion(id){ // <-- 'id' ya viene como parámetro
+    async function cargarDotacion(id){
         try{
             const response = await fetch(`${URL_BASE}/get-dotaciones-edicion?id=${id}`);
             const data = await response.json();
+            console.log(data);
 
-            if (response.ok && data.dotacion) {
-                
-                const dotacion = data.dotacion; 
+            if (response.ok) {
 
-                document.getElementById('mes').value = dotacion.mes_id || '';
-                document.getElementById('anio').value = dotacion.anio || '';
-                document.getElementById('tipo_contrato').value = dotacion.TipoContrato_id || '';
-                document.getElementById('cantidad_personal').value = dotacion.cantidad_personal || '';
-                document.getElementById('carga_horaria').value = dotacion.carga_horaria || '';
+                const dotacionActual = data.dotacionActual;
+                document.getElementById('mes').value = dotacionActual.mes_id || '';
+                document.getElementById('anio').value = dotacionActual.anio || '';
+                document.getElementById('tipo_contrato').value = dotacionActual.TipoContrato_id || '';
+                document.getElementById('cantidad_personal').value = dotacionActual.cantidad_personal || '';
+                document.getElementById('carga_horaria').value = dotacionActual.carga_horaria || '';
 
+                if(data.datosAnteriores){
+                  const viejos = data.datosAnteriores;
+                  datosViejosparaReestablecer = viejos;
+                  document.getElementById('mes_antiguo').value = viejos.mes_id || '';
+                  document.getElementById('anio_antiguo').value = viejos.anio || '';
+                  document.getElementById('tipo_contrato_antiguo').value = viejos.TipoContrato_id || '';
+                  document.getElementById('cantidad_personal_antiguo').value = viejos.cantidad_personal || '';
+                  document.getElementById('carga_horaria_antiguo').value = viejos.carga_horaria || '';
+                  document.getElementById('reestablecerBtn').disabled = false;
+
+                  const sonIguales = 
+                      (dotacionActual.mes_id == viejos.mes_id) &&
+                      (dotacionActual.anio == viejos.anio) &&
+                      (dotacionActual.TipoContrato_id == viejos.TipoContrato_id) &&
+                      (dotacionActual.cantidad_personal == viejos.cantidad_personal) &&
+                      (dotacionActual.carga_horaria == viejos.carga_horaria);
+
+                  if (sonIguales) {
+                      document.getElementById('reestablecerBtn').disabled = true;
+                      document.getElementById('reestablecerBtn').innerHTML = '<i class="fas fa-check"></i> Ya está en la versión anterior';
+                  } else {
+                      document.getElementById('reestablecerBtn').disabled = false;
+                      document.getElementById('reestablecerBtn').innerHTML = '<i class="fas fa-undo"></i> Re-establecer Datos Antiguos';
+                  }
+                }
             } else {
                 alert(data.message || 'Dotación no encontrada');
             }
@@ -256,28 +306,18 @@
             alert('Error al cargar los datos de la dotación.');
         }
     }
-    cargarDotacion(id);
+    
 
     document.getElementById('dotacionForm').addEventListener('submit', async function(e){
         e.preventDefault();
 
-        // Obtener los valores del formulario
-        const id = new URLSearchParams(window.location.search).get('id'); 
-        const mes = document.getElementById('mes').value;
-        const anio = document.getElementById('anio').value;
-        const tipoContrato = document.getElementById('tipo_contrato').value;
-        const cantidadPersonal = document.getElementById('cantidad_personal').value;
-        const cargaHoraria = document.getElementById('carga_horaria').value;
-
         const updatedDotacion = {
-            mes_id: mes,
-            anio,
-            TipoContrato_id: tipoContrato,  
-            cantidad_personal: cantidadPersonal,
-            carga_horaria: cargaHoraria
+            mes_id: document.getElementById('mes').value,
+            anio: document.getElementById('anio').value,
+            TipoContrato_id: document.getElementById('tipo_contrato').value,  
+            cantidad_personal: document.getElementById('cantidad_personal').value,
+            carga_horaria: document.getElementById('carga_horaria').value
         };
-
-        console.log('Datos enviados para actualizar la dotación:', updatedDotacion);
 
         try{
             const response = await fetch(`${URL_BASE}/editarDotacion/${id}`, {
@@ -300,6 +340,39 @@
             alert('Hubo un error al actualizar la dotación.');
         }
     });
+
+    document.getElementById('reestablecerBtn').addEventListener('click', async function(){
+      if(!datosViejosparaReestablecer){
+        alert('No hay datos antiguos para reestablecer.');
+        return;
+      }
+
+      if(!confirm('¿Está seguro de que desea reestablecer la dotación a los datos anteriores?')){
+        return;
+      }
+
+      try{
+        const response = await fetch(`${URL_BASE}/reestablecerDotacion/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(datosViejosparaReestablecer)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+          alert('Dotación reestablecida con éxito');
+          window.location.href = 'dotacion_personal.html';
+        } else {
+          throw new Error(result.message || 'Error al reestablecer la dotación');
+        }
+      } catch (error){
+        console.error('Error al reestablecer la dotación:', error);
+        alert('Hubo un error al reestablecer la dotación.');
+      }
+    });
+    cargarDotacion(id);
   </script>
 </body>
 </html>

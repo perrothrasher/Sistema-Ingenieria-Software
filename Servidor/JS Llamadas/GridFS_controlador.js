@@ -74,9 +74,7 @@ const listarArchivos = async (req, res) =>{
         const bucket = new GridFSBucket(db, {bucketName: 'archivos'});
         const archivos = await bucket.find({}).toArray();
 
-        if(!archivos || archivos.length === 0){
-            return res.status(404).json({error: 'No se encontraron archivos'});
-        }
+
 
         // Mapeo
         const fileInfos = archivos.map(file => ({
