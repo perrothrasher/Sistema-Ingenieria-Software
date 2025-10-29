@@ -5,12 +5,32 @@ const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const https = require('https');
+const ejs = require('ejs');
 require('dotenv').config();
 
 /////////////////////////////////////////////////
-// Utilización de express para no utilizar xampp
 const app = express();
 app.set('trust proxy', 1);
+app.set('views', path.join(__dirname, '..', 'Front', 'views'));
+app.set('view engine', 'ejs');
+app.get('/login.html', (req, res) => { res.render('login'); });
+app.get('/index.html', (req, res) => { res.render('index'); });
+app.get('/carga_datos_historicos.html', (req, res) => { res.render('carga_datos_historicos'); });
+app.get('/dotacion_personal.html', (req, res) => { res.render('dotacion_personal'); });
+app.get('editar_cliente.html', (req, res) => { res.render('editar_cliente'); });
+app.get('/editar_trabajador.html', (req, res) => { res.render('editar_trabajador'); });
+app.get('/editar.html', (req, res) => { res.render('editar'); });
+app.get('/editar2.html', (req, res) => { res.render('editar2'); });
+app.get('/editar3.html', (req, res) => { res.render('editar3'); });
+app.get('/estado_sistema.html', (req, res) => { res.render('estado_sistema'); });
+app.get('/historial.html', (req, res) => { res.render('historial'); });
+app.get('/prediccion.html', (req, res) => { res.render('prediccion'); });
+app.get('/registro_cliente.html', (req, res) => { res.render('registro_cliente'); });
+app.get('/registro2.html', (req, res) => { res.render('registro2'); });
+app.get('/ver_auditoria.html', (req, res) => { res.render('ver_auditoria'); });
+app.get('ver_cliente.html', (req, res) => { res.render('ver_cliente'); });
+app.get('/ver_trabajador.html', (req, res) => { res.render('ver_trabajador'); });
+app.get('visualizar_datos_historicos.html', (req, res) => { res.render('visualizar_datos_historicos'); });
 app.use(express.static(path.join(__dirname, '..', 'Front')));
 app.use(express.json());
 app.use(cookieParser());

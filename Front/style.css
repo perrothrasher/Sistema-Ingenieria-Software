@@ -112,3 +112,13 @@ button:hover {
   border: none;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
+
+.navbar-nav .dropdown-menu {
+  z-index: 1050;
+  position: absolute;
+}
+
+.dropdown-menu[data-bs-popper] {
+  left: auto;
+  right: 0;
+}
