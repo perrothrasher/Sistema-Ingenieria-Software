@@ -180,11 +180,9 @@ const CERT_ID = 'ssl-localhost';
 app.locals.mongoReady = (async () => {
   let db;
   try{
-    db = await conexion_Mongo(); 
-    app.locals.getDB = () => db; 
-    console.log('Base de datos lista para las rutas.');
+    db = await conexion_Mongo();
+    app.locals.getDB = () => db;
 
-    console.log(`Buscando certificados SSL en coleccion: ${CERT_COLLECTION}...`);
     const sslConfig = await db.collection(CERT_COLLECTION).findOne({ _id: CERT_ID });
 
     if (!sslConfig || !sslConfig.key || !sslConfig.cert) {
