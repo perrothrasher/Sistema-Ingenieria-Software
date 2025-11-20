@@ -39,6 +39,6 @@ async function guardarCertsEnDB() {
   } finally {
     await client.close();
   }
-}
+};
 
 guardarCertsEnDB();

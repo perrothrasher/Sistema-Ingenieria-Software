@@ -139,7 +139,6 @@ async function editarDotacion(req, res){
         );
 
         await conn.commit();
-        console.log('Dotación actualizada:', results);
         res.status(200).json({ message: 'Dotación actualizada exitosamente' });
 
     } catch (err) {

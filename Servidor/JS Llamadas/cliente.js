@@ -67,37 +67,124 @@ async function registrarCliente(req, res){
 // Ruta para obtener todos los clientes.
 async function obtenerClientes(req, res){
   const id = req.query.id;
-  const sql = `
+
+  if(!id){
+    const sqlList = `
     SELECT
-        c.id AS id,
-        p.id AS persona_id,
-        p.nombre,
-        p.apellido,
-        p.rut,
-        p.telefono,
-        p.correo,
-        u.direccion,
-        u.ciudad,
-        r.id AS region_id,
-        r.nombre AS region,
-        u.postal
+          c.id AS id, p.nombre, p.apellido, p.rut, p.telefono, p.correo,
+          u.direccion, u.ciudad, r.nombre AS region, u.postal
+      FROM Cliente c
+      JOIN Persona p ON c.persona_id = p.id
+      JOIN Ubicacion u ON p.ubicacion_id = u.id
+      JOIN Region r ON u.region_id = r.id; 
+    `;
+
+    try{
+      const [results] = await connection.query(sqlList);
+
+      if (results.length > 0){
+        return res.status(200).json({ clientes: results });
+      } else{
+        return res.status(404).json({message: 'No se encontraron clientes'});
+      }
+    }catch(err){
+      console.error('Error en la consulta SQL:', err);
+      return res.status(500).json({ message: 'Error al obtener los clientes', error: err.message });
+    }
+  }
+
+  const sqlActual = `
+    SELECT
+        c.id, p.nombre, p.apellido, p.rut, p.telefono, p.correo,
+        u.direccion, u.ciudad, u.postal, u.region_id
     FROM Cliente c
     JOIN Persona p ON c.persona_id = p.id
     JOIN Ubicacion u ON p.ubicacion_id = u.id
-    JOIN Region r ON u.region_id = r.id;  
+    WHERE c.id = ?;
   `;
 
-  try{
-    const [results] = await connection.query(sql);
+  const sqlAnterior = `
+    (SELECT detalles_cambio FROM auditoria_clientes
+     WHERE cliente_id = ? AND accion_id = 2 AND JSON_EXTRACT(detalles_cambio, '$.tabla_modificada') = 'Persona'
+     ORDER BY fecha DESC LIMIT 1)
+    UNION ALL
+    (SELECT detalles_cambio FROM auditoria_clientes
+     WHERE cliente_id = ? AND accion_id = 2 AND JSON_EXTRACT(detalles_cambio, '$.tabla_modificada') = 'Ubicacion'
+     ORDER BY fecha DESC LIMIT 1);
+  `;
 
-    if (results.length > 0){
-      return res.status(200).json({ clientes: results });
-    } else{
-      return res.status(404).json({message: 'No se encontraron clientes'});
+  try {
+    const [resultsActual] = await connection.query(sqlActual, [id]);
+    const [resultsAnterior] = await connection.query(sqlAnterior, [id, id]);
+
+    if (resultsActual.length === 0) {
+      return res.status(404).json({ message: 'No se encontró el cliente' });
     }
-  }catch(err){
+
+    const clienteActual = resultsActual[0];
+    let datosAnteriores = {}; 
+
+    if (resultsAnterior.length > 0) {
+      resultsAnterior.forEach(row => {
+        Object.assign(datosAnteriores, row.detalles_cambio.valores_viejos);
+      });
+    } else {
+      datosAnteriores = null;
+    }
+    return res.status(200).json({
+      clienteActual: clienteActual,
+      datosAnteriores: datosAnteriores
+    });
+
+  } catch(err) {
     console.error('Error en la consulta SQL:', err);
-    return res.status(500).json({ message: 'Error al obtener los clientes', error: err.message });
+    return res.status(500).json({ message: 'Error al obtener el cliente', error: err.message });
+  }
+};
+
+// Reestablecer cliente
+async function reestablecerCliente(req, res){
+  const { id: clienteId } = req.params;
+  const { nombre, apellido, rut, region_id, direccion, ciudad, postal, telefono, correo } = req.body;
+  const { id: userId} = req.usuario;
+  
+  const sql = `
+    UPDATE Persona p
+    JOIN Cliente c ON c.persona_id = p.id
+    JOIN Ubicacion u ON u.id = p.ubicacion_id
+    SET
+      p.nombre = ?,
+      p.apellido = ?,
+      p.rut = ?,
+      p.telefono = ?,
+      p.correo = ?,
+      u.direccion = ?,
+      u.ciudad = ?,
+      u.postal = ?,
+      u.region_id = ?
+    WHERE c.id = ?
+  `;
+
+  let conn;
+  try{
+    conn = await connection.getConnection();
+    await conn.beginTransaction();
+    await conn.execute('SET @current_user_id = ?', [userId]);
+    await conn.execute('SET @accion_id_override = 4', []); 
+
+    const [results] = await conn.execute(
+      sql, [nombre, apellido, rut, telefono, correo, direccion, ciudad, postal, region_id, clienteId]
+    );
+
+    await conn.commit();
+    res.status(200).json({ message: 'Cliente re-establecido exitosamente' });
+
+  }catch(err){
+    if (conn) await conn.rollback();
+    console.error('Error al re-establecer el cliente:', err);
+    return res.status(500).json({ message: 'Error al re-establecer el cliente', error: err.message });
+  } finally{
+    if (conn) conn.release();
   }
 };
 
@@ -257,5 +344,6 @@ module.exports = {
   obtenerClientes,
   editarClientes,
   eliminarCliente,
-  generarReporteClientes
+  generarReporteClientes,
+  reestablecerCliente
 };

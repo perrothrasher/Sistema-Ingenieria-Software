@@ -11,75 +11,115 @@
   <script src="config_server.js"></script>
   <style>
     .form-container {
-      max-width: 500px;
-      margin: 20px auto;
-      background-color: #f4f4f4;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      padding: 30px;
+      margin-top: 20px;
+      height: 100%;
     }
-
-    h1 {
-      text-align: center;
-      margin-top: 30px;
+    .form-container.disabled-form {
+      background-color: #f8f9fa; 
     }
-
-    form input, form button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
+    .form-container h4 {
+      font-weight: 600;
+      color: #667eea;
+      border-bottom: 2px solid #e9ecef;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
     }
-
-    button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    button i {
-      margin-right: 5px;
+    .form-label {
+      font-weight: 600;
+      color: #495057;
     }
   </style>
 </head>
 <body>
   <%- include('partials/navbar') %>
 
-  <div class="container">
-    <h1><i class="fas fa-user-plus"></i> Editar Cliente</h1>
-    <form id="editarForm" method="post">
-      <input type="text" id="nombre" name="nombre" placeholder="Nombre" required>
-      <input type="text" id="apellido" name="apellido" placeholder="Apellido" required>
-      <input type="text" id="rut" name="rut" placeholder="RUT" required>
-      <select id="region_id" name="region_id" required>
-        <option value="" disabled selected>Seleccione una región</option>
-        <option value="1">Arica y Parinacota</option>
-        <option value="2">Tarapacá</option>
-        <option value="3">Antofagasta</option>
-        <option value="4">Atacama</option>
-        <option value="5">Coquimbo</option>
-        <option value="6">Valparaíso</option>
-        <option value="7">Región Metropolitana de Santiago</option>
-        <option value="8">O’Higgins</option>
-        <option value="9">Maule</option>
-        <option value="10">Ñuble</option>
-        <option value="11">Biobío</option>
-        <option value="12">La Araucanía</option>
-        <option value="13">Los Ríos</option>
-        <option value="14">Los Lagos</option>
-        <option value="15">Aysén del General Carlos Ibáñez del Campo</option>
-        <option value="16">Magallanes y de la Antártica Chilena</option>
-      </select>
-      <input type="text" id="comuna" name="comuna" placeholder="Comuna" required>
-      <input type="text" id="direccion" name="direccion" placeholder="Dirección" required>
-      <input type="text" id="codigo_postal" name="codigo_postal" placeholder="Código Postal" required>
-      <input type="text" id="telefono" name="telefono" placeholder="Teléfono" required>
-      <input type="email" id="correo" name="correo" placeholder="Correo" required>
-      <button type="submit">Actualizar Cliente</button>
-    </form>
+  <div class="container mt-4">
+    <h1 class="text-center"><i class="fas fa-user-edit"></i> Editar Cliente</h1>
+
+    <div class="row">
+      
+      <div class="col-lg-6">
+        <div class="form-container disabled-form">
+          <h4 class="text-center">Valores Antiguos (Revertir a)</h4>
+          <form id="clienteFormAntiguo">
+            <input type="text" id="nombre_antiguo" class="form-control mb-2" placeholder="Nombre" disabled>
+            <input type="text" id="apellido_antiguo" class="form-control mb-2" placeholder="Apellido" disabled>
+            <input type="text" id="rut_antiguo" class="form-control mb-2" placeholder="RUT" disabled>
+            <select id="region_id_antiguo" class="form-select mb-2" disabled>
+              <option value="">Seleccione una región</option>
+              <option value="1">Arica y Parinacota</option>
+              <option value="2">Tarapacá</option>
+              <option value="3">Antofagasta</option>
+              <option value="4">Atacama</option>
+              <option value="5">Coquimbo</option>
+              <option value="6">Valparaíso</option>
+              <option value="7">Región Metropolitana de Santiago</option>
+              <option value="8">O’Higgins</option>
+              <option value="9">Maule</option>
+              <option value="10">Ñuble</option>
+              <option value="11">Biobío</option>
+              <option value="12">La Araucanía</option>
+              <option value="13">Los Ríos</option>
+              <option value="14">Los Lagos</option>
+              <option value="15">Aysén</option>
+              <option value="16">Magallanes</option>
+            </select>
+            <input type="text" id="comuna_antiguo" class="form-control mb-2" placeholder="Comuna" disabled>
+            <input type="text" id="direccion_antiguo" class="form-control mb-2" placeholder="Dirección" disabled>
+            <input type="text" id="codigo_postal_antiguo" class="form-control mb-2" placeholder="Código Postal" disabled>
+            <input type="text" id="telefono_antiguo" class="form-control mb-2" placeholder="Teléfono" disabled>
+            <input type="email" id="correo_antiguo" class="form-control mb-3" placeholder="Correo" disabled>
+            
+            <button type="button" id="reestablecerBtn" class="btn btn-warning w-100" disabled>
+              <i class="fas fa-undo"></i> Re-establecer a esta versión
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="form-container">
+          <h4 class="text-center">Valores Actuales (Editar)</h4>
+          <form id="editarForm">
+            <input type="text" id="nombre" class="form-control mb-2" placeholder="Nombre" required>
+            <input type="text" id="apellido" class="form-control mb-2" placeholder="Apellido" required>
+            <input type="text" id="rut" class="form-control mb-2" placeholder="RUT" required>
+            <select id="region_id" class="form-select mb-2" required>
+              <option value="" disabled selected>Seleccione una región</option>
+              <option value="1">Arica y Parinacota</option>
+              <option value="2">Tarapacá</option>
+              <option value="3">Antofagasta</option>
+              <option value="4">Atacama</option>
+              <option value="5">Coquimbo</option>
+              <option value="6">Valparaíso</option>
+              <option value="7">Región Metropolitana de Santiago</option>
+              <option value="8">O’Higgins</option>
+              <option value="9">Maule</option>
+              <option value="10">Ñuble</option>
+              <option value="11">Biobío</option>
+              <option value="12">La Araucanía</option>
+              <option value="13">Los Ríos</option>
+              <option value="14">Los Lagos</option>
+              <option value="15">Aysén</option>
+              <option value="16">Magallanes</option>
+            </select>
+            <input type="text" id="comuna" class="form-control mb-2" placeholder="Comuna" required>
+            <input type="text" id="direccion" class="form-control mb-2" placeholder="Dirección" required>
+            <input type="text" id="codigo_postal" class="form-control mb-2" placeholder="Código Postal" required>
+            <input type="text" id="telefono" class="form-control mb-2" placeholder="Teléfono" required>
+            <input type="email" id="correo" class="form-control mb-3" placeholder="Correo" required>
+            
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="fas fa-save"></i> Actualizar Cliente
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -159,6 +199,8 @@
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get('id');
 
+    let datosViejosparaReestablecer = null;
+
     async function cargarCliente(id) {
       try {
         const response = await fetch(`${URL_BASE}/get-clientes?id=${id}`);
@@ -166,22 +208,53 @@
 
         console.log('Datos del cliente:', data); 
 
-        if (data.clientes && data.clientes.length > 0) {
-          const cliente = data.clientes.find(cliente => cliente.id === parseInt(id)); // Filtra el cliente por el ID
-
-          document.getElementById('nombre').value = cliente.nombre || '';
-          document.getElementById('apellido').value = cliente.apellido || '';
-          document.getElementById('rut').value = cliente.rut || '';
-
-          const regionSelect = document.getElementById('region_id');
-          regionSelect.value = cliente.region_id || '';
-
-          document.getElementById('comuna').value = cliente.ciudad || '';
-          document.getElementById('direccion').value = cliente.direccion || '';
-          document.getElementById('codigo_postal').value = cliente.postal || '';
-          document.getElementById('telefono').value = cliente.telefono || '';
-          document.getElementById('correo').value = cliente.correo || '';
+        if (response.ok) {
+          const current = data.clienteActual;
+          document.getElementById('nombre').value = current.nombre || '';
+          document.getElementById('apellido').value = current.apellido || '';
+          document.getElementById('rut').value = current.rut || '';
+          document.getElementById('region_id').value = current.region_id || '';
+          document.getElementById('comuna').value = current.ciudad || '';
+          document.getElementById('direccion').value = current.direccion || '';
+          document.getElementById('codigo_postal').value = current.postal || '';
+          document.getElementById('telefono').value = current.telefono || '';
+          document.getElementById('correo').value = current.correo || '';
           
+          if(data.datosAnteriores){
+            const viejos = data.datosAnteriores;
+            datosViejosparaReestablecer = viejos;
+            
+            document.getElementById('nombre_antiguo').value = viejos.nombre || '';
+            document.getElementById('apellido_antiguo').value = viejos.apellido || '';
+            document.getElementById('rut_antiguo').value = viejos.rut || '';
+            document.getElementById('region_id_antiguo').value = viejos.region_id || '';
+            document.getElementById('comuna_antiguo').value = viejos.ciudad || '';
+            document.getElementById('direccion_antiguo').value = viejos.direccion || '';
+            document.getElementById('codigo_postal_antiguo').value = viejos.postal || '';
+            document.getElementById('telefono_antiguo').value = viejos.telefono || '';
+            document.getElementById('correo_antiguo').value = viejos.correo || '';
+            
+            const sonIguales = (current.nombre == viejos.nombre) &&
+                                (current.apellido == viejos.apellido) &&
+                                (current.rut == viejos.rut) &&
+                                (current.region_id == viejos.region_id) &&
+                                (current.ciudad == viejos.ciudad) &&
+                                (current.direccion == viejos.direccion) &&
+                                (current.postal == viejos.postal) &&
+                                (current.telefono == viejos.telefono) &&
+                                (current.correo == viejos.correo);
+
+            if (sonIguales) {
+                document.getElementById('reestablecerBtn').disabled = true;
+                document.getElementById('reestablecerBtn').innerHTML = '<i class="fas fa-check"></i> Ya está en la versión anterior';
+            } else {
+                document.getElementById('reestablecerBtn').disabled = false;
+                document.getElementById('reestablecerBtn').innerHTML = '<i class="fas fa-undo"></i> Re-establecer Datos Antiguos';
+            }
+        } else {
+            document.getElementById('reestablecerBtn').disabled = true;
+            document.getElementById('reestablecerBtn').innerHTML = '<i class="fas fa-ban"></i> No hay historial para revertir';
+        }
         } else {
           alert('Cliente no encontrado');
         }
@@ -191,13 +264,10 @@
       }
     }
 
-    cargarCliente(id);
-
     document.getElementById('editarForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
       const updatedCliente = {
-        id,
         nombre: document.getElementById('nombre').value,
         apellido: document.getElementById('apellido').value,
         rut: document.getElementById('rut').value,
@@ -209,8 +279,6 @@
         postal: document.getElementById('codigo_postal').value
       };
 
-      console.log('Datos enviados para actualizar el cliente:', updatedCliente); 
-
       try {
         const response = await fetch(`${URL_BASE}/editarCliente/${id}`, {
           method: 'PUT',
@@ -219,7 +287,7 @@
           },
           body: JSON.stringify(updatedCliente)
         });
-
+        console.log('Respuesta del servidor:', response);
         const result = await response.json();
         if (response.ok) {
           alert('Cliente actualizado con éxito');
@@ -233,6 +301,40 @@
         alert('Hubo un error al actualizar el cliente.');
       }
     });
+
+    document.getElementById('reestablecerBtn').addEventListener('click', async function(){
+        if (!datosViejosparaReestablecer) {
+            alert('No hay datos antiguos para reestablecer.');
+            return;
+        }
+
+        if (!confirm('¿Estás seguro de que quieres re-establecer los datos a la versión anterior?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${URL_BASE}/reestablecerCliente/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(datosViejosparaReestablecer)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert('Cliente re-establecido con éxito');
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Error al re-establecer el cliente');
+            }
+        } catch (error) {
+            console.error('Error al re-establecer:', error);
+            alert('Hubo un error al re-establecer el cliente.');
+        }
+    });
+
+    cargarCliente(id);
   </script>
 </body>
 </html>

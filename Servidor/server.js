@@ -48,7 +48,7 @@ const login = require('./JS Llamadas/login.js'); // Iniciar sesión
 const verificarToken = require('./JS Llamadas/authMiddleware.js');
 const { registrarAuditoria } = require('./JS Llamadas/auditoria.js');
 const auditoriaRoutes = require('./JS Llamadas/auditoria_rutas.js');
-const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente, generarReporteClientes } = require('./JS Llamadas/cliente.js');
+const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente, generarReporteClientes, reestablecerCliente } = require('./JS Llamadas/cliente.js');
 const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores, listarTrabajadores, generarReporteTrabajadores, actualizarTipoContrato } = require('./JS Llamadas/trabajadores.js'); 
 const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion, generarReporteDotacion, eliminarDotacion, reestablecerDotacion } = require('./JS Llamadas/dotacion.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
@@ -143,6 +143,8 @@ app.put('/editarCliente/:id', editarClientes);
 app.delete('/eliminarCliente/:id', eliminarCliente);
 // Ruta para generar reporte PDF de clientes
 app.get('/api/clientes/reporte', verificarToken, generarReporteClientes);
+// Ruta para reestablecer un cliente eliminado
+app.put('/reestablecerCliente/:id', verificarToken, reestablecerCliente);
 /////////////////////////////////////////////////
 
 // DOTACIÓN
