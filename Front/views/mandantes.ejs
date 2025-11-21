@@ -8,10 +8,185 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        .welcome-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 15px;
+        }
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-color: #e9ecef;
+        }
+        
+        .btn-action {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            margin: 0 2px;
+        }
+        
+        .btn-edit {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+            color: white;
+        }
+        
+        .btn-delete {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+            color: white;
+        }
+        
+        .page-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+    </style>
 </head>
 <body>
     <%- include('partials/navbar') %>
 
+    <div class="container-fluid mt-4">
+        <!-- TITULO-->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="welcome-section fade-in">
+                    <div class="mb-4">
+                        <i class="fas fa-edit fa-3x text-primary mb-3"></i>
+                    </div>
+                    <h1 class="h2 mb-3 page-title">Gestión de Mandantes</h1>
+                    <p class="text-muted mb-0" style="font-size: 18px;">
+                        Administra y edita la información de los mandantes registrados en el sistema.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de mandantes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="table-container fade-in">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            Mandantes registrados
+                        </h5>
+                        <div class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <span id="totalMandantes">0</span> mandantes encontrados
+                        </div>
+                    </div>
+                    <div class="loading-spinner" id="loadingSpinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando mandantes...</p>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table" id="mandantesTable" style="display: none;">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-user me-2"></i>Nombre</th>
+                                    <th><i class="fas fa-envelope me-2"></i>Fecha Ingreso</th>
+                                    <th><i class="fas fa-phone me-2"></i>Recuento</th>
+                                    <th><i class="fas fa-cogs me-2"></i>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mandantesBody">
+                                <!-- Los datos de los mandantes se cargarán aquí -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <i class="fas fa-users"></i>
+                        <h5>No hay mandantes registrados</h5>
+                        <p>Aún no se han registrado mandantes en el sistema.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         function isDev(){
@@ -91,6 +266,80 @@
                 });
             } catch (e) {}
             window.location.replace('login.html');
+        }
+
+        // Cargar los mandantes desde el backend
+        async function cargarMandantes() {
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const mandantesTable = document.getElementById('mandantesTable');
+            const emptyState = document.getElementById('emptyState');
+            const totalMandantes = document.getElementById('totalMandantes');
+            
+            loadingSpinner.style.display = 'block';
+            mandantesTable.style.display = 'none';
+            emptyState.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${URL_BASE}/get-mandantes`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                const data = await response.json();
+
+                loadingSpinner.style.display = 'none';
+
+                if (response.ok && data.mandantes && data.mandantes.length > 0) {
+                    const mandantesBody = document.getElementById('mandantesBody');
+                    mandantesBody.innerHTML = ''; 
+
+                    // Actualizar contador
+                    totalMandantes.textContent = data.mandantes.length;
+
+                    // Iterar sobre los datos de los mandantes y mostrarlos en la tabla
+                    data.mandantes.forEach((mandante, index) => {
+                        const tr = document.createElement('tr');
+                        tr.style.animationDelay = `${index * 0.1}s`;
+                        tr.classList.add('fade-in');
+                        tr.innerHTML = `
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-white"></i>
+                                    </div>
+                                    <strong>${mandante.nombre}</strong>
+                                </div>
+                            </td>
+                            <td>${mandante.apellido}</td>
+                            <td>
+                                <i class="fas fa-envelope text-muted me-2"></i>
+                                ${mandante.correo}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-action btn-edit" onclick="editarMandante(${mandante.id})" title="Editar mandante">
+                                        <i class="fas fa-edit me-1"></i>Editar
+                                    </button>
+                                    <button type="button" class="btn btn-action btn-delete" onclick="eliminarMandante(${mandante.id})" title="Eliminar mandante">
+                                        <i class="fas fa-trash me-1"></i>Eliminar
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        mandantesBody.appendChild(tr);
+                    });
+                    
+                    mandantesTable.style.display = 'table';
+                } else {
+                    totalMandantes.textContent = '0';
+                    emptyState.style.display = 'block';
+                }
+            } catch (error) {
+                loadingSpinner.style.display = 'none';
+                console.error('Error fetching mandantes:', error);
+                alert('Error al obtener los mandantes. Por favor, intenta nuevamente.');
+            }
         }
     </script>
 </body>

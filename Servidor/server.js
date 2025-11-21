@@ -57,6 +57,7 @@ const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesP
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
+const { listarMandantes } = require('./JS Llamadas/mandantes.js');
 const conexion_Mongo = require('./JS Llamadas/mongo_connection.js');
 /////////////////////////////////////////////////
 
@@ -133,6 +134,13 @@ app.get('/api/trabajadores/reporte', verificarToken, generarReporteTrabajadores)
 // Ruta para actualizar tipo de contrato de un trabajador
 app.put('/api/trabajadores/:id/contrato', verificarToken, actualizarTipoContrato);
 /////////////////////////////////////////////////
+
+// MANDANTES
+/////////////////////////////////////////////////
+// Ruta para listar mandantes (id, nombre, fecha_ingreso, total_folios)
+app.get('/get-mandantes', listarMandantes);
+/////////////////////////////////////////////////
+
 
 // CLIENTES
 /////////////////////////////////////////////////

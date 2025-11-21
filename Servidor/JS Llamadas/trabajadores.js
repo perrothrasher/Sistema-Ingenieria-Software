@@ -164,7 +164,6 @@ async function listarTrabajadores(req, res){
         const [usuarios] = await connection.query(sql);
         res.status(200).json(usuarios);
     } catch (err) {
-        // ESTO es lo que está causando el error 500
         console.error("Error al obtener lista de usuarios:", err); 
         res.status(500).json({ message: "Error interno al consultar la base de datos", error: err.message });
     }
