@@ -8,7 +8,7 @@ async function listarMandantes(req, res){
             m.id,
             m.nombre,
             m.fecha_ingreso,
-            COALESCE(COUNT(p.cantidad_folios), 0) as total_folios
+            COALESCE(SUM(p.cantidadfolios), 0) as total_folios
         FROM Mandante m
         LEFT JOIN Produccion p ON m.id = p.mandante_id
         GROUP BY m.id, m.nombre, m.fecha_ingreso
@@ -17,13 +17,49 @@ async function listarMandantes(req, res){
 
     try{
         const [mandantes] = await connection.query(sql);
-        res.status(200).json(mandantes)
+        res.status(200).json({mandantes: mandantes});
     }catch(err){
        console.error("Error al obtener lista de mandantes:", err);
          res.status(500).json({ message: "Error interno al consultar la base de datos", error: err.message }); 
     }
 };
 
+async function registrarMandante(req, res){
+    const { nombre } = req.body;
+    //const {id: userId} = req.usuario;
+    
+    let conn;
+    if(!nombre){
+        return res.status(400).json({message: 'El nombre del mandante es obligatorio'});
+    }
+
+    const sql = `
+        INSERT INTO Mandante (nombre) VALUES (?);
+    `;
+
+    try{
+        conn = await connection.getConnection();
+        await conn.beginTransaction();
+
+        // Establecer el ID del usuario actual para el trigger
+        //await conn.execute('SET @current_user_id = ?', [userId]);
+
+        const [results] = await conn.execute(
+            sql, [nombre]
+        );
+
+        await conn.commit();
+        res.status(201).json({ message: 'Mandante registrado con éxito', mandanteId: results.insertId });
+    }catch(err){
+        if(conn) await conn.rollback();
+        console.error('Error al registrar mandante:', err);
+        return res.status(500).json({ message: 'Error al registrar el mandante', error: err.message });
+    } finally{
+        if(conn) conn.release();
+    }
+}
+
 module.exports = {
-    listarMandantes
+    listarMandantes,
+    registrarMandante
 };

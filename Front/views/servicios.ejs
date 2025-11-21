@@ -8,9 +8,203 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="config_server.js"></script>
+    <style>
+        body {
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+        
+        .welcome-section {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 15px;
+        }
+        
+        .table tbody tr {
+            transition: all 0.3s ease;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .table tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-color: #e9ecef;
+        }
+        
+        .btn-action {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: none;
+            margin: 0 2px;
+        }
+        
+        .btn-view {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .page-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+        .input-celda {
+        border: 1px solid transparent;
+        background-color: transparent;
+        width: 100%;
+        padding: 8px;
+        transition: all 0.2s;
+        }
+        .input-celda:focus, .input-celda:hover {
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            outline: none;
+            box-shadow: 0 0 0 0.25rem rgba(44, 98, 199, 0.25);
+            border-radius: 4px;
+        }
+        .opcion-crear {
+            font-weight: bold;
+            color: #2C62C7;
+            background-color: #eef2ff;
+        }
+    </style>
 </head>
 <body>
     <%- include('partials/navbar') %>
+
+    <div class="container-fluid mt-4">
+    
+    <div class="row mb-3 align-items-center fade-in">
+        <div class="col-md-8">
+            <h2 class="fw-bold" style="color: #2C62C7;">
+                <i class="fas fa-edit me-2"></i>Ingreso de Producción
+            </h2>
+            <p class="text-muted mb-0">
+                Rellena los campos para registrar la producción diaria. Puedes agregar múltiples filas antes de guardar.
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-success btn-lg shadow-sm" onclick="guardarTodo()">
+                <i class="fas fa-save me-2"></i> Guardar Registros
+            </button>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 fade-in">
+        <div class="card-body p-0"> <form id="formPlanilla">
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0 align-middle" id="tablaIngreso">
+                        <thead class="bg-light text-center">
+                            <tr style="border-bottom: 2px solid #2C62C7;">
+                                <th style="width: 50px;">#</th>
+                                <th style="width: 25%;">Operario / Usuario <span class="text-danger">*</span></th>
+                                <th style="width: 20%;">Tipo Servicio <span class="text-danger">*</span></th>
+                                <th style="width: 15%;">Cantidad <span class="text-danger">*</span></th>
+                                <th style="width: 20%;">Mandante <span class="text-danger">*</span></th>
+                                <th style="width: 15%;">Fecha (Mes/Año)</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="cuerpoTabla">
+                            </tbody>
+                    </table>
+                </div>
+            </form>
+            
+            <div class="p-3 bg-light border-top text-center">
+                <button type="button" class="btn btn-outline-primary dashed-border" onclick="agregarFilaVacia()">
+                    <i class="fas fa-plus-circle me-2"></i> Agregar otra línea vacía
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoMandante" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Nuevo Mandante</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="inputNuevoMandante" placeholder="Nombre de la empresa...">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="guardarMandanteModal()">Crear</button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script>
         function isDev(){
@@ -90,6 +284,182 @@
                 });
             } catch (e) {}
             window.location.replace('login.html');
+        }
+
+        let contador = 0;
+        let listaUsuarios = []; 
+        let listaServicios = [];
+        let listaMandantes = [];
+        let selectMandanteActivo = null;
+
+        window.addEventListener('load', async () => {
+            // 1. Cargar datos iniciales para llenar los selects (Simulado)
+            // Aquí harías los fetch reales a tu backend
+            listaUsuarios = [
+                {id: 1, nombre: "Juan Pérez"}, 
+                {id: 2, nombre: "Maria González"},
+                {id: 3, nombre: "Carlos Ruiz"}
+            ];
+            listaServicios = [
+                {id: 1, nombre: "Prendas"}, 
+                {id: 2, nombre: "Garantía"},
+                {id: 3, nombre: "Planchado"}
+            ];
+            listaMandantes = [
+                {id: 1, nombre: "Falabella"}, 
+                {id: 2, nombre: "Cencosud"}
+            ];
+
+            // 2. Crear la primera fila vacía lista para escribir
+            agregarFilaVacia();
+        });
+
+        function agregarFilaVacia() {
+            contador++;
+            const tbody = document.getElementById('cuerpoTabla');
+            const tr = document.createElement('tr');
+            tr.id = `fila_${contador}`;
+            
+            // Generar opciones de selects
+            const optsUsers = listaUsuarios.map(u => `<option value="${u.id}">${u.nombre}</option>`).join('');
+            const optsServs = listaServicios.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
+            let optsMandantes = listaMandantes.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+            optsMandantes += `<option value="NEW" class="opcion-crear">+ Nuevo Mandante...</option>`;
+
+            tr.innerHTML = `
+                <td class="text-center text-muted align-middle">${contador}</td>
+                
+                <td class="p-0">
+                    <select class="form-select input-celda" name="usuario">
+                        <option value="" selected disabled>- Seleccionar Operario -</option>
+                        ${optsUsers}
+                    </select>
+                </td>
+                
+                <td class="p-0">
+                    <select class="form-select input-celda" name="servicio">
+                        ${optsServs}
+                    </select>
+                </td>
+
+                <td class="p-0">
+                    <input type="number" class="form-control input-celda text-center" placeholder="0" min="1" name="cantidad">
+                </td>
+
+                <td class="p-0">
+                    <select class="form-select input-celda" name="mandante" onchange="checkNuevoMandante(this)">
+                        <option value="" selected disabled>- Mandante -</option>
+                        ${optsMandantes}
+                    </select>
+                </td>
+
+                <td class="p-0">
+                    <div class="d-flex">
+                        <select class="form-select input-celda border-end" style="width: 60%;" name="mes">
+                            <option value="1">Ene</option><option value="2">Feb</option>
+                            <option value="3">Mar</option><option value="4">Abr</option>
+                            <option value="5">May</option><option value="6">Jun</option>
+                            <option value="7">Jul</option><option value="8">Ago</option>
+                            <option value="9">Sep</option><option value="10">Oct</option>
+                            <option value="11" selected>Nov</option><option value="12">Dic</option>
+                        </select>
+                        <select class="form-select input-celda" style="width: 40%;" name="anio">
+                            <option value="2025">2025</option>
+                        </select>
+                    </div>
+                </td>
+
+                <td class="text-center align-middle">
+                    <button type="button" class="btn btn-link text-danger p-0" onclick="eliminarFila(${contador})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function eliminarFila(id) {
+            const fila = document.getElementById(`fila_${id}`);
+            if(fila) fila.remove();
+        }
+
+        const modal = new bootstrap.Modal(document.getElementById('modalNuevoMandante'));
+    
+        function checkNuevoMandante(select) {
+            if(select.value === 'NEW') {
+                selectMandanteActivo = select;
+                modal.show();
+                document.getElementById('inputNuevoMandante').value = '';
+            }
+        }
+
+        function guardarMandanteModal() {
+            const nombre = document.getElementById('inputNuevoMandante').value;
+            if(!nombre) return;
+
+            // Aquí simulo que el backend me devuelve ID 99
+            const nuevoId = 99 + Math.floor(Math.random() * 100); 
+            
+            // Agregar al array global
+            listaMandantes.push({id: nuevoId, nombre: nombre});
+
+            // Actualizar TODOS los selects de la tabla
+            const selects = document.querySelectorAll('select[name="mandante"]');
+            selects.forEach(sel => {
+                // Guardar valor actual
+                const valActual = sel.value;
+                // Reconstruir opciones
+                let html = listaMandantes.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+                html += `<option value="NEW" class="opcion-crear">+ Nuevo Mandante...</option>`;
+                sel.innerHTML = html;
+                
+                // Restaurar valor (si no era el nuevo)
+                if(sel === selectMandanteActivo) {
+                    sel.value = nuevoId; // Al que disparó el evento le pongo el nuevo
+                } else if (valActual !== 'NEW') {
+                    sel.value = valActual;
+                }
+            });
+
+            modal.hide();
+        }
+
+        function guardarTodo() {
+            // Recorrer la tabla y armar el JSON
+            const filas = document.querySelectorAll('#cuerpoTabla tr');
+            const datosParaEnviar = [];
+
+            filas.forEach(tr => {
+                const usuario = tr.querySelector('[name="usuario"]').value;
+                const servicio = tr.querySelector('[name="servicio"]').value;
+                const cantidad = tr.querySelector('[name="cantidad"]').value;
+                const mandante = tr.querySelector('[name="mandante"]').value;
+                const mes = tr.querySelector('[name="mes"]').value;
+                const anio = tr.querySelector('[name="anio"]').value;
+
+                // Solo guardamos si tiene datos mínimos
+                if(usuario && cantidad && mandante) {
+                    datosParaEnviar.push({
+                        id_usuario: usuario,
+                        id_tipo_servicio: servicio,
+                        cantidad: cantidad,
+                        id_mandante: mandante,
+                        mes: mes,
+                        anio: anio
+                    });
+                }
+            });
+
+            console.log("Datos listos para enviar al Backend:", datosParaEnviar);
+            
+            if(datosParaEnviar.length === 0) {
+                alert("La tabla está vacía o faltan datos obligatorios.");
+                return;
+            }
+
+            // AQUÍ HARÍAS EL FETCH POST FINAL
+            // fetch('/api/produccion/masiva', { method: 'POST', body: JSON.stringify(datosParaEnviar)... })
+            alert(`Se guardarán ${datosParaEnviar.length} registros exitosamente.`);
         }
     </script>
 </body>
