@@ -301,7 +301,9 @@
             };
 
             Object.values(dropdowns).forEach(dropdown => {
-                dropdown.style.display = 'block';
+                if (dropdown) { 
+                    dropdown.style.display = 'block';
+                }
             });
 
             if (rol === 'Soporte TI' || rol === 'Gerente'){
