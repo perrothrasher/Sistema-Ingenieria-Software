@@ -118,23 +118,23 @@
             color: #dee2e6;
         }
         .input-celda {
-        border: 1px solid transparent;
-        background-color: transparent;
-        width: 100%;
-        padding: 8px;
-        transition: all 0.2s;
+            border-radius: 0;
+            box-shadow: none;
+            font-size: 0.9rem;
+            height: 100%;
+            padding: 8px;
         }
         .input-celda:focus, .input-celda:hover {
-            background-color: #fff;
-            border: 1px solid #ced4da;
-            outline: none;
-            box-shadow: 0 0 0 0.25rem rgba(44, 98, 199, 0.25);
-            border-radius: 4px;
+            background-color: #f0f8ff;
+            box-shadow: inset 0 0 0 2px #5a67d8;
         }
         .opcion-crear {
             font-weight: bold;
             color: #2C62C7;
             background-color: #eef2ff;
+        }
+        #tablaIngreso td {
+            vertical-align: middle;
         }
     </style>
 </head>
@@ -165,13 +165,14 @@
                     <table class="table table-bordered mb-0 align-middle" id="tablaIngreso">
                         <thead class="bg-light text-center">
                             <tr style="border-bottom: 2px solid #2C62C7;">
-                                <th style="width: 50px;">#</th>
-                                <th style="width: 25%;">Operario / Usuario <span class="text-danger">*</span></th>
-                                <th style="width: 20%;">Tipo Servicio <span class="text-danger">*</span></th>
-                                <th style="width: 15%;">Cantidad <span class="text-danger">*</span></th>
-                                <th style="width: 20%;">Mandante <span class="text-danger">*</span></th>
-                                <th style="width: 15%;">Fecha (Mes/Año)</th>
-                                <th style="width: 50px;"></th>
+                                <th style="width: 3%;">#</th>
+                                <th style="width: 20%;">Usuario <small>(Nombre + Apellido)</small></th>
+                                <th style="width: 12%;">Tipo Servicio</th>
+                                <th style="width: 10%;">Cantidad</th>
+                                <th style="width: 15%;">Mandante</th>
+                                <th style="width: 15%;">Fecha</th>
+                                <th style="width: 15%;">Justificación</th>
+                                <th style="width: 5%;"><i class="fas fa-trash-alt"></i></th> </tr>
                             </tr>
                         </thead>
                         <tbody id="cuerpoTabla">
@@ -255,174 +256,187 @@
         let selectMandanteActivo = null;
 
         window.addEventListener('load', async () => {
-            // 1. Cargar datos iniciales para llenar los selects (Simulado)
-            // Aquí harías los fetch reales a tu backend
-            listaUsuarios = [
-                {id: 1, nombre: "Juan Pérez"}, 
-                {id: 2, nombre: "Maria González"},
-                {id: 3, nombre: "Carlos Ruiz"}
-            ];
-            listaServicios = [
-                {id: 1, nombre: "Prendas"}, 
-                {id: 2, nombre: "Garantía"},
-                {id: 3, nombre: "Planchado"}
-            ];
-            listaMandantes = [
-                {id: 1, nombre: "Falabella"}, 
-                {id: 2, nombre: "Cencosud"}
-            ];
+            try {
+                const resUsers = await fetch('/get-usuarios'); 
+                const dataUsers = await resUsers.json();
+                console.log("Datos usuarios:", dataUsers);
+                listaUsuarios = dataUsers.usuarios || [];
 
-            // 2. Crear la primera fila vacía lista para escribir
-            agregarFilaVacia();
+                const resMandantes = await fetch('/get-mandantes');
+                const dataMandantes = await resMandantes.json();
+                listaMandantes = dataMandantes.mandantes || [];
+
+                listaServicios = [
+                    {id: 1, nombre: "Prenda"}, 
+                    {id: 2, nombre: "Prendas Demo"},
+                    {id: 3, nombre: "Rectificación en RNVM"},
+                    {id: 4, nombre: "Cambio de Garantía"},
+                    {id: 5, nombre: "Solo Prenda"},
+                    {id: 6, nombre: "Portabilidad"}
+                ];
+
+                agregarFilaVacia();
+            } catch (error) {
+                console.error("Error cargando listas:", error);
+            }
         });
 
         function agregarFilaVacia() {
-            contador++;
-            const tbody = document.getElementById('cuerpoTabla');
-            const tr = document.createElement('tr');
-            tr.id = `fila_${contador}`;
+        contador++;
+        const tbody = document.getElementById('cuerpoTabla');
+        const tr = document.createElement('tr');
+        tr.id = `fila_${contador}`;
+        
+        // A) Generar opciones de Usuario (SOLO Primer Nombre + Primer Apellido)
+        const optsUsers = listaUsuarios.map(u => 
+            `<option value="${u.id}">${u.primer_nombre} ${u.primer_apellido}</option>`
+        ).join('');
+
+        // B) Generar opciones de Mandantes
+        const optsMandantes = listaMandantes.map(m => 
+            `<option value="${m.id}">${m.nombre}</option>`
+        ).join('');
+
+        // C) Generar opciones de Servicios
+        const optsServs = listaServicios.map(s => 
+            `<option value="${s.id}">${s.nombre}</option>`
+        ).join('');
+
+        // D) HTML de la Fila
+        tr.innerHTML = `
+            <td class="text-center bg-light text-muted">${contador}</td>
             
-            // Generar opciones de selects
-            const optsUsers = listaUsuarios.map(u => `<option value="${u.id}">${u.nombre}</option>`).join('');
-            const optsServs = listaServicios.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
-            let optsMandantes = listaMandantes.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
-            optsMandantes += `<option value="NEW" class="opcion-crear">+ Nuevo Mandante...</option>`;
+            <td class="p-0">
+                <select class="form-select input-celda border-0" name="usuario">
+                    <option value="" selected disabled>- Seleccionar -</option>
+                    ${optsUsers}
+                </select>
+            </td>
+            
+            <td class="p-0">
+                <select class="form-select input-celda border-0" name="servicio">
+                    <option value="" selected disabled>- Seleccionar -</option>
+                    ${optsServs}
+                </select>
+            </td>
 
-            tr.innerHTML = `
-                <td class="text-center text-muted align-middle">${contador}</td>
-                
-                <td class="p-0">
-                    <select class="form-select input-celda" name="usuario">
-                        <option value="" selected disabled>- Seleccionar Operario -</option>
-                        ${optsUsers}
-                    </select>
-                </td>
-                
-                <td class="p-0">
-                    <select class="form-select input-celda" name="servicio">
-                        ${optsServs}
-                    </select>
-                </td>
+            <td class="p-0">
+                <input type="number" class="form-control input-celda border-0 text-center" placeholder="0" min="0" name="cantidad">
+            </td>
 
-                <td class="p-0">
-                    <input type="number" class="form-control input-celda text-center" placeholder="0" min="1" name="cantidad">
-                </td>
+            <td class="p-0">
+                <select class="form-select input-celda border-0" name="mandante">
+                    <option value="" selected disabled>- Seleccionar -</option>
+                    ${optsMandantes}
+                </select>
+            </td>
 
-                <td class="p-0">
-                    <select class="form-select input-celda" name="mandante" onchange="checkNuevoMandante(this)">
-                        <option value="" selected disabled>- Mandante -</option>
-                        ${optsMandantes}
-                    </select>
-                </td>
-
-                <td class="p-0">
-                    <div class="d-flex">
-                        <select class="form-select input-celda border-end" style="width: 60%;" name="mes">
-                            <option value="1">Ene</option><option value="2">Feb</option>
-                            <option value="3">Mar</option><option value="4">Abr</option>
-                            <option value="5">May</option><option value="6">Jun</option>
-                            <option value="7">Jul</option><option value="8">Ago</option>
-                            <option value="9">Sep</option><option value="10">Oct</option>
-                            <option value="11" selected>Nov</option><option value="12">Dic</option>
+            <td class="p-0">
+                <div class="d-flex">
+                    <select class="form-select input-celda border-0" style="width: 60%;" name="mes">
+                        <option value="" selected disabled>-mes-</option>
+                        <option value="1">Ene</option>
+                        <option value="2">Feb</option>
+                        <option value="3">Mar</option>
+                        <option value="4">Abr</option>
+                        <option value="5">May</option>
+                        <option value="6">Jun</option>
+                        <option value="7">Jul</option>
+                        <option value="8">Ago</option>
+                        <option value="9">Sep</option>
+                        <option value="10">Oct</option>
+                        <option value="11">Nov</option>
+                        <option value="12">Dic</option>
                         </select>
-                        <select class="form-select input-celda" style="width: 40%;" name="anio">
-                            <option value="2025">2025</option>
-                        </select>
-                    </div>
-                </td>
+                    <select class="form-select input-celda border-0 border-start" style="width: 40%;" name="anio">
+                        <option value="" selected disabled>-año-</option>
+                        <option value="2020">2020</option>
+                        <option value="2021">2021</option>
+                        <option value="2022">2022</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                </div>
+            </td>
 
-                <td class="text-center align-middle">
-                    <button type="button" class="btn btn-link text-danger p-0" onclick="eliminarFila(${contador})">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        }
+            <td class="p-0">
+                <select class="form-select input-celda border-0 text-center" name="justificacion">
+                    <option value="1" selected>-- Sin Justificación --</option>
+                    <option value="2" style="color:orange;">Vacaciones</option>
+                    <option value="3" style="color:red;">Licencia Médica</option>
+                    <option value="4">Otro</option>
+                </select>
+            </td>
 
-        function eliminarFila(id) {
-            const fila = document.getElementById(`fila_${id}`);
-            if(fila) fila.remove();
-        }
+            <td class="text-center p-1">
+                <button type="button" class="btn btn-sm btn-danger" onclick="eliminarFila(${contador})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    }
 
-        const modal = new bootstrap.Modal(document.getElementById('modalNuevoMandante'));
-    
-        function checkNuevoMandante(select) {
-            if(select.value === 'NEW') {
-                selectMandanteActivo = select;
-                modal.show();
-                document.getElementById('inputNuevoMandante').value = '';
+    function eliminarFila(id) {
+        const fila = document.getElementById(`fila_${id}`);
+        if(fila) fila.remove();
+    }
+
+    // 3. Guardar Todo (Actualizado para leer Justificación)
+    async function guardarTodo() {
+        const filas = document.querySelectorAll('#cuerpoTabla tr');
+        const datosParaEnviar = [];
+
+        filas.forEach(tr => {
+            // Obtenemos valores
+            const usuario = tr.querySelector('[name="usuario"]').value;
+            const servicio = tr.querySelector('[name="servicio"]').value;
+            const cantidad = tr.querySelector('[name="cantidad"]').value;
+            const mandante = tr.querySelector('[name="mandante"]').value;
+            const mes = tr.querySelector('[name="mes"]').value;
+            const anio = tr.querySelector('[name="anio"]').value;
+            const justificacion = tr.querySelector('[name="justificacion"]').value; // Nuevo
+
+            // Validamos que lo esencial esté lleno
+            if (usuario && servicio && mandante) {
+                datosParaEnviar.push({
+                    id_usuario: usuario,
+                    id_tipo_servicio: servicio,
+                    cantidad: cantidad || 0, // Si está vacío pone 0
+                    id_mandante: mandante,
+                    mes: mes,
+                    anio: anio,
+                    id_justificacion: justificacion
+                });
             }
+        });
+
+        if (datosParaEnviar.length === 0) {
+            alert("No hay datos completos para guardar.");
+            return;
         }
 
-        function guardarMandanteModal() {
-            const nombre = document.getElementById('inputNuevoMandante').value;
-            if(!nombre) return;
-
-            // Aquí simulo que el backend me devuelve ID 99
-            const nuevoId = 99 + Math.floor(Math.random() * 100); 
-            
-            // Agregar al array global
-            listaMandantes.push({id: nuevoId, nombre: nombre});
-
-            // Actualizar TODOS los selects de la tabla
-            const selects = document.querySelectorAll('select[name="mandante"]');
-            selects.forEach(sel => {
-                // Guardar valor actual
-                const valActual = sel.value;
-                // Reconstruir opciones
-                let html = listaMandantes.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
-                html += `<option value="NEW" class="opcion-crear">+ Nuevo Mandante...</option>`;
-                sel.innerHTML = html;
-                
-                // Restaurar valor (si no era el nuevo)
-                if(sel === selectMandanteActivo) {
-                    sel.value = nuevoId; // Al que disparó el evento le pongo el nuevo
-                } else if (valActual !== 'NEW') {
-                    sel.value = valActual;
-                }
+        try {
+            const response = await fetch('/registrar-produccion-masiva', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(datosParaEnviar)
             });
-
-            modal.hide();
-        }
-
-        function guardarTodo() {
-            // Recorrer la tabla y armar el JSON
-            const filas = document.querySelectorAll('#cuerpoTabla tr');
-            const datosParaEnviar = [];
-
-            filas.forEach(tr => {
-                const usuario = tr.querySelector('[name="usuario"]').value;
-                const servicio = tr.querySelector('[name="servicio"]').value;
-                const cantidad = tr.querySelector('[name="cantidad"]').value;
-                const mandante = tr.querySelector('[name="mandante"]').value;
-                const mes = tr.querySelector('[name="mes"]').value;
-                const anio = tr.querySelector('[name="anio"]').value;
-
-                // Solo guardamos si tiene datos mínimos
-                if(usuario && cantidad && mandante) {
-                    datosParaEnviar.push({
-                        id_usuario: usuario,
-                        id_tipo_servicio: servicio,
-                        cantidad: cantidad,
-                        id_mandante: mandante,
-                        mes: mes,
-                        anio: anio
-                    });
-                }
-            });
-
-            console.log("Datos listos para enviar al Backend:", datosParaEnviar);
             
-            if(datosParaEnviar.length === 0) {
-                alert("La tabla está vacía o faltan datos obligatorios.");
-                return;
+            if(response.ok) {
+                alert("¡Datos guardados correctamente!");
+                document.getElementById('cuerpoTabla').innerHTML = '';
+                agregarFilaVacia();
+            } else {
+                alert("Hubo un error al guardar.");
             }
-
-            // AQUÍ HARÍAS EL FETCH POST FINAL
-            // fetch('/api/produccion/masiva', { method: 'POST', body: JSON.stringify(datosParaEnviar)... })
-            alert(`Se guardarán ${datosParaEnviar.length} registros exitosamente.`);
+        } catch (e) {
+            console.error(e);
+            alert("Error de conexión.");
         }
+    }
     </script>
 </body>
 </html>

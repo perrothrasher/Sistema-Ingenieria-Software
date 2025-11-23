@@ -58,6 +58,8 @@ const { obtenerHistoricos } = require('./JS Llamadas/historicos.js');
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
 const { listarMandantes, registrarMandante, eliminarMandante} = require('./JS Llamadas/mandantes.js');
+const { añadirUsuario, listarUsuarios, eliminarUsuario} = require('./JS Llamadas/usuarios.js');
+const {registrarProduccionMasiva} = require('./JS Llamadas/servicios.js');
 const conexion_Mongo = require('./JS Llamadas/mongo_connection.js');
 /////////////////////////////////////////////////
 
@@ -145,21 +147,20 @@ app.post('/registrar-mandante', registrarMandante);
 app.delete('/eliminar-mandante/:id', verificarToken, eliminarMandante);
 /////////////////////////////////////////////////
 
-
-// CLIENTES
+// USUARIOS DE PRENDAS
 /////////////////////////////////////////////////
-// Ruta para registrar un cliente
-app.post('/register-cliente', registrarCliente);
-// Ruta para obtener todos los clientes
-app.get('/get-clientes', obtenerClientes);
-// Ruta para editar un cliente
-app.put('/editarCliente/:id', editarClientes);
-// Ruta para eliminar un cliente
-app.delete('/eliminarCliente/:id', eliminarCliente);
-// Ruta para generar reporte PDF de clientes
-app.get('/api/clientes/reporte', verificarToken, generarReporteClientes);
-// Ruta para reestablecer un cliente eliminado
-app.put('/reestablecerCliente/:id', verificarToken, reestablecerCliente);
+// Ruta para añadir un usuario de prendas
+app.post('/registrar-usuario', añadirUsuario);
+// Ruta para listar usuarios de prendas
+app.get('/get-usuarios', listarUsuarios);
+// Ruta para eliminar un usuario de prendas
+app.delete('/eliminar-usuario/:id', verificarToken, eliminarUsuario);
+/////////////////////////////////////////////////
+
+// SERVICIOS
+/////////////////////////////////////////////////
+// Ruta para registrar producción masiva
+app.post('/registrar-produccion-masiva', registrarProduccionMasiva);
 /////////////////////////////////////////////////
 
 // DOTACIÓN
