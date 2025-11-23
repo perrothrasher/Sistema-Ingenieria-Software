@@ -57,7 +57,7 @@ const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesP
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
-const { listarMandantes, registrarMandante } = require('./JS Llamadas/mandantes.js');
+const { listarMandantes, registrarMandante, eliminarMandante} = require('./JS Llamadas/mandantes.js');
 const conexion_Mongo = require('./JS Llamadas/mongo_connection.js');
 /////////////////////////////////////////////////
 
@@ -139,8 +139,10 @@ app.put('/api/trabajadores/:id/contrato', verificarToken, actualizarTipoContrato
 /////////////////////////////////////////////////
 // Ruta para listar mandantes (id, nombre, fecha_ingreso, total_folios)
 app.get('/get-mandantes', listarMandantes);
-// Ruta para añadir un mandante
+// Ruta para registrar un mandante
 app.post('/registrar-mandante', registrarMandante);
+// Ruta para eliminar un mandante
+app.delete('/eliminar-mandante/:id', eliminarMandante);
 /////////////////////////////////////////////////
 
 

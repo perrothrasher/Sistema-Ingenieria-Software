@@ -134,9 +134,9 @@
                     <div class="mb-4">
                         <i class="fas fa-edit fa-3x text-primary mb-3"></i>
                     </div>
-                    <h1 class="h2 mb-3 page-title">Gestión de Mandantes</h1>
+                    <h1 class="h2 mb-3 page-title">Gestión de Clientes</h1>
                     <p class="text-muted mb-0" style="font-size: 18px;">
-                        Administra y edita la información de los mandantes registrados en el sistema.
+                        Administra y edita la información de los clientes registrados en el sistema.
                     </p>
                 </div>
             </div>
@@ -149,7 +149,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h5 class="mb-0">
                             <i class="fas fa-users text-primary me-2"></i>
-                            Mandantes registrados
+                            Clientes registrados
                         </h5>
                         <div>
                             <button type="button" data-bs-toggle="modal" data-bs-target="#myModal" class="fa-sharp fa-solid fa-plus"></button>
@@ -219,44 +219,8 @@
             </form>
         </div>
         </div>
-
     <script>
-        function isDev(){
-            try { return location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1'; }
-            catch(_) { return true; }
-        }
-
-        window.addEventListener('load', async () =>{
-            try{
-                // Se obtienen los datos del usuario desde el servidor
-                const response = await fetch('/api/perfil');
-
-                // Modo desarrollo: si no hay backend, no va a redirigir
-                if (!response.ok){
-                    if (isDev()) {
-                        console.warn('Dev mode: perfil no disponible, se omite redirección al login');
-                    } else {
-                        window.location.href = 'login.html';
-                        return;
-                    }
-                } else {
-                    const usuario = await response.json();
-                    if (usuario.nombre && usuario.apellido){
-                        document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
-                    }
-                    verificarAdmin(usuario.rol);
-                    return;
-                }
-            } catch (error){
-                console.error('Error de autenticación: ', error);
-                if (isDev()) {
-                    console.warn('Dev mode: se omite redirección al login');
-                } else {
-                    window.location.href = 'login.html';
-                }
-            }
-        });
-
+        
         // Permisos
         function verificarAdmin(rol){
             console.log("Rol del usuario: ", rol);

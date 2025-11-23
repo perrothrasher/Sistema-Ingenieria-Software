@@ -5,64 +5,39 @@ const path = require('path');
 
 // Ruta para registrar un cliente.
 async function registrarCliente(req, res){
-  const { nombre, apellido, rut,  direccion, comuna, correo, telefono, region_id, codigo_postal} = req.body;
-  const {id: userId} = req.usuario;
-
-  let conn;
-  try{
-    conn = await connection.getConnection();
-    await conn.beginTransaction();
-
-    // ESTABLECER EL ID DEL USUARIO QUE LANZA EL TRIGGER
-    await conn.execute('SET @current_user_id = ?', [userId]);
-
-    // Insertar la nueva ubicacion.
-    const sqlUbicacion = `
-      INSERT INTO Ubicacion (direccion, ciudad, region_id, postal)
-      VALUES (?, ?, ?, ?);
-    `;
-    const [resultUbicacion] = await conn.execute(
-      sqlUbicacion, [direccion, comuna, region_id, codigo_postal]
-    );
-    const ubicacion_id = resultUbicacion.insertId;
-
-    // Insertar la nueva persona.
-    const sqlPersona = `
-    INSERT INTO Persona (nombre, apellido, rut, telefono, correo, ubicacion_id)
-    VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
-    const [resultPersona] = await conn.execute(
-      sqlPersona, [nombre, apellido, rut, telefono, correo, ubicacion_id]
-    );
-    const persona_id = resultPersona.insertId;
-
-    // Insertar el cliente.
-    const sqlCliente = `
-      INSERT INTO Cliente (persona_id)
-      VALUES (?)
-    `;
-
-    const [resultCliente] = await conn.execute(
-      sqlCliente, [persona_id]
-    );
-
-    await conn.commit();
-
-    res.status(201).json({
-      message: 'Cliente registrado con éxito',
-      clienteId: resultCliente.insertId
-    });
-
-  } catch(error){
-      console.error('Error al registrar cliente:', error);
-      return res.status(500).json({ message: 'Error al registrar cliente: ' + error.message });
-  } finally{
-    if(conn){
-      conn.release();
+    const { nombre } = req.body;
+    //const {id: userId} = req.usuario;
+    
+    let conn;
+    if(!nombre){
+        return res.status(400).json({message: 'El nombre del cliente es obligatorio'});
     }
-  }
-};
+
+    const sql = `
+        INSERT INTO Cliente (nombre) VALUES (?);
+    `;
+
+    try{
+        conn = await connection.getConnection();
+        await conn.beginTransaction();
+
+        // Establecer el ID del usuario actual para el trigger
+        //await conn.execute('SET @current_user_id = ?', [userId]);
+
+        const [results] = await conn.execute(
+            sql, [nombre]
+        );
+
+        await conn.commit();
+        res.status(201).json({ message: 'Cliente registrado con éxito', clienteId: results.insertId });
+    }catch(err){
+        if(conn) await conn.rollback();
+        console.error('Error al registrar cliente:', err);
+        return res.status(500).json({ message: 'Error al registrar el cliente', error: err.message });
+    } finally{
+        if(conn) conn.release();
+    }
+}
 
 // Ruta para obtener todos los clientes.
 async function obtenerClientes(req, res){
