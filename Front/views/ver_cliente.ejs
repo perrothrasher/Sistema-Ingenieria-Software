@@ -336,11 +336,10 @@
         }
 
         window.onload = function() {
-            verificarAdmin();
             cargarClientes();
         };
         window.onload = () => {
-            [verificarAdmin, cargarClientes].forEach(func => func());
+            [cargarClientes].forEach(func => func());
         };
     </script>
 </body>
