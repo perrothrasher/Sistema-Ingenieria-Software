@@ -333,73 +333,33 @@
     </div>
 
     <script>
-        window.addEventListener('load', async () =>{
-            try{
-                const response = await fetch('/api/perfil');
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/perfil', {
+                    method: 'GET',
+                    credentials: 'include', 
+                    headers: { 'Content-Type': 'application/json' }
+                });
 
-                if (!response.ok){
-                    if (isDev()) {
-                        console.warn('Dev mode: perfil no disponible, se omite redirección al login');
-                        document.getElementById('welcomeMessage').innerText = 'Usuario (Dev)';
-                        verificarAdmin('Soporte TI');
-                        return;
-                    } else {
-                        window.location.href = 'login.html';
-                        return;
-                    }
+                if (!response.ok) {
+                    const textoError = await response.text();
+                    console.error("Error del servidor:", textoError);
+                    console.warn("El sistema intentó desloguearte por el error de arriba.");
+                    
+                    window.location.href = 'login.html'; 
+                    return;
                 }
-
                 const usuario = await response.json();
-                if (usuario.nombre && usuario.apellido){
-                    document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
+                if (usuario.nombre && usuario.apellido) {
+                    const welcomeMsg = document.getElementById('welcomeMessage');
+                    if(welcomeMsg) welcomeMsg.innerText = `${usuario.nombre} ${usuario.apellido}`;
                 }
-                verificarAdmin(usuario.rol);
+                if (typeof cargarMandantes === 'function') cargarMandantes();
 
-            } catch (error){
-                console.error('Error de autenticación: ', error);
-                if (isDev()) {
-                    console.warn('Dev mode: se omite redirección al login');
-                    document.getElementById('welcomeMessage').innerText = 'Usuario (Dev)';
-                    verificarAdmin('Soporte TI');
-                } else {
-                    window.location.href = 'login.html';
-                }
+            } catch (error) {
+                console.error('Error:', error);
             }
-            
-            // Cargar lista de archivos
-            cargarListaArchivos();
         });
-
-        function verificarAdmin(rol){
-            console.log("Rol del usuario: ", rol);
-
-            const dropdowns = {
-                registrar: document.getElementById('dropdownRegistrar'),
-                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
-                editarCliente: document.getElementById('dropdownEditarCliente'),
-                registrarCliente: document.getElementById('dropdownRegistrarCliente')
-            };
-
-            Object.values(dropdowns).forEach(dropdown => {
-                if (dropdown) { 
-                    dropdown.style.display = 'block';
-                }
-            });
-
-            if (rol === 'Soporte TI' || rol === 'Gerente'){
-                Object.values(dropdowns).forEach(dropdown =>{
-                    dropdown.style.pointerEvents = 'auto';
-                    dropdown.style.color = '';
-                    dropdown.style.textDecoration= '';
-                });
-            } else if(rol === 'Supervisor'){
-                Object.values(dropdowns).forEach(dropdown =>{
-                    dropdown.style.pointerEvents = 'none';
-                    dropdown.style.color = 'Gray';
-                    dropdown.style.textDecoration= 'none';
-                });
-            }
-        }
 
         async function logout() {
             await fetch ('/logout', {method: 'POST'});

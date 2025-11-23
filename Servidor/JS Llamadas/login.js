@@ -43,7 +43,7 @@ async function login(req, res){
       apellido: trabajador.apellido
     };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '1h'});
+    const token = jwt.sign(payload, process.env.JWT_SECRET, {expiresIn: '10h'});
 
     const ip = req.ip || req.connection.remoteAddress;
     registrarAuditoria(

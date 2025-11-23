@@ -142,7 +142,7 @@ app.get('/get-mandantes', listarMandantes);
 // Ruta para registrar un mandante
 app.post('/registrar-mandante', registrarMandante);
 // Ruta para eliminar un mandante
-app.delete('/eliminar-mandante/:id', eliminarMandante);
+app.delete('/eliminar-mandante/:id', verificarToken, eliminarMandante);
 /////////////////////////////////////////////////
 
 

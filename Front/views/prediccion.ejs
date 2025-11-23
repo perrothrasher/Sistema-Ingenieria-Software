@@ -195,57 +195,33 @@
   </div>
 
 <script>
-  window.addEventListener('load', async () =>{
-            try{
-                // se obtienen los datos del usuario desde el servidor
-                const response = await fetch('/api/perfil');
+  window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/perfil', {
+                    method: 'GET',
+                    credentials: 'include', 
+                    headers: { 'Content-Type': 'application/json' }
+                });
 
-                if (!response.ok){
-                    console.warn('Dev mode: perfil no disponible, se omite redirección al login');
-                } else {
-                    const usuario = await response.json();
-                    if (usuario.nombre && usuario.apellido){
-                        document.getElementById('welcomeMessage').innerText = `${usuario.nombre} ${usuario.apellido}`;
-                    }
-                    verificarAdmin(usuario.rol);
+                if (!response.ok) {
+                    const textoError = await response.text();
+                    console.error("Error del servidor:", textoError);
+                    console.warn("El sistema intentó desloguearte por el error de arriba.");
+                    
+                    window.location.href = 'login.html'; 
+                    return;
                 }
-            } catch (error){
-                console.error('Error de autenticación: ', error);
-                console.warn('Dev mode: se omite redirección al login');
+                const usuario = await response.json();
+                if (usuario.nombre && usuario.apellido) {
+                    const welcomeMsg = document.getElementById('welcomeMessage');
+                    if(welcomeMsg) welcomeMsg.innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+                if (typeof cargarMandantes === 'function') cargarMandantes();
+
+            } catch (error) {
+                console.error('Error:', error);
             }
         });
-
-        // Permisos
-        function verificarAdmin(rol){
-            console.log("Rol del usuario: ", rol);
-
-            const dropdowns = {
-                registrar: document.getElementById('dropdownRegistrar'),
-                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
-                editarCliente: document.getElementById('dropdownEditarCliente'),
-                registrarCliente: document.getElementById('dropdownRegistrarCliente')
-            };
-
-            Object.values(dropdowns).forEach(dropdown => {
-                if (dropdown) { 
-                    dropdown.style.display = 'block';
-                }
-            });
-
-            if (rol === 'Soporte TI' || rol === 'Gerente'){
-                Object.values(dropdowns).forEach(dropdown =>{
-                    dropdown.style.pointerEvents = 'auto';
-                    dropdown.style.color = '';
-                    dropdown.style.textDecoration= '';
-                });
-            } else if(rol === 'Supervisor'){
-                Object.values(dropdowns).forEach(dropdown =>{
-                    dropdown.style.pointerEvents = 'none';
-                    dropdown.style.color = 'Gray';
-                    dropdown.style.textDecoration= 'none';
-                });
-            }
-        }
 
         async function logout() {
             try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}

@@ -220,39 +220,6 @@
         </div>
         </div>
     <script>
-        
-        // Permisos
-        function verificarAdmin(rol){
-            console.log("Rol del usuario: ", rol);
-
-            const dropdowns = {
-                registrar: document.getElementById('dropdownRegistrar'),
-                editarTrabajador: document.getElementById('dropdownEditarTrabajador'),
-                editarCliente: document.getElementById('dropdownEditarCliente'),
-                registrarCliente: document.getElementById('dropdownRegistrarCliente')
-            };
-
-            Object.values(dropdowns).forEach(dropdown => {
-                if (dropdown) { 
-                    dropdown.style.display = 'block';
-                }
-            });
-
-            if (rol === 'Soporte TI' || rol === 'Gerente'){
-                Object.values(dropdowns).forEach(dropdown =>{
-                    dropdown.style.pointerEvents = 'auto';
-                    dropdown.style.color = '';
-                    dropdown.style.textDecoration= '';
-                });
-            } else if(rol === 'Supervisor'){
-                Object.values(dropdowns).forEach(dropdown =>{
-                    dropdown.style.pointerEvents = 'none';
-                    dropdown.style.color = 'Gray';
-                    dropdown.style.textDecoration= 'none';
-                });
-            }
-        }
-
         async function logout() {
             try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
             try { sessionStorage.clear(); localStorage.clear(); } catch (e) {}
@@ -321,6 +288,9 @@
                                     </button>
                                     <button type="button" class="btn btn-action btn-info text-white" onclick="verDetalle(${mandante.id})" title="Ver Detalle" style="background-color: #2C62C7">
                                         <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-action btn-delete" onclick="eliminarMandante(${mandante.id})" title="Eliminar mandante">
+                                        <i class="fas fa-trash me-1"></i>
                                     </button>
                                 </div>
                             </td>
@@ -397,10 +367,65 @@
             }
         })
 
-        window.onload = function() {
-            verificarAdmin();
-            cargarMandantes();
-        };
+        async function eliminarMandante(id){
+            if(confirm("¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.")){
+                try{
+                    const response = await fetch(`${URL_BASE}/eliminar-Mandante/${id}`,{
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+                    if(!response.ok){
+                        throw new Error("Error al eliminar el mandante");
+                    }
+
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+                    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                    alertDiv.innerHTML = `
+                        <i class="fas fa-check-circle me-2"></i>
+                        Cliente eliminado con éxito
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.body.appendChild(alertDiv);
+
+                    // Recargar la lista de mandantes
+                    setTimeout(() => {
+                        cargarMandantes();
+                    }, 1000);
+                }catch(error){
+                    console.error("Error al eliminar el mandante:", error);
+                    alert("Error al eliminar el mandante. Por favor, intenta nuevamente.");
+                }
+            }
+        }
+
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/perfil', {
+                    method: 'GET',
+                    credentials: 'include', 
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    const textoError = await response.text();
+                    console.error("Error del servidor:", textoError);
+                    console.warn("El sistema intentó desloguearte por el error de arriba.");
+                    
+                    window.location.href = 'login.html'; 
+                    return;
+                }
+                const usuario = await response.json();
+                if (usuario.nombre && usuario.apellido) {
+                    const welcomeMsg = document.getElementById('welcomeMessage');
+                    if(welcomeMsg) welcomeMsg.innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+                if (typeof cargarMandantes === 'function') cargarMandantes();
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
     </script>
 </body>
 </html>
