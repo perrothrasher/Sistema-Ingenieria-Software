@@ -48,10 +48,10 @@ const PUERTO    = process.env.PORT      || 8090; // ELIMINAR
 // 2. CONFIGURACIÓN MYSQL (Para el modelo predictivo)
 // =================================================================
 const mysqlConfig = {
-    host: 'localhost',
-    user: 'root',           // Tu usuario de Workbench
-    password: 'Lis1811*',           // Tu contraseña (ponla si tienes)
-    database: 'ingenieriasoftware',  // La base de datos nueva que creamos
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,  
+    password: process.env.DB_PASSWORD,         
+    database: process.env.DB_NAME, 
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
