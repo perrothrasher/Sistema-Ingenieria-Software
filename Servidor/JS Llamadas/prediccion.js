@@ -1,404 +1,570 @@
-// JS Llamadas/prediccion.js
-// Lee Excels desde MongoDB (GridFS) y proyecta SOLO el primer mes faltante del último año con datos.
-// Si intentan predecir un mes que YA TIENE informe, devuelve error.
-// Si intentan saltarse un hueco previo (ej. falta el 9 y piden 10), devuelve error.
-
+// prediccion.js (COMPLETO Y CORREGIDO)
 const { Router } = require('express');
-const ExcelJS = require('exceljs');
-const { GridFSBucket } = require('mongodb');
-const {registrarAuditoria} = require('./auditoria.js');
-
+const PDFDocument = require('pdfkit');
 const router = Router();
 
-// === Colección destino (donde guardaste el resumen mensual) ===
-const COLECCION_MESES = 'venta_e_ingreso_por_usuario';
+// Constantes
+const EVENTOS_SEMILLA = { 1: 0.95, 2: 0.85, 3: 1.10, 9: 0.80, 12: 0.90 };
+const POLL_INTERVAL_MS = 60 * 1000;
 
-// === Meses en español -> número ===
-const mapaMes = {
-  enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6,
-  julio: 7, agosto: 8, septiembre: 9, setiembre: 9, octubre: 10,
-  noviembre: 11, diciembre: 12
-};
-
-// === Bucket de GridFS (puede tener espacios) ===
-const BUCKET = (process.env.GFS_BUCKET && String(process.env.GFS_BUCKET).trim()) || 'archivos';
-
-/* ========= 1) Parser nombre ========= */
-function extraerMesAnioDesdeNombre(nombre) {
-  if (!nombre) return null;
-
-  let s = String(nombre)
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[“”"']/g, '')
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  // quita extensión
-  s = s.replace(/\s*\.(xlsx|xls|xlsm)\s*$/i, '');
-
-  const tokens = s.split(' ').filter(Boolean);
-  if (tokens.length < 2) return null;
-
-  const mesTxt = tokens[0];
-  const mes = mapaMes[mesTxt];
-  if (!mes) return null;
-
-  const anioStr = tokens[1];
-  if (!/^(19|20)\d{2}$/.test(anioStr)) return null;
-
-  return { mes, anio: parseInt(anioStr, 10) };
+// Helpers DB
+function getDB(reqOrApp) {
+  if (!reqOrApp) return null;
+  if (reqOrApp.app) return reqOrApp.app.locals.db;
+  if (reqOrApp.locals) return reqOrApp.locals.db;
+  return null;
+}
+async function query(db, sql, params = []) {
+  const [rows] = await db.query(sql, params);
+  return rows;
 }
 
-/* ========= 2) Resumen Excel ========= */
-async function resumirExcelDesdeBuffer(buffer) {
-  const libro = new ExcelJS.Workbook();
-  await libro.xlsx.load(buffer);
-  const hoja = libro.worksheets[0];
-  if (!hoja) return { filas_utiles: 0, suma_numeros: 0 };
-
-  let filas_utiles = 0, suma_numeros = 0;
-
-  hoja.eachRow((fila, n) => {
-    if (n === 1) return; // cabecera
-    const hayDato = fila.values?.some(v => v !== null && v !== undefined && String(v).trim() !== '');
-    if (!hayDato) return;
-
-    filas_utiles++;
-    fila.eachCell((celda) => {
-      const val = celda.value;
-      if (typeof val === 'number') { suma_numeros += val; return; }
-      if (val && typeof val === 'object') {
-        if (typeof val.result === 'number') suma_numeros += val.result;
-        else if (typeof val.value === 'number') suma_numeros += val.value;
-        else if (typeof val.text === 'string') {
-          const n = Number(val.text.replace(/[^\d.\-]/g, ''));
-          if (!Number.isNaN(n)) suma_numeros += n;
-        }
-        return;
-      }
-      if (typeof val === 'string') {
-        const n = Number(val.replace(/[^\d.\-]/g, ''));
-        if (!Number.isNaN(n)) suma_numeros += n;
-      }
-    });
-  });
-
-  return { filas_utiles, suma_numeros };
-}
-
-/* ========= 3) Proyección (cálculo) ========= */
-function proyectarSiguienteMes(ordenAsc) {
-  if (!ordenAsc.length) return { ok: false, error: 'Sin datos entrenados' };
-
-  const ultimo = ordenAsc[ordenAsc.length - 1];
-  let anioSig = ultimo.anio, mesSig = ultimo.mes + 1;
-  if (mesSig > 12) { mesSig = 1; anioSig++; }
-
-  const ult3 = ordenAsc.slice(-3);
-  const prom3 = ult3.length
-    ? (ult3.reduce((a, m) => a + (m.produccion_total || 0), 0) / ult3.length)
-    : (ultimo.produccion_total || 0);
-
-  const capacidad_optima = prom3 * 0.85;
-
-  let delta = 0;
-  for (let i = 1; i < ult3.length; i++) {
-    delta += (ult3[i].produccion_total - ult3[i - 1].produccion_total);
+// Regresión simple
+function calcularRegresion(puntos) {
+  const n = puntos.length;
+  if (n === 0) return { m: 0, b: 0 };
+  let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+  for (const p of puntos) {
+    sumX += p.x; sumY += p.y; sumXY += p.x * p.y; sumXX += p.x * p.x;
   }
-  const deltaProm = ult3.length > 1 ? delta / (ult3.length - 1) : 0;
-
-  const produccion_siguiente = Math.max(0, Math.round((ultimo.produccion_total || 0) + deltaProm));
-
-  const productividad_promedio = 100; // AJUSTA si tienes métrica real
-  const trabajadores_necesarios = Math.max(1, Math.ceil(produccion_siguiente / productividad_promedio));
-  const trabajadores_reales = ultimo.trabajadores_reales
-    || Math.max(1, Math.round((ultimo.produccion_total || 0) / productividad_promedio));
-
-  let estado_regla = 'ok';
-  if (trabajadores_reales > trabajadores_necesarios * 1.1) estado_regla = 'sobre';
-  else if (trabajadores_reales < trabajadores_necesarios * 0.9) estado_regla = 'sub';
-
-  return {
-    ok: true,
-    mes_base: { anio: ultimo.anio, mes: ultimo.mes, capacidad_optima },
-    mes_siguiente: {
-      anio: anioSig,
-      mes: mesSig,
-      produccion_total: produccion_siguiente,
-      trabajadores_reales,
-      trabajadores_necesarios,
-      estado_regla
-    }
-  };
+  const den = (n * sumXX - sumX * sumX);
+  if (den === 0) return { m: 0, b: 0 };
+  const m = (n * sumXY - sumX * sumY) / den;
+  const b = (sumY - m * sumX) / n;
+  return { m, b };
 }
 
-/* ========= 4) GridFS helpers ========= */
-async function detectarColeccionesGridFS(db) {
-  const names = await db.listCollections().toArray();
-  const colNames = names.map(n => n.name);
-
-  const filesStd = `${BUCKET}.files`;
-  const chunksStd = `${BUCKET}.chunks`;
-
-  let filesCollName = colNames.includes(filesStd) ? filesStd : null;
-  let chunksCollName = colNames.includes(chunksStd) ? chunksStd : null;
-
-  if (!filesCollName && colNames.includes(BUCKET)) filesCollName = BUCKET;
-
-  if (!chunksCollName) {
-    const candidatas = colNames.filter(n => /\.chunks$/i.test(n));
-    if (candidatas.includes(chunksStd)) chunksCollName = chunksStd;
-    else if (candidatas.length) chunksCollName = candidatas[0];
-  }
-  return { filesCollName, chunksCollName };
-}
-
-async function listarArchivosExcel(db) {
-  const { filesCollName } = await detectarColeccionesGridFS(db);
-  if (!filesCollName) return [];
-  const colFiles = db.collection(filesCollName);
-  return await colFiles.find({ filename: { $regex: /\.xlsx$/i } }).toArray();
-}
-
-async function descargarArchivoGridFS(db, fileId) {
-  const { filesCollName, chunksCollName } = await detectarColeccionesGridFS(db);
-
-  if (filesCollName === `${BUCKET}.files` && chunksCollName === `${BUCKET}.chunks`) {
-    const bucket = new GridFSBucket(db, { bucketName: BUCKET });
-    const chunks = [];
-    return await new Promise((resolve, reject) => {
-      bucket.openDownloadStream(fileId)
-        .on('data', d => chunks.push(d))
-        .on('error', reject)
-        .on('end', () => resolve(Buffer.concat(chunks)));
-    });
-  }
-
-  if (!chunksCollName) throw new Error('No se encontró colección .chunks para reconstruir el archivo.');
-  const colChunks = db.collection(chunksCollName);
-  const cursor = colChunks.find({ files_id: fileId }).sort({ n: 1 });
-  const parts = [];
-  for await (const ch of cursor) {
-    const buf = Buffer.isBuffer(ch.data) ? ch.data : Buffer.from(ch.data.buffer);
-    parts.push(buf);
-  }
-  if (!parts.length) throw new Error(`No hay chunks para fileId=${fileId} en ${chunksCollName}`);
-  return Buffer.concat(parts);
-}
-
-/* ========= 5) ENDPOINTS ========= */
-
-// Entrenar
-router.post('/entrenar', async (req, res) => {
+// Productividad base: promedio por trabajador (solo justificacion_id = 0)
+async function calcularProductividadBase(db) {
   try {
-    await req.app.locals.mongoReady;
-    const db = req.app.locals.getDB();
-    const colResumen = db.collection(COLECCION_MESES);
-
-    const { filesCollName, chunksCollName } = await detectarColeccionesGridFS(db);
-    console.log('[Predicción] files:', filesCollName, '| chunks:', chunksCollName, '| BUCKET:', `"${BUCKET}"`);
-
-    const archivos = await listarArchivosExcel(db);
-    if (!archivos.length) {
-      return res.status(400).json({ ok: false, error: `No hay .xlsx en GridFS (${filesCollName || `${BUCKET}.files`})` });
+    const sql = `
+      SELECT
+        p.usuarioPrendas_id AS usuario,
+        SUM(p.cantidadFolios) AS total,
+        COUNT(DISTINCT CONCAT(p.anio,'-',LPAD(p.mes,2,'0'))) AS meses_activos,
+        (SUM(p.cantidadFolios) / NULLIF(COUNT(DISTINCT CONCAT(p.anio,'-',LPAD(p.mes,2,'0'))),0)) AS promedio_mensual
+      FROM produccion p
+      WHERE (p.justificacion_id = 0 OR p.justificacion_id IS NULL)
+      GROUP BY p.usuarioPrendas_id
+      HAVING total > 0
+    `;
+    const rows = await query(db, sql);
+    if (!rows || rows.length === 0) {
+      const r2 = await query(db, `
+        SELECT AVG(total) AS prom FROM (
+          SELECT SUM(cantidadFolios) AS total FROM produccion GROUP BY anio, mes
+        ) tmp
+      `);
+      const fallback = (r2 && r2[0] && r2[0].prom) ? Number(r2[0].prom) : 500;
+      return Math.round(fallback);
     }
-
-    let procesados = 0, omitidos = 0;
-
-    for (const file of archivos) {
-      const info = extraerMesAnioDesdeNombre(file.filename);
-      if (!info) { console.warn(`[Entrenar] No pude extraer mes/año desde: ${file.filename}`); omitidos++; continue; }
-
-      const buffer = await descargarArchivoGridFS(db, file._id);
-      const { filas_utiles, suma_numeros } = await resumirExcelDesdeBuffer(buffer);
-
-      const produccion_total = (suma_numeros > 0 ? suma_numeros : filas_utiles);
-
-      const doc = {
-        anio: info.anio,
-        mes: info.mes,
-        archivo: file.filename,
-        fileId: file._id,
-        filas_utiles,
-        produccion_total,
-        updatedAt: new Date()
-      };
-
-      await colResumen.updateOne(
-        { anio: info.anio, mes: info.mes },
-        { $set: doc },
-        { upsert: true }
-      );
-      procesados++;
+    let maxVal = -Infinity, minVal = Infinity;
+    for (const r of rows) {
+      const v = Number(r.promedio_mensual || 0);
+      if (v > maxVal) maxVal = v;
+      if (v < minVal) minVal = v;
     }
-    // Auditoria
-    const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
-    const ip = req.ip || req.connection.remoteAddress;
-      registrarAuditoria(
-        userId, `${userNombre} ${userApellido}`, 'Modelo Entrenado', ip, rol
-      );
-
-    res.json({ ok: true, mensaje: 'Entrenamiento completado desde GridFS', procesados, omitidos });
+    if (!isFinite(maxVal) || !isFinite(minVal)) {
+      const fallbackAvg = rows.reduce((a,b)=>a+Number(b.promedio_mensual||0),0)/rows.length;
+      return Math.round(fallbackAvg);
+    }
+    const productBase = (maxVal + minVal) / 2;
+    return Math.max(1, Math.round(productBase));
   } catch (e) {
-    console.error('[Entrenar] ', e);
-    res.status(500).json({ ok: false, error: e.message });
+    try {
+      const r2 = await query(db, `
+        SELECT AVG(total) AS prom FROM (
+          SELECT SUM(cantidadFolios) AS total FROM produccion GROUP BY anio, mes
+        ) tmp
+      `);
+      const fallback = (r2 && r2[0] && r2[0].prom) ? Number(r2[0].prom) : 500;
+      return Math.round(fallback);
+    } catch(_) {
+      return 500;
+    }
   }
+}
+
+// Helper auxiliar (solo usado como fallback)
+async function getLastRecordedDate(db) {
+  const sql = `
+    SELECT anio, mes
+    FROM (
+      SELECT anio, mes, SUM(cantidadFolios) AS total
+      FROM produccion
+      GROUP BY anio, mes
+      HAVING total > 0
+    ) t
+    ORDER BY anio DESC, mes DESC
+    LIMIT 1
+  `;
+  const rows = await query(db, sql);
+  if (!rows || rows.length === 0) {
+    const now = new Date();
+    return { anio: now.getFullYear(), mes: now.getMonth() + 1 };
+  }
+  return rows[0];
+}
+
+// Entrenar modelo (tendencia y estacionalidad)
+async function entrenarModeloInterno(db) {
+  console.log("[IA] Entrenando modelo...");
+  const sqlHistoria = `
+    SELECT anio, mes, SUM(cantidadFolios) AS produccion_total
+    FROM produccion
+    GROUP BY anio, mes
+    HAVING SUM(cantidadFolios) > 0
+    ORDER BY anio ASC, mes ASC
+  `;
+  const rows = await query(db, sqlHistoria);
+  if (!rows || rows.length < 2) {
+    console.log("[IA] Datos insuficientes para entrenar.");
+    return null;
+  }
+
+  const productividad_base = await calcularProductividadBase(db);
+
+  // puntos x = anio*12 + mes
+  const puntos = rows.map(r => {
+    const x = (Number(r.anio) * 12) + Number(r.mes);
+    return { x, y: Number(r.produccion_total) };
+  }).sort((a,b)=>a.x-b.x);
+
+  const { m, b } = calcularRegresion(puntos);
+
+  // factores estacionales
+  const factoresTemp = {};
+  const conteo = {};
+  for (const p of puntos) {
+    const tendencia = (m * p.x) + b;
+    const ratio = tendencia > 0 ? (p.y / tendencia) : 1;
+    const mes = ((p.x - 1) % 12) + 1;
+    factoresTemp[mes] = (factoresTemp[mes] || 0) + ratio;
+    conteo[mes] = (conteo[mes] || 0) + 1;
+  }
+  const factoresFinales = {};
+  for (let mth=1;mth<=12;mth++) {
+    const est = conteo[mth] ? (factoresTemp[mth]/conteo[mth]) : 1;
+    factoresFinales[mth] = (est * 0.7) + ((EVENTOS_SEMILLA[mth] || 1) * 0.3);
+  }
+
+  // Guardamos el último registro REAL usado para el entrenamiento
+  const ultimo = rows[rows.length - 1];
+  const ultimoX = (Number(ultimo.anio) * 12) + Number(ultimo.mes);
+
+  const modeloData = {
+    pendiente: m,
+    intercepto: b,
+    factores_json: JSON.stringify(factoresFinales),
+    productividad_base: productividad_base,
+    ultimo_indice: ultimoX,
+    ultimo_anio: ultimo.anio, // IMPORTANTE: Guarda dónde termina la realidad
+    ultimo_mes: ultimo.mes,   // IMPORTANTE: Guarda dónde termina la realidad
+    fecha_entrenamiento: new Date()
+  };
+
+  await query(db, "TRUNCATE TABLE modelo_prediccion");
+  await query(db, "INSERT INTO modelo_prediccion SET ?", [modeloData]);
+
+  console.log("[IA] Modelo guardado. Último dato real:", ultimo.anio, ultimo.mes);
+  return modeloData;
+}
+
+async function getModeloGuardado(db) {
+  const rows = await query(db, `SELECT * FROM modelo_prediccion ORDER BY id_modelo DESC LIMIT 1`);
+  return rows && rows.length ? rows[0] : null;
+}
+
+// Polling (Detección de cambios y auto-entrenamiento)
+let lastProductionChecksum = null;
+let pollingStarted = false;
+async function computeProductionChecksum(db) {
+  // Checksum simple: Cantidad de filas + Fecha máxima + ID máximo
+  const rows = await query(db, `SELECT COUNT(*) AS cnt, MAX(fecha_registro) AS max_date, MAX(id) AS max_id FROM produccion`);
+  if (!rows || !rows.length) return null;
+  const r = rows[0];
+  const datePart = r.max_date ? (r.max_date.toISOString ? r.max_date.toISOString() : r.max_date) : '';
+  return `${r.cnt}|${datePart}|${r.max_id||0}`;
+}
+async function startPollingForChanges(app) {
+  if (pollingStarted) return;
+  pollingStarted = true;
+  const db = getDB(app);
+  if (!db) return console.warn("[IA] No DB para polling");
+  try { lastProductionChecksum = await computeProductionChecksum(db); } catch(e){ lastProductionChecksum = null; }
+  
+  setInterval(async () => {
+    try {
+      const cs = await computeProductionChecksum(db);
+      // Si cambia algo en la tabla producción, reentrenamos
+      if (cs && cs !== lastProductionChecksum) {
+        console.log("[IA] Cambio detectado en datos -> REENTRENANDO MODELO...");
+        lastProductionChecksum = cs;
+        try { 
+            await entrenarModeloInterno(db); 
+        } catch(e){ 
+            console.error("[IA] Reentreno falló:", e.message); 
+        }
+      }
+    } catch(e){ console.error("[IA] Polling error:", e.message); }
+  }, POLL_INTERVAL_MS);
+}
+
+// RUTAS
+
+router.post('/entrenar', async (req, res) => {
+  const db = getDB(req);
+  if (!db) return res.status(500).json({ ok:false, error:"DB no conectada" });
+  try {
+    const modelo = await entrenarModeloInterno(db);
+    res.json({ ok:true, modelo });
+  } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
 });
 
-// Proyectar (reglas:
-// 1) Solo se puede predecir el PRIMER mes faltante del ÚLTIMO año con datos.
-// 2) Si piden un mes que YA TIENE informe => error (no hay predicción que hacer).
-// 3) Si faltan meses previos y piden un mes posterior => error.)
-router.get('/proyectar', async (req, res) => {
+router.post('/notify-change', async (req, res) => {
+  const db = getDB(req);
+  if (!db) return res.status(500).json({ ok:false, error: "DB no conectada" });
   try {
-    await req.app.locals.mongoReady;
-    const db = req.app.locals.getDB();
-    const col = db.collection(COLECCION_MESES);
+    await entrenarModeloInterno(db);
+    lastProductionChecksum = await computeProductionChecksum(db);
+    res.json({ ok:true, msg: "Reentrenamiento ejecutado" });
+  } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
+});
 
-    const meses = await col.find({}).toArray();
-    if (!meses.length) {
-      return res.status(400).json({ ok: false, error: 'Ejecuta /prediccion/entrenar primero' });
+// ANALIZAR MES
+router.get('/analizar-mes', async (req, res) => {
+  const db = getDB(req);
+  if (!db) return res.status(500).json({ ok:false, error: "DB no conectada" });
+  try {
+    const mes = Number(req.query.mes);
+    const anio = Number(req.query.anio);
+    const rows = await query(db, `SELECT SUM(cantidadFolios) AS total FROM produccion WHERE mes = ? AND anio = ?`, [mes, anio]);
+    const total = (rows && rows[0] && rows[0].total) ? Number(rows[0].total) : 0;
+    const productividad_base = await calcularProductividadBase(db);
+    const dot = productividad_base > 0 ? Math.ceil(total / productividad_base) : 0;
+    const exacto = productividad_base > 0 ? (total / productividad_base) : 0;
+    let estado = 'ok';
+    if (dot > exacto * 1.15) estado = 'sobre';
+    else if (dot < exacto * 0.85) estado = 'sub';
+    res.json({ ok:true, produccion: total, dotacion: dot, estado });
+  } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
+});
+
+// PROYECTAR (CORREGIDO PARA INICIAR DESDE FIN DEL ENTRENAMIENTO)
+router.get('/proyectar', async (req, res) => {
+  const db = getDB(req);
+  if (!db) return res.status(500).json({ ok:false, error: "DB no conectada" });
+  try {
+    let mod = await getModeloGuardado(db);
+    if (!mod) {
+      // entrenar si no existe modelo
+      await entrenarModeloInterno(db);
+      mod = await getModeloGuardado(db);
+      if (!mod) return res.status(400).json({ ok:false, error: "Modelo inicializando" });
     }
 
-    // Orden cronológico
-    meses.sort((a, b) => (a.anio - b.anio) || (a.mes - b.mes));
+    const factores = JSON.parse(mod.factores_json || "{}");
+    const nMeses = parseInt(req.query.meses) || 1;
+    const proy = [];
 
-    const exists = (a, m) => meses.some(x => x.anio === a && x.mes === m);
+    // --- LÓGICA CORREGIDA ---
+    // Usamos el último año/mes que el modelo "conoce" por su entrenamiento.
+    // Esto evita saltar a fechas futuras basura en la DB.
+    let lastAnio = Number(mod.ultimo_anio);
+    let lastMes = Number(mod.ultimo_mes);
 
-    // Último año con datos
-    const years = [...new Set(meses.map(m => m.anio))].sort((a,b)=>a-b);
-    const lastYear = years[years.length-1];
-
-    // Meses presentes en ese año y prefijo contiguo
-    const monthsInLast = new Set(meses.filter(m => m.anio===lastYear).map(m => m.mes));
-    let contiguousLen = 0;
-    for (let mm=1; mm<=12; mm++){
-      if (monthsInLast.has(mm)) contiguousLen++;
-      else break;
+    // Fallback: Si el modelo es muy antiguo y no tiene esos campos, consultamos DB (último recurso)
+    if (!lastAnio || !lastMes) {
+         const ultimoReal = await getLastRecordedDate(db);
+         lastAnio = Number(ultimoReal.anio);
+         lastMes = Number(ultimoReal.mes);
     }
+    
+    // Convertimos a índice lineal X
+    let x = (lastAnio * 12) + lastMes;
+    // ------------------------
 
-    if (contiguousLen === 0) {
-      return res.status(400).json({
-        ok: false,
-        error: `No hay informes previos en ${lastYear}. Sube al menos "Enero ${lastYear}" antes de predecir.`
+    for (let i=0;i<nMeses;i++) {
+      // avanzar calendario al siguiente mes para proyectar
+      lastMes++;
+      if (lastMes > 12) { lastMes = 1; lastAnio++; }
+      x = x + 1;
+
+      // Calcular predicción
+      const tendencia = (mod.pendiente * x) + Number(mod.intercepto);
+      const factor = (factores[lastMes] !== undefined) ? Number(factores[lastMes]) : 1;
+      const estimado = Math.max(0, tendencia * factor);
+
+      // Calcular dotación sugerida
+      const productividad_base = Number(mod.productividad_base || (await calcularProductividadBase(db)));
+      const dot = productividad_base > 0 ? Math.ceil(estimado / productividad_base) : 0;
+      const exacto = productividad_base > 0 ? (estimado / productividad_base) : 0;
+      let estado = 'ok';
+      if (dot > exacto * 1.15) estado = 'sobre';
+      else if (dot < exacto * 0.85) estado = 'sub';
+
+      proy.push({
+        anio: lastAnio,
+        mes: lastMes,
+        produccion: Math.round(estimado),
+        rango_min: Math.round(estimado * 0.9),
+        rango_max: Math.round(estimado * 1.1),
+        dotacion: dot,
+        factor: factor.toFixed(2),
+        estado
       });
     }
 
-    // Primer mes faltante del último año con datos
-    let targetYear = lastYear;
-    let targetMonth = contiguousLen + 1;
-    if (targetMonth > 12) { targetMonth = 1; targetYear = lastYear + 1; }
-
-    // Validar parámetros solicitados por el usuario (si los envía)
-    const qAnio = req.query.anio ? Number(req.query.anio) : null;
-    const qMes  = req.query.mes  ? Number(req.query.mes)  : null;
-
-    if (qAnio && qMes) {
-      // (NUEVO) Si el mes pedido YA EXISTE como informe, error directo:
-      if (exists(qAnio, qMes)) {
-        return res.status(400).json({
-          ok: false,
-          error: `El mes ${qAnio}-${String(qMes).padStart(2,'0')} ya tiene informe cargado. No hay predicción que hacer.`
-        });
-      }
-
-      // Reglas de huecos: no se puede saltar el primer faltante
-      if (qAnio === lastYear) {
-        if (qMes !== targetMonth) {
-          if (qMes > targetMonth) {
-            return res.status(400).json({
-              ok: false,
-              error: `No se puede predecir ${qAnio}-${String(qMes).padStart(2,'0')}: falta el informe del mes ${String(targetMonth).padStart(2,'0')} de ${lastYear}.`
-            });
-          }
-          // qMes < targetMonth y no existe => es un hueco antes del primer faltante (no debería ocurrir si contiguousLen es correcto)
-          if (!monthsInLast.has(qMes)) {
-            return res.status(400).json({
-              ok: false,
-              error: `El mes ${String(qMes).padStart(2,'0')} de ${qAnio} no tiene informe y está antes del primer faltante (${String(targetMonth).padStart(2,'0')}). Sube primero los meses previos.`
-            });
-          }
-        }
-      } else if (qAnio === lastYear + 1) {
-        // Solo permitido si lastYear tiene 12/12 y piden enero del siguiente
-        if (!(contiguousLen === 12 && qMes === 1)) {
-          return res.status(400).json({
-            ok: false,
-            error: `Solo puede predecirse ${lastYear+1}-01 porque ${lastYear} ya tiene 12 meses.`
-          });
-        }
-      } else {
-        return res.status(400).json({
-          ok: false,
-          error: `La predicción se limita al primer mes faltante del último año con datos (${lastYear}).`
-        });
-      }
-
-      // A partir de aquí, los parámetros son válidos, pero forzamos el objetivo a lo permitido
-      targetYear = (qAnio === lastYear + 1 && contiguousLen === 12) ? (lastYear + 1) : lastYear;
-      targetMonth = (qAnio === lastYear + 1 && contiguousLen === 12) ? 1 : targetMonth;
+    // Guardar historial para auditoría (opcional)
+    if (proy.length) {
+      const resumen = `${proy[0].anio}-${String(proy[0].mes).padStart(2,'0')} → ${proy[proy.length-1].anio}-${String(proy[proy.length-1].mes).padStart(2,'0')}`;
+      try {
+        await query(db, "INSERT INTO historial_proyecciones (fecha, resumen, json_resultado) VALUES (NOW(), ?, ?)", [resumen, JSON.stringify(proy)]);
+      } catch(e) { /* ignore */ }
     }
 
-    // Serie completa para entrenar/estimar tendencia
-    const hasta = meses.slice();
-    if (!hasta.length) {
-      return res.status(400).json({ ok:false, error: 'Sin datos suficientes para proyectar.' });
+    res.json({ ok:true, proyecciones: proy });
+  } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
+});
+
+// GRAFICO FILTRADO
+router.post('/grafico-filtrado', async (req, res) => {
+  const db = getDB(req);
+  if (!db) return res.status(500).json({ ok:false, error: "DB no conectada" });
+  try {
+    const { anio, mandante, servicio, usuario } = req.body;
+    const where = ["1=1"];
+    const params = [];
+    if (anio) { where.push("p.anio = ?"); params.push(anio); }
+    if (mandante) { where.push("p.cliente_id = ?"); params.push(mandante); }
+    if (servicio) { where.push("p.tipoServicio_id = ?"); params.push(servicio); }
+    if (usuario) {
+      if (/^\d+$/.test(String(usuario))) { where.push("p.usuarioPrendas_id = ?"); params.push(usuario); }
+      else { where.push("(up.primer_nombre LIKE ? OR up.primer_apellido LIKE ?)"); params.push("%"+usuario+"%", "%"+usuario+"%"); }
     }
+    const needJoinUsu = (usuario && !/^\d+$/.test(String(usuario)));
+    const sql = `
+      SELECT p.anio, p.mes, CONCAT(p.anio,'-',LPAD(p.mes,2,'0')) AS etiqueta, SUM(p.cantidadFolios) AS valor
+      FROM produccion p
+      ${needJoinUsu ? "INNER JOIN usuarioprendas up ON up.id = p.usuarioPrendas_id" : ""}
+      WHERE ${where.join(" AND ")}
+      GROUP BY p.anio, p.mes
+      ORDER BY p.anio ASC, p.mes ASC
+    `;
+    const rows = await query(db, sql, params);
 
-    let resp = proyectarSiguienteMes(hasta);
-    if (!resp.ok) return res.status(400).json(resp);
+    const productividad_base = await calcularProductividadBase(db);
 
-    // Sobrescribe con el mes objetivo permitido
-    resp.mes_siguiente.anio = targetYear;
-    resp.mes_siguiente.mes  = targetMonth;
+    const datos = rows.map(r => {
+      const anioN = Number(r.anio), mesN = Number(r.mes), valor = Number(r.valor || 0);
+      const dot = productividad_base > 0 ? Math.ceil(valor / productividad_base) : 0;
+      const exacto = productividad_base > 0 ? (valor / productividad_base) : 0;
+      let estado = 'ok';
+      if (dot > exacto * 1.15) estado = 'sobre';
+      else if (dot < exacto * 0.85) estado = 'sub';
+      return { etiqueta: r.etiqueta, valor: valor, anio: anioN, mes: mesN, estado };
+    });
 
-    // === Serie para gráfico (histórico + proyectado) ===
-    const labels = [];
-    const reales = [];
-    const necesarios = [];
-    for (const m of meses) {
-      labels.push(`${m.anio}-${String(m.mes).padStart(2,'0')}`);
-      const prod = Number(m.produccion_total || 0);
-      const nec = Math.max(1, Math.ceil(prod / 100)); // misma regla
-      necesarios.push(nec);
-      reales.push(Number(m.trabajadores_reales) || Math.max(1, Math.round(prod / 100)));
-    }
-    labels.push(`${resp.mes_siguiente.anio}-${String(resp.mes_siguiente.mes).padStart(2,'0')}`);
-    necesarios.push(resp.mes_siguiente.trabajadores_necesarios);
-    reales.push(resp.mes_siguiente.trabajadores_reales);
-    resp.serie_empleados = { labels, reales, necesarios };
-
-    // === Resumen + Reporte ===
-    const estado = resp.mes_siguiente.estado_regla;
-    const textoEstado = estado === 'sobre' ? 'sobredotación' : estado === 'sub' ? 'subdotación' : 'dotación adecuada';
-    resp.resumen =
-      `Predicción para ${resp.mes_siguiente.anio}-${String(resp.mes_siguiente.mes).padStart(2,'0')}: ` +
-      `producción esperada ${resp.mes_siguiente.produccion_total}, ` +
-      `necesarios ${resp.mes_siguiente.trabajadores_necesarios}, ` +
-      `reales base ${resp.mes_siguiente.trabajadores_reales} → ${textoEstado}.`;
-    resp.reporte = {
-      mes_base: resp.mes_base,
-      mes_proyectado: resp.mes_siguiente,
-      regla: 'Promedio móvil (3) + tendencia; productividad 100 unidades/empleado',
-      notas: `Se proyecta únicamente el primer mes faltante del año ${lastYear}. Si falta un mes previo, NO se permite predecir meses posteriores. Si el mes ya tiene informe, no hay predicción que hacer.`
-    };
-
-    resp.mes_base.capacidad_optima = Number(resp.mes_base.capacidad_optima || 0);
-
-    // Auditoria
-    const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
-    const ip = req.ip || req.connection.remoteAddress;
-      registrarAuditoria(
-        userId, `${userNombre} ${userApellido}`, 'Proyección Generada', ip, rol
-      );
-
-    res.json(resp);
-  } catch (e) {
-    console.error('[Proyectar] ', e);
-    res.status(500).json({ ok: false, error: e.message });
+    res.json({ ok:true, datos, meta_base: productividad_base });
+  } catch(e) {
+    res.json({ ok:false, error: e.message });
   }
 });
 
+// Filtros info
+router.get('/filtros-info', async (req, res) => {
+  const db = getDB(req);
+  if (!db) return res.json({ mandantes:[], servicios:[], usuarios:[] });
+  try {
+    const mandantes = await query(db, `SELECT id, nombre FROM cliente ORDER BY nombre`);
+    const servicios = await query(db, `SELECT id, NombreServicio AS nombre FROM tiposervicio ORDER BY NombreServicio`);
+    const usuarios = await query(db, `SELECT id, CONCAT(primer_nombre, ' ', primer_apellido) AS nombre FROM usuarioprendas ORDER BY primer_nombre, primer_apellido`);
+    res.json({ mandantes, servicios, usuarios });
+  } catch(e) { res.json({ mandantes:[], servicios:[], usuarios:[] }); }
+});
+
+// Historial
+router.get('/historial', async (req, res) => {
+  const db = getDB(req);
+  try {
+    const rows = await query(db, `SELECT id, fecha, resumen FROM historial_proyecciones ORDER BY fecha DESC`);
+    res.json({ ok:true, historial: rows });
+  } catch(e){ res.json({ ok:false, error: e.message }); }
+});
+
+router.get('/historial/pdf/:id', async (req, res) => {
+  const db = getDB(req);
+  try {
+    const rows = await query(db, `SELECT archivo_pdf FROM historial_proyecciones WHERE id = ?`, [req.params.id]);
+    if (!rows || !rows.length) return res.status(404).send("No encontrado");
+    res.setHeader("Content-Type", "application/pdf");
+    res.send(rows[0].archivo_pdf);
+  } catch(e){ res.status(500).send("Error interno"); }
+});
+
+// Generar PDF
+// REEMPLAZAR SOLO LA RUTA '/reporte' EN prediccion.js
+
+router.post('/reporte', async (req, res) => {
+  try {
+    const proyecciones = req.body.proyecciones || [];
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+    // Configurar respuesta HTTP
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Informe_Dotacion_${new Date().toISOString().slice(0,10)}.pdf`);
+    doc.pipe(res);
+
+    // --- 1. ENCABEZADO ---
+    doc.fillColor('#444444').fontSize(20).text('Informe de Proyección de Dotación', { align: 'center' });
+    doc.fontSize(10).text(`Generado el: ${new Date().toLocaleString()}`, { align: 'center' });
+    doc.moveDown(2);
+
+    // --- 2. RESUMEN EJECUTIVO ---
+    doc.fillColor('#000000').fontSize(12).font('Helvetica-Bold').text('Resumen Ejecutivo');
+    doc.font('Helvetica').fontSize(10).moveDown(0.5);
+    
+    const inicio = proyecciones.length > 0 ? `${proyecciones[0].anio}-${proyecciones[0].mes}` : '?';
+    const fin = proyecciones.length > 0 ? `${proyecciones[proyecciones.length-1].anio}-${proyecciones[proyecciones.length-1].mes}` : '?';
+    const maxDot = Math.max(...proyecciones.map(p => p.dotacion));
+    
+    doc.text(`El presente informe detalla la proyección de dotación sugerida para el periodo comprendido entre ${inicio} y ${fin}. ` +
+             `El modelo predictivo ha analizado las tendencias históricas y la estacionalidad para recomendar una dotación máxima de ${maxDot} personas durante este periodo. ` + 
+             `Se recomienda ajustar los turnos según los rangos mínimos y máximos presentados a continuación para optimizar la productividad.`);
+    doc.moveDown(2);
+
+    // --- 3. TABLA DE DATOS ---
+    doc.font('Helvetica-Bold').fontSize(10);
+    
+    // Cabecera Tabla
+    const tableTop = doc.y;
+    const colX = [50, 130, 230, 330, 430]; // Posiciones X de las columnas
+    
+    doc.text('Periodo', colX[0], tableTop);
+    doc.text('Producción Est.', colX[1], tableTop);
+    doc.text('Rango Sugerido', colX[2], tableTop);
+    doc.text('Dotación', colX[3], tableTop);
+    doc.text('Estado', colX[4], tableTop);
+
+    doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).strokeColor('#aaaaaa').stroke();
+    
+    let y = tableTop + 25;
+    doc.font('Helvetica').fontSize(10);
+
+    proyecciones.forEach(p => {
+        // Fondo alternado para filas
+        if (proyecciones.indexOf(p) % 2 === 1) {
+            doc.save().fillColor('#f5f5f5').rect(50, y - 5, 500, 20).fill().restore();
+        }
+
+        const periodo = `${p.anio}-${String(p.mes).padStart(2,'0')}`;
+        const rango = `${p.rango_min} - ${p.rango_max}`;
+        
+        doc.fillColor('#000000').text(periodo, colX[0], y);
+        doc.text(p.produccion.toString(), colX[1], y);
+        doc.text(rango, colX[2], y);
+        doc.font('Helvetica-Bold').fillColor('#2980b9').text(`${p.dotacion} Pers.`, colX[3], y);
+        
+        // Estado con color
+        doc.font('Helvetica');
+        let colorEstado = '#27ae60'; // verde
+        if(p.estado === 'sobre') colorEstado = '#c0392b'; // rojo
+        if(p.estado === 'sub') colorEstado = '#d35400'; // naranja
+        
+        doc.fillColor(colorEstado).text(p.estado.toUpperCase(), colX[4], y);
+        
+        y += 20;
+    });
+
+    doc.moveDown(3);
+
+    // --- 4. GRÁFICA DE DOTACIÓN (DIBUJO VECTORIAL) ---
+    if (proyecciones.length > 1) {
+        doc.addPage(); // Nueva página para el gráfico grande
+        doc.fillColor('#000000').fontSize(14).font('Helvetica-Bold').text('Gráfica de Tendencia: Dotación Sugerida', { align: 'center' });
+        doc.moveDown(2);
+
+        const chartTop = 150;
+        const chartLeft = 50;
+        const chartHeight = 300;
+        const chartWidth = 450;
+        const chartBottom = chartTop + chartHeight;
+
+        // Ejes
+        doc.strokeColor('#000000').lineWidth(1)
+           .moveTo(chartLeft, chartTop).lineTo(chartLeft, chartBottom) // Eje Y
+           .lineTo(chartLeft + chartWidth, chartBottom) // Eje X
+           .stroke();
+
+        // Escalas
+        const maxVal = Math.ceil(Math.max(...proyecciones.map(p => p.dotacion)) * 1.2); // +20% margen arriba
+        const stepX = chartWidth / (proyecciones.length - 1);
+
+        // Dibujar Eje Y (Etiquetas y líneas guía)
+        doc.fontSize(9).fillColor('#666666');
+        for (let i = 0; i <= 5; i++) {
+            const val = Math.round((maxVal / 5) * i);
+            const yPos = chartBottom - ((val / maxVal) * chartHeight);
+            doc.text(val.toString(), chartLeft - 25, yPos - 5, { width: 20, align: 'right' });
+            // Línea guía
+            doc.strokeColor('#e0e0e0').lineWidth(0.5)
+               .moveTo(chartLeft, yPos).lineTo(chartLeft + chartWidth, yPos).stroke();
+        }
+
+        // Dibujar Línea de Tendencia
+        doc.strokeColor('#2980b9').lineWidth(3).lineCap('round').lineJoin('round');
+        
+        let prevX = 0, prevY = 0;
+        proyecciones.forEach((p, i) => {
+            const x = chartLeft + (i * stepX);
+            const y = chartBottom - ((p.dotacion / maxVal) * chartHeight);
+            
+            if (i === 0) {
+                doc.moveTo(x, y);
+            } else {
+                doc.lineTo(x, y);
+            }
+            
+            // Guardar coordenadas para dibujar puntos después
+            p._x = x; 
+            p._y = y;
+        });
+        doc.stroke(); // Ejecutar trazo de línea
+
+        // Dibujar Puntos y Etiquetas X
+        proyecciones.forEach((p, i) => {
+            // Punto
+            doc.fillColor('#e74c3c').circle(p._x, p._y, 4).fill();
+            
+            // Etiqueta X (Mes)
+            doc.fillColor('#000000').fontSize(8)
+               .text(`${p.anio}-${p.mes}`, p._x - 15, chartBottom + 10, { width: 30, align: 'center' });
+            
+            // Etiqueta Valor sobre el punto
+            doc.fillColor('#2980b9').fontSize(9).font('Helvetica-Bold')
+               .text(p.dotacion.toString(), p._x - 10, p._y - 15, { width: 20, align: 'center' });
+        });
+    }
+
+    // Pie de página
+    doc.fillColor('#999999').fontSize(8)
+       .text('Este documento fue generado automáticamente por el sistema de IA.', 50, 750, { align: 'center', width: 500 });
+
+    doc.end();
+
+  } catch(e) {
+    console.error(e);
+    res.status(500).send('Error generando PDF: ' + e.message);
+  }
+});
+
+// Inicializador de auto-entrenamiento (exportado)
+function initAutoRetrain(app) {
+  const db = getDB(app);
+  if (!db) return console.warn("[IA] initAutoRetrain: no db");
+  startPollingForChanges(app).catch(e => console.warn("[IA] Polling start error:", e.message));
+}
+
 module.exports = router;
+module.exports.entrenarModeloInterno = entrenarModeloInterno;
+module.exports.initAutoRetrain = initAutoRetrain;

@@ -6,6 +6,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const https = require('https');
 const ejs = require('ejs');
+const mysql = require('mysql2/promise'); // <--- AGREGA ESTA LÍNEA
 require('dotenv').config();
 
 /////////////////////////////////////////////////
@@ -42,6 +43,36 @@ app.use(cookieParser());
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017'; // ELIMINAR
 const MONGO_DB  = process.env.MONGO_DB  || 'IngenieriaSoftware'; // ELIMINAR
 const PUERTO    = process.env.PORT      || 8090; // ELIMINAR
+
+// =================================================================
+// 2. CONFIGURACIÓN MYSQL (Para el modelo predictivo)
+// =================================================================
+const mysqlConfig = {
+    host: 'localhost',
+    user: 'root',           // Tu usuario de Workbench
+    password: 'Lis1811*',           // Tu contraseña (ponla si tienes)
+    database: 'ingenieriasoftware',  // La base de datos nueva que creamos
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+};
+
+// Crear el pool de MySQL
+const dbSql = mysql.createPool(mysqlConfig);
+
+// Inyectarlo en app.locals para que prediccion.js lo encuentre
+app.locals.db = dbSql;
+
+// Prueba rápida de conexión MySQL (solo para log)
+dbSql.getConnection()
+    .then(conn => {
+        console.log('✅ [MySQL] Conectado correctamente.');
+        conn.release();
+    })
+    .catch(err => {
+        console.error('❌ [MySQL] Error de conexión:', err.message);
+    });
+// =================================================================
 
 /////////////////////////////////////////////////
 const corsOptions = require('./JS Llamadas/cors_config.js'); // Configuración de CORS.

@@ -3,544 +3,609 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Predicción de Dotación de Personal - Sistema</title>
+  <title>Predicción de Dotación - Sistema IA</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="config_server.js"></script>
 
-  <!-- === AÑADIDO: librerías para gráfico y exportaciones === -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
   <style>
-    /* === estilos de tu maqueta, sin cambios en los cards === */
-    .top-bar{background:#fff;height:60px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
-    .navbar-brand{font-size:24px;font-weight:bold;color:#007bff!important;text-decoration:none}
-    .navbar{background:#fff;padding:.2rem 1rem}
-    .navbar-nav .nav-link{color:#6c757d;font-weight:500}
-    .navbar-nav .nav-link:hover{color:#007bff}
-    .dropdown-menu{border:none;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+    /* === ESTÉTICA GENERAL === */
+    body { background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
 
-    .metric-card{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;color:#fff;transition:transform .3s}
-    .metric-card:hover{transform:translateY(-5px)}
-    .metric-card.success{background:linear-gradient(135deg,#11998e,#38ef7d)}
-    .metric-card.warning{background:linear-gradient(135deg,#f093fb,#f5576c)}
-    .metric-card.info{background:linear-gradient(135deg,#4facfe,#00f2fe)}
+    /* Cards de Métricas */
+    .metric-card { 
+      border-radius: 16px; color: #fff; padding: 20px; border: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; position: relative; overflow: hidden;
+    }
+    .metric-card:hover { transform: translateY(-3px); }
+    .metric-card.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .metric-card.success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .metric-card.warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .metric-card.info    { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    
+    .metric-icon { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); opacity: 0.3; font-size: 2.5rem; }
 
-    .chart-container{background:#fff;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1);padding:20px;margin-bottom:30px}
-    .prediction-area{border:2px solid #e2e8f0;transition:all .3s;background:linear-gradient(135deg,#fff,#f8fafc);border-radius:15px;padding:24px}
-    .prediction-area.processing{border-color:#4f46e5;background:linear-gradient(135deg,#eff6ff,#dbeafe)}
-    .progress-bar{transition:width .3s;background:linear-gradient(90deg,#4f46e5,#7c3aed)}
-    .fade-in{animation:fadeIn .5s ease-in}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    body{overflow-x:hidden;background:linear-gradient(135deg,#f5f7fa,#c3cfe2)}
-    .result-card{background:linear-gradient(135deg,#667eea,#764ba2);border-radius:15px;color:#fff;padding:20px;margin-bottom:20px}
-    .estado-badge{font-size:14px}
+    /* Contenedores Blancos */
+    .content-box { 
+      background: #fff; border-radius: 16px; padding: 25px; 
+      box-shadow: 0 5px 20px rgba(0,0,0,0.03); height: 100%; border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .section-title { font-weight: 700; color: #2d3748; margin-bottom: 20px; font-size: 1.1rem; }
+
+    .form-select-custom, .form-control-custom { 
+      background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 15px; font-size: 0.9rem;
+    }
+    .form-select-custom:focus, .form-control-custom:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+
+    .btn-action { 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; 
+      border-radius: 10px; padding: 12px; width: 100%; font-weight: 600; transition: all 0.3s; 
+    }
+    .btn-action:hover { opacity: 0.9; transform: translateY(-1px); color: white; }
+    
+    .history-item { 
+      display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9; 
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-icon { 
+      width: 40px; height: 40px; border-radius: 10px; background: #e0e7ff; color: #4f46e5; 
+      display: flex; align-items: center; justify-content: center; margin-right: 15px; 
+    }
+    
+    .badge-status { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; }
+    .bg-soft-success { background-color: #d1fae5; color: #065f46; }
+    .bg-soft-danger { background-color: #fee2e2; color: #991b1b; }
+    .bg-soft-warning { background-color: #fef3c7; color: #92400e; }
+
+    .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
+
     <%- include('partials/navbar') %>
 
-  <div class="container-fluid mt-4">
-    <!-- Encabezado -->
-    <div class="row mb-4">
-      <div class="col-12 d-flex justify-content-between align-items-center">
-        <div>
-          <h1 class="h2 mb-1"><i class="fas fa-crystal-ball text-primary"></i> Predicción de Dotación de Personal</h1>
-          <p class="text-muted mb-0">Genera predicciones basadas en los Excel mensuales almacenados en MongoDB</p>
-        </div>
-        <div>
-          <button class="btn btn-outline-primary me-2" onclick="refreshPredictions()"><i class="fas fa-sync-alt"></i> Actualizar</button>
-          <button class="btn btn-primary" onclick="generatePrediction()"><i class="fas fa-magic"></i> Nueva Predicción</button>
-        </div>
-      </div>
-    </div>
+    <div class="container-fluid px-4 py-4">
 
-    <!-- === MÉTRICAS === -->
-    <div class="row mb-4" id="metricsCards">
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="metric-card p-4 h-100">
-          <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <div class="text-white-50 small">Predicciones Generadas</div>
-              <div class="h4 mb-0 text-white" id="totalPredictions">0</div>
+                <h3 class="fw-bold text-dark mb-0">Predicción de Dotación</h3>
+                <p class="text-muted small mb-0">Modelo Híbrido: Regresión + Estacionalidad (MySQL)</p>
             </div>
-            <div class="align-self-center"><i class="fas fa-chart-line fa-2x text-white-50"></i></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="metric-card success p-4 h-100">
-          <div class="d-flex justify-content-between">
             <div>
-              <div class="text-white-50 small">Precisión Promedio</div>
-              <div class="h4 mb-0 text-white" id="avgAccuracy">95.2%</div>
+               <button class="btn btn-light border shadow-sm" onclick="app.actualizarGrafico()"><i class="fas fa-sync-alt text-muted"></i></button>
             </div>
-            <div class="align-self-center"><i class="fas fa-bullseye fa-2x text-white-50"></i></div>
-          </div>
         </div>
-      </div>
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="metric-card warning p-4 h-100">
-          <div class="d-flex justify-content-between">
-            <div>
-              <div class="text-white-50 small">Última Predicción</div>
-              <div class="h6 mb-0 text-white" id="lastPrediction">Sin predicciones</div>
-            </div>
-            <div class="align-self-center"><i class="fas fa-clock fa-2x text-white-50"></i></div>
-          </div>
-        </div>
-      </div>
-      <div class="col-xl-3 col-md-6 mb-4">
-        <div class="metric-card info p-4 h-100">
-          <div class="d-flex justify-content-between">
-            <div>
-              <div class="text-white-50 small">Modelo IA</div>
-              <div class="h6 mb-0 text-white" id="modeloIAEstado">Activo</div>
-            </div>
-            <div class="align-self-center"><i class="fas fa-robot fa-2x text-white-50"></i></div>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Parámetros -->
-    <div class="row mb-4">
-      <div class="col-12">
-        <div class="chart-container">
-          <h5 class="mb-3"><i class="fas fa-sliders-h text-primary"></i> Parámetros de Predicción</h5>
-          <div class="row g-3 align-items-end prediction-area" id="predictionArea">
-            <div class="col-sm-4">
-              <label class="form-label">Año (opcional)</label>
-              <input id="anioInput" type="number" class="form-control" placeholder="Ej: 2025">
+        <div class="row g-4 mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card primary h-100">
+                    <p class="mb-1 opacity-75 small text-uppercase fw-bold">Predicciones Totales</p>
+                    <h2 class="mb-0 fw-bold" id="totalPredictions">0</h2>
+                    <i class="fas fa-chart-line metric-icon"></i>
+                </div>
             </div>
-            <div class="col-sm-4">
-              <label class="form-label">Mes (1–12, opcional)</label>
-              <input id="mesInput" type="number" class="form-control" placeholder="Ej: 8">
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card success h-100">
+                    <p class="mb-1 opacity-75 small text-uppercase fw-bold">Precisión Modelo</p>
+                    <h2 class="mb-0 fw-bold">±10%</h2>
+                    <i class="fas fa-bullseye metric-icon"></i>
+                </div>
             </div>
-            <div class="col-sm-4">
-              <button class="btn btn-primary w-100" onclick="generatePrediction()"><i class="fas fa-magic"></i> Proyectar</button>
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card warning h-100">
+                    <p class="mb-1 opacity-75 small text-uppercase fw-bold">Última Proyección</p>
+                    <h5 class="mb-0 fw-bold" id="lastPrediction">---</h5>
+                    <i class="fas fa-clock metric-icon"></i>
+                </div>
             </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="metric-card info h-100">
+                    <p class="mb-1 opacity-75 small text-uppercase fw-bold">Estado IA</p>
+                    <h5 class="mb-0 fw-bold">Auto-Learn</h5>
+                    <i class="fas fa-robot metric-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="content-box">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="section-title m-0"><i class="fas fa-chart-area text-primary me-2"></i>Análisis Histórico</h5>
+                        <span class="badge bg-light text-secondary border">Filtros Activos</span>
+                    </div>
+
+                    <div class="row g-2 mb-4">
+                        <div class="col-md-3">
+                            <select id="fMandante" class="form-select form-select-custom"><option value="">Todos Mandantes</option></select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="fServicio" class="form-select form-select-custom"><option value="">Todos Servicios</option></select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" id="fUsuario" class="form-control form-control-custom" placeholder="Usuario...">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="number" id="fAnio" class="form-control form-control-custom" value="2025">
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-primary w-100 rounded-3" onclick="app.actualizarGrafico()"><i class="fas fa-search"></i></button>
+                        </div>
+                    </div>
+
+                    <div style="height: 380px;">
+                        <canvas id="mainHistoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="content-box">
+                    <h5 class="section-title">Configurar Proyección</h5>
+                    
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase">Analizar Mes Específico</label>
+                        <div class="d-flex g-2">
+                            <select id="selMes" class="form-select form-select-custom me-2" style="width:50%">
+                                <% for(let m=1;m<=12;m++){ %>
+                                  <option value="<%= m %>"><%= m %></option>
+                                <% } %>
+                            </select>
+                            <select id="selAnio" class="form-select form-select-custom" style="width:50%">
+                                <% for(let a=2020;a<=2030;a++){ %>
+                                  <option value="<%= a %>"><%= a %></option>
+                                <% } %>
+                            </select>
+                        </div>
+                        <div class="mt-2 d-grid">
+                          <button class="btn btn-outline-primary btn-sm" onclick="app.analizarMesEspecifico()">
+                            <i class="fas fa-search me-1"></i> Analizar mes
+                          </button>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold text-uppercase">Horizonte Temporal</label>
+                        <select id="mesesInput" class="form-select form-select-custom">
+                            <option value="1">1 Mes (Alta Precisión)</option>
+                            <option value="3" selected>3 Meses (Trimestre)</option>
+                            <option value="6">6 Meses (Semestre)</option>
+                            <option value="12">12 Meses (Anual)</option>
+                        </select>
+                        <small class="text-muted" style="font-size: 0.75rem;">
+                            <i class="fas fa-info-circle me-1"></i> La precisión disminuye en fechas lejanas.
+                        </small>
+                    </div>
+
+                    <div class="d-grid gap-3 mb-3">
+                        <button class="btn-action shadow-sm" onclick="app.proyectar()">
+                            <i class="fas fa-magic me-2"></i> Generar Proyección
+                        </button>
+                        
+                        <div class="text-center">
+                            <small class="text-success fw-bold" style="font-size: 0.75rem;">
+                                <i class="fas fa-check-circle me-1"></i> Modelo actualizado automáticamente
+                            </small>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted opacity-25 my-2">
+
+                    <h6 class="text-muted small fw-bold text-uppercase mb-3">Actividad Reciente</h6>
+                    <div id="predictionHistory" style="max-height: 200px; overflow-y: auto;">
+                        <div class="text-center text-muted py-3 small">Sin historial de sesión.</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsSection" class="row mt-4 d-none fade-in">
             <div class="col-12">
-              <button class="btn btn-outline-secondary" onclick="entrenarModelo()"><i class="fas fa-database"></i> Entrenar desde MongoDB</button>
-              <small class="text-muted ms-2">Construye la base desde Excel en GridFS y deja lista la proyección.</small>
+                <div class="content-box">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="section-title m-0 text-success">Resultados de Proyección</h5>
+                        <div>
+                          <button id="btnDescargarPDF" class="btn btn-sm btn-outline-primary">
+                              <i class="fas fa-file-pdf me-1"></i> Descargar Informe PDF
+                          </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Periodo</th>
+                                    <th>Producción Est.</th>
+                                    <th>Rango (Min-Max)</th>
+                                    <th>Dotación Sugerida</th>
+                                    <th>Factor Evento</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-light border mt-3 d-flex gap-3 align-items-center">
+                        <i class="fas fa-info-circle text-info fa-lg"></i>
+                        <small class="text-muted">
+                            <strong>Nota de Modelo:</strong> Los cálculos excluyen ausencias justificadas (Vacaciones, Licencias Médicas) para determinar la productividad óptima real.
+                        </small>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Progreso -->
-    <div id="progressSection" class="row mb-4 d-none">
-      <div class="col-12">
-        <div class="chart-container">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <span class="fw-bold text-dark">Procesando predicción...</span>
-            <span id="progressText" class="text-primary fw-bold">0%</span>
-          </div>
-          <div class="progress" style="height:10px;">
-            <div id="progressBar" class="progress-bar" role="progressbar" style="width:0%"></div>
-          </div>
-          <div class="small text-muted mt-2" id="progressStatus">Consultando servidor…</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Alertas -->
-    <div id="alertContainer"></div>
-
-    <!-- Resultados -->
-    <div id="resultsSection" class="row mb-4 d-none">
-      <div class="col-12">
-        <div class="chart-container">
-          <h5 class="mb-3"><i class="fas fa-chart-bar text-success"></i> Resultados de la Predicción</h5>
-          <div id="predictionResults"></div>
-
-          <!-- === acciones de reporte === -->
-          <hr class="my-3">
-          <div class="d-flex gap-2">
-            <button id="btnVerReporte" class="btn btn-outline-primary" disabled>
-              <i class="fas fa-chart-line me-1"></i> Ver gráfico y reporte
-            </button>
-            <button id="btnDescargarPDF" class="btn btn-outline-danger" disabled>
-              <i class="fas fa-file-pdf me-1"></i> Descargar PDF
-            </button>
-            <button id="btnDescargarXLSX" class="btn btn-outline-success" disabled>
-              <i class="fas fa-file-excel me-1"></i> Descargar XLSX
-            </button>
-          </div>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- Historial -->
-    <div class="row">
-      <div class="col-12">
-        <div class="chart-container">
-          <h5 class="mb-3"><i class="fas fa-history text-info"></i> Historial de Predicciones</h5>
-          <div id="predictionHistory">
-            <div class="text-center text-muted py-5">
-              <i class="fas fa-crystal-ball fa-3x text-muted mb-3"></i>
-              <p class="fw-bold mb-1">No hay predicciones generadas aún</p>
-              <p class="small text-muted">Las predicciones aparecerán aquí una vez que las generes</p>
+        <div id="progressSection" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background: rgba(255,255,255,0.8); z-index: 9999;">
+            <div class="bg-white p-4 rounded-4 shadow text-center border" style="width: 300px;">
+                <div class="spinner-border text-primary mb-3" role="status"></div>
+                <h6 class="fw-bold mb-2">Procesando IA...</h6>
+                <div class="progress" style="height: 6px;">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                </div>
+                <small id="progressText" class="text-muted mt-2 d-block">0%</small>
             </div>
-          </div>
         </div>
-      </div>
+
     </div>
-  </div>
 
 <script>
-  window.addEventListener('load', async () => {
-            try {
-                const response = await fetch('/api/perfil', {
-                    method: 'GET',
-                    credentials: 'include', 
-                    headers: { 'Content-Type': 'application/json' }
-                });
+/* ========== LÓGICA JAVASCRIPT ========= */
 
-                if (!response.ok) {
-                    const textoError = await response.text();
-                    console.error("Error del servidor:", textoError);
-                    console.warn("El sistema intentó desloguearte por el error de arriba.");
-                    
-                    window.location.href = 'login.html'; 
-                    return;
-                }
-                const usuario = await response.json();
-                if (usuario.nombre && usuario.apellido) {
-                    const welcomeMsg = document.getElementById('welcomeMessage');
-                    if(welcomeMsg) welcomeMsg.innerText = `${usuario.nombre} ${usuario.apellido}`;
-                }
-                if (typeof cargarMandantes === 'function') cargarMandantes();
+class StaffPredictionSystem {
+  constructor(){
+    this.progressSection = document.getElementById('progressSection');
+    this.progressBar = document.getElementById('progressBar');
+    this.progressText = document.getElementById('progressText');
+    this.resultsSection = document.getElementById('resultsSection');
+    this.tableBody = document.getElementById('resultsTableBody');
+    this.historyContainer = document.getElementById('predictionHistory');
 
-            } catch (error) {
-                console.error('Error:', error);
+    this.predictions = JSON.parse(localStorage.getItem('staffPredictions') || '[]');
+
+    this.lastHistoryData = null;
+    this.chart = null;
+    this.baseUrl = (typeof URL_BASE !== 'undefined') ? URL_BASE : '';
+
+    this.renderHistory();
+    this.updateMetrics();
+    this.cargarFiltros();
+    this.initChart();
+
+    // Solo listener PDF
+    const pdfBtn = document.getElementById('btnDescargarPDF');
+    if (pdfBtn) pdfBtn.addEventListener('click', () => this.descargarPDF());
+  }
+
+  async cargarFiltros() {
+    try {
+        const r = await fetch(`${this.baseUrl}/prediccion/filtros-info`);
+        const d = await r.json();
+
+        const selMan = document.getElementById('fMandante');
+        const selSer = document.getElementById('fServicio');
+
+        selMan.innerHTML = '<option value="">Todos Mandantes</option>';
+        selSer.innerHTML = '<option value="">Todos Servicios</option>';
+
+        if (d.mandantes && Array.isArray(d.mandantes)) {
+          d.mandantes.forEach(m => {
+            const text = m.nombre || m;
+            const val  = m.id ?? m;
+            selMan.add(new Option(text, val));
+          });
+        }
+        if (d.servicios && Array.isArray(d.servicios)) {
+          d.servicios.forEach(s => {
+            const text = s.nombre || s;
+            const val  = s.id ?? s;
+            selSer.add(new Option(text, val));
+          });
+        }
+    } catch(e) {
+      console.warn("Error cargando filtros:", e);
+    }
+  }
+
+  initChart() { this.actualizarGrafico(); }
+
+  async actualizarGrafico() {
+    const filtros = {
+        mandante: document.getElementById('fMandante').value,
+        servicio: document.getElementById('fServicio').value,
+        usuario: document.getElementById('fUsuario').value,
+        anio: document.getElementById('fAnio').value
+    };
+
+    try {
+        const r = await fetch(`${this.baseUrl}/prediccion/grafico-filtrado`, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(filtros)
+        });
+        const js = await r.json();
+
+        if (!js.ok) { console.warn("grafico-filtrado no devolvió ok"); return; }
+        if (!js.datos || !js.datos.length) {
+          if (this.chart) { this.chart.destroy(); this.chart = null; }
+          this.lastHistoryData = null;
+          return;
+        }
+
+        this.lastHistoryData = js.datos.map(d => {
+          let etiqueta = d.etiqueta;
+          if (!etiqueta && d.anio && d.mes) etiqueta = `${d.anio}-${String(d.mes).padStart(2,'0')}`;
+          return {
+            etiqueta,
+            valor: Number(d.valor || d.produccion || 0),
+            anio: Number(d.anio || (etiqueta ? Number(etiqueta.split('-')[0]) : null)),
+            mes: Number(d.mes || (etiqueta ? Number(etiqueta.split('-')[1]) : null)),
+            estado: (d.estado || '').toString().toLowerCase() || null
+          };
+        });
+
+        const metaBase = js.meta_base ? Number(js.meta_base) : null;
+        if (!this.lastHistoryData.some(x => x.estado)) {
+          const valores = this.lastHistoryData.map(x => x.valor);
+          const calculados = valores.map((v, i) => {
+             if(metaBase) {
+               const dot = Math.ceil(v / metaBase);
+               const exact = v / metaBase;
+               if (dot > exact * 1.15) return 'sobre';
+               if (dot < exact * 0.85) return 'sub';
+               return 'ok';
+             } else {
+               const windowStart = Math.max(0, i-2);
+               const subset = valores.slice(windowStart, i+1);
+               const avg = subset.reduce((a,b)=>a+b,0)/subset.length;
+               if (v > avg * 1.15) return 'sobre';
+               if (v < avg * 0.85) return 'sub';
+               return 'ok';
+             }
+          });
+          this.lastHistoryData = this.lastHistoryData.map((x, i) => ({ ...x, estado: calculados[i] }));
+        }
+
+        const pointColors = this.lastHistoryData.map(x => {
+          const s = (x.estado || 'ok').toString().toLowerCase();
+          if (s === 'sobre') return '#ef4444';
+          if (s === 'sub') return '#f59e0b';
+          return '#10b981';
+        });
+
+        const ctx = document.getElementById('mainHistoryChart').getContext('2d');
+        if (this.chart) this.chart.destroy();
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(102, 126, 234, 0.25)');
+        gradient.addColorStop(1, 'rgba(102, 126, 234, 0.0)');
+
+        this.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: this.lastHistoryData.map(d => d.etiqueta),
+                datasets: [{
+                    label: 'Producción Real',
+                    data: this.lastHistoryData.map(d => d.valor),
+                    borderColor: '#667eea',
+                    backgroundColor: gradient,
+                    borderWidth: 2,
+                    pointBackgroundColor: pointColors,
+                    pointBorderColor: '#764ba2',
+                    pointRadius: 5,
+                    fill: true,
+                    tension: 0.35
+                }]
+            },
+            options: {
+                responsive:true,
+                maintainAspectRatio:false,
+                plugins: {
+                  legend: { display:false },
+                  tooltip: {
+                    callbacks: {
+                      label: (ctx) => `Producción: ${ctx.parsed.y}`,
+                      afterBody: (items) => {
+                        const idx = items[0].dataIndex;
+                        const st = (this.lastHistoryData[idx]?.estado || 'OK').toUpperCase();
+                        return `Estado: ${st}`;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  y: { grid: { borderDash: [5,5] } },
+                  x: { grid: { display: false } }
+                }
             }
         });
 
-        async function logout() {
-            try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
-            try { sessionStorage.clear(); localStorage.clear(); } catch (e) {}
-            try {
-                document.cookie.split(';').forEach(c => {
-                    const eqPos = c.indexOf('=');
-                    const name = (eqPos > -1 ? c.substring(0, eqPos) : c).trim();
-                    if (name) document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
-                });
-            } catch (e) {}
-            window.location.replace('login.html');
-        }
-/* === backend integrado === */
-class StaffPredictionSystem{
-  constructor(){
-    this.progressSection=document.getElementById('progressSection');
-    this.progressBar=document.getElementById('progressBar');
-    this.progressText=document.getElementById('progressText');
-    this.progressStatus=document.getElementById('progressStatus');
-    this.alertContainer=document.getElementById('alertContainer');
-    this.predictionHistory=document.getElementById('predictionHistory');
-    this.resultsSection=document.getElementById('resultsSection');
-    this.predictionResults=document.getElementById('predictionResults');
-    this.totalPredEl=document.getElementById('totalPredictions');
-    this.lastPredEl=document.getElementById('lastPrediction');
-    this.predictions=JSON.parse(localStorage.getItem('staffPredictions')||'[]');
-    this.renderPredictionHistory(); this.updateMetrics();
+    } catch (e) { console.error("Error actualizando gráfico:", e); }
   }
 
-  async entrenar(){
-    try{
-      this.showProgress('Preparando entrenamiento…',15);
-      const r= await fetch(`${URL_BASE}/prediccion/entrenar`,
-        {method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({})
+  async proyectar() {
+    const meses = document.getElementById('mesesInput').value;
+    this.showProgress(60);
+    try {
+        const r = await fetch(`${this.baseUrl}/prediccion/proyectar?meses=${meses}`);
+        const js = await r.json();
+        this.hideProgress();
+
+        if(!js.ok) throw new Error(js.error || 'Error en proyección');
+
+        window.__lastPrediction = js.proyecciones;
+        this.renderResults(js.proyecciones);
+        this.addToHistory(js.proyecciones);
+        setTimeout(()=> this.resultsSection.scrollIntoView({behavior:'smooth'}), 200);
+    } catch(e) {
+        this.hideProgress();
+        alert(e.message || e);
+    }
+  }
+
+  async analizarMesEspecifico(){
+    const mes = Number(document.getElementById('selMes').value);
+    const anio = Number(document.getElementById('selAnio').value);
+
+    try {
+      const r = await fetch(`${this.baseUrl}/prediccion/analizar-mes?mes=${mes}&anio=${anio}`);
+      const js = await r.json();
+      if (js.ok) {
+        const dto = {
+          anio, mes,
+          produccion: js.produccion ?? 0,
+          rango_min: js.rango_min ?? Math.round((js.produccion||0)*0.9),
+          rango_max: js.rango_max ?? Math.round((js.produccion||0)*1.1),
+          dotacion: js.dotacion ?? js.dot ?? '-',
+          factor: js.factor ?? '1.00',
+          estado: js.estado || 'ok'
+        };
+        this.renderResults([dto]);
+        window.__lastPrediction = [dto];
+        return;
+      }
+    } catch(e) { console.warn('analizar-mes error', e); }
+
+    // Fallback historial
+    if (!this.lastHistoryData) { alert("No hay datos históricos cargados."); return; }
+    const etiqueta = `${anio}-${String(mes).padStart(2,'0')}`;
+    const found = this.lastHistoryData.find(d => d.etiqueta === etiqueta);
+    if (found) {
+      const dto = {
+        anio: found.anio,
+        mes: found.mes,
+        produccion: found.valor,
+        rango_min: Math.round(found.valor*0.9),
+        rango_max: Math.round(found.valor*1.1),
+        dotacion: '-', factor: '1.00', estado: found.estado || 'ok'
+      };
+      this.renderResults([dto]);
+      window.__lastPrediction = [dto];
+    } else {
+      alert("No se encontró el periodo en el historial.");
+    }
+  }
+
+  renderResults(lista) {
+    this.tableBody.innerHTML = '';
+    lista.forEach(p => {
+        let badge = `<span class="badge-status bg-soft-success">ADECUADO</span>`;
+        const estadoNorm = (p.estado || '').toString().toLowerCase();
+        if(estadoNorm === 'sobre') badge = `<span class="badge-status bg-soft-danger">SOBREDOTACIÓN</span>`;
+        if(estadoNorm === 'sub')   badge = `<span class="badge-status bg-soft-warning">SUBDOTACIÓN</span>`;
+
+        const tr = `
+            <tr>
+                <td class="ps-3 fw-bold text-dark">${p.anio}-${String(p.mes).padStart(2,'0')}</td>
+                <td>${p.produccion}</td>
+                <td class="text-muted small">${p.rango_min} - ${p.rango_max}</td>
+                <td class="text-primary fw-bold">${p.dotacion} Pers.</td>
+                <td><span class="badge bg-light text-dark border">${p.factor}x</span></td>
+                <td>${badge}</td>
+            </tr>
+        `;
+        this.tableBody.innerHTML += tr;
+    });
+    this.resultsSection.classList.remove('d-none');
+  }
+
+  addToHistory(lista) {
+      const inicio = lista[0];
+      const fin = lista[lista.length-1];
+      const resumen = `${inicio.anio}-${String(inicio.mes).padStart(2,'0')} → ${fin.anio}-${String(fin.mes).padStart(2,'0')}`;
+      
+      this.predictions.unshift({ id: Date.now(), date: new Date().toLocaleDateString(), resumen: resumen });
+      localStorage.setItem('staffPredictions', JSON.stringify(this.predictions));
+      this.renderHistory();
+      this.updateMetrics();
+  }
+
+  renderHistory() {
+      if(!this.predictions.length) {
+          this.historyContainer.innerHTML = '<div class="text-center text-muted py-3 small">Sin historial reciente.</div>';
+          return;
+      }
+      this.historyContainer.innerHTML = this.predictions.slice(0, 6).map(p => `
+          <div class="history-item">
+              <div class="history-icon"><i class="fas fa-magic"></i></div>
+              <div>
+                  <div class="fw-bold text-dark" style="font-size: 0.9rem;">Proyección Generada</div>
+                  <div class="text-muted small">${p.resumen}</div>
+                  <div class="text-muted small" style="font-size: 0.75rem;">${p.date}</div>
+              </div>
+          </div>
+      `).join('');
+  }
+
+  updateMetrics() {
+      document.getElementById('totalPredictions').innerText = this.predictions.length;
+      if(this.predictions.length) document.getElementById('lastPrediction').innerText = this.predictions[0].date;
+  }
+
+  showProgress(pct) {
+      this.progressSection.classList.remove('d-none');
+      this.progressBar.style.width = pct + '%';
+      this.progressText.innerText = pct + '%';
+  }
+  hideProgress() { this.progressSection.classList.add('d-none'); }
+
+  /* ========== DESCARGA PDF ========== */
+  async descargarPDF(){
+    const btn = document.getElementById('btnDescargarPDF');
+    const originalText = btn.innerHTML; 
+
+    if (!window.__lastPrediction || !window.__lastPrediction.length) {
+      alert("No hay proyección para exportar. Genera una proyección primero.");
+      return;
+    }
+
+    try {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando informe...';
+
+      const r = await fetch(`${this.baseUrl}/prediccion/reporte`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proyecciones: window.__lastPrediction })
       });
-s
-      const js=await r.json();
-      this.hideProgress();
-      if(!r.ok||!js.ok) throw new Error(js.error||js.mensaje||'Fallo al entrenar');
-      this.showAlert('success','Entrenamiento listo. Ahora puedes proyectar.');
-    }catch(e){
-      this.hideProgress(); this.showAlert('error','No se pudo entrenar: '+e.message);
+
+      if (!r.ok) {
+        const txt = await r.text();
+        throw new Error(txt || 'Error generando PDF');
+      }
+
+      const blob = await r.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Informe_Dotacion_${new Date().toISOString().slice(0,10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Error descargando PDF:", e);
+      alert("No se pudo generar el informe.");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
     }
-  }
-
-  async proyectar(){
-    try{
-      const anio=document.getElementById('anioInput').value.trim();
-      const mes=document.getElementById('mesInput').value.trim();
-      let url=`${URL_BASE}/prediccion/proyectar`;
-      const qs=[]; if(anio) qs.push('anio='+encodeURIComponent(anio)); if(mes) qs.push('mes='+encodeURIComponent(mes));
-      if(qs.length) url+='?'+qs.join('&');
-
-      this.showProgress('Proyectando…',40);
-      const r=await fetch(url); const js=await r.json(); this.hideProgress();
-      if(!r.ok||!js.ok) throw new Error(js.error||js.mensaje||'Fallo en proyección');
-
-      // Historial
-      const item={id:Date.now(),createdDate:new Date().toLocaleString('es-CL'),resumen:`${js.mes_base.anio}-${js.mes_base.mes} → ${js.mes_siguiente.anio}-${js.mes_siguiente.mes}`,estado:js.mes_siguiente.estado_modelo||js.mes_siguiente.estado_regla};
-      this.predictions.unshift(item); localStorage.setItem('staffPredictions',JSON.stringify(this.predictions));
-      this.renderPredictionHistory(); this.updateMetrics();
-
-      this.showResults(js);
-      this.showAlert('success','Predicción generada correctamente.');
-    }catch(e){
-      this.hideProgress(); this.showAlert('error',e.message);
-    }
-  }
-
-  showResults(js){
-    const est=(js.mes_siguiente.estado_modelo||js.mes_siguiente.estado_regla||'').toLowerCase();
-    const badge= est==='sobre' ? '<span class="badge bg-danger estado-badge">sobredotación</span>'
-               : est==='sub'   ? '<span class="badge bg-warning text-dark estado-badge">subdotación</span>'
-                               : '<span class="badge bg-success estado-badge">adecuado</span>';
-    const html=`
-      <div class="row">
-        <div class="col-md-4 mb-3">
-          <div class="result-card">
-            <h6 class="text-white-50">Mes base</h6>
-            <h4 class="text-white">${js.mes_base.anio}-${String(js.mes_base.mes).padStart(2,'0')}</h4>
-            <small class="text-white-50">capacidad óptima: ${js.mes_base.capacidad_optima.toFixed(2)}</small>
-          </div>
-        </div>
-        <div class="col-md-4 mb-3">
-          <div class="result-card success">
-            <h6 class="text-white-50">Mes siguiente</h6>
-            <h4 class="text-white">${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}</h4>
-            <small class="text-white-50">producción: ${js.mes_siguiente.produccion_total}</small>
-          </div>
-        </div>
-        <div class="col-md-4 mb-3">
-          <div class="result-card warning">
-            <h6 class="text-white-50">Estado</h6>
-            <h3 class="text-white">${badge}</h3>
-            <small class="text-white-50">reales: ${js.mes_siguiente.trabajadores_reales} • necesarios: ${js.mes_siguiente.trabajadores_necesarios}</small>
-          </div>
-        </div>
-      </div>`;
-    this.predictionResults.innerHTML=html;
-    this.resultsSection.classList.remove('d-none'); this.resultsSection.classList.add('fade-in');
-  }
-
-  renderPredictionHistory(){
-    if(this.predictions.length===0){
-      this.predictionHistory.innerHTML=`<div class="text-center text-muted py-5">
-        <i class="fas fa-crystal-ball fa-3x text-muted mb-3"></i>
-        <p class="fw-bold mb-1">No hay predicciones generadas aún</p>
-        <p class="small text-muted">Las predicciones aparecerán aquí una vez que las generes</p>
-      </div>`; return;
-    }
-    const toBadge=e=> e==='sobre' ? '<span class="badge bg-danger">sobre</span>' : e==='sub' ? '<span class="badge bg-warning text-dark">sub</span>' : '<span class="badge bg-success">ok</span>';
-    this.predictionHistory.innerHTML=this.predictions.map(p=>`
-      <div class="d-flex justify-content-between align-items-center p-3 mb-3 bg-light rounded border">
-        <div class="d-flex align-items-center">
-          <div class="me-3"><div class="bg-primary bg-opacity-10 rounded p-2"><i class="fas fa-crystal-ball text-primary"></i></div></div>
-          <div><p class="mb-1 fw-bold">${p.resumen}</p></div>
-        </div>
-        <div>${toBadge(p.estado)}</div>
-      </div>`).join('');
-  }
-
-  updateMetrics(){
-    this.totalPredEl.textContent=this.predictions.length;
-    this.lastPredEl.textContent=this.predictions[0]?.createdDate||'Sin predicciones';
-  }
-
-  showProgress(text='Procesando…',pct=20){
-    this.progressSection.classList.remove('d-none'); this.updateProgress(pct,text);
-    document.getElementById('predictionArea').classList.add('processing');
-  }
-  hideProgress(){ this.progressSection.classList.add('d-none'); this.updateProgress(0,''); document.getElementById('predictionArea').classList.remove('processing'); }
-  updateProgress(p,status){ this.progressBar.style.width=`${p}%`; this.progressText.textContent=`${p}%`; this.progressStatus.textContent=status||''; }
-  showAlert(type,message){
-    const id=Date.now();
-    const map={success:'alert-success',error:'alert-danger',info:'alert-info'};
-    const iconMap={success:'fa-check-circle',error:'fa-exclamation-triangle',info:'fa-info-circle'};
-    const cls=map[type]||'alert-info'; const icon=iconMap[type]||'fa-info-circle';
-    const html=`<div id="a-${id}" class="alert ${cls} alert-dismissible fade show mb-4" role="alert">
-      <i class="fas ${icon} me-2"></i>${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
-    this.alertContainer.insertAdjacentHTML('beforeend',html);
-    setTimeout(()=>{document.getElementById('a-'+id)?.remove();},5000);
   }
 }
-let predictor;
-document.addEventListener('DOMContentLoaded',()=>{ predictor=new StaffPredictionSystem(); });
-function generatePrediction(){ predictor.proyectar(); }
-function entrenarModelo(){ predictor.entrenar(); }
-function refreshPredictions(){ predictor.renderPredictionHistory(); predictor.updateMetrics(); predictor.showAlert('success','Datos actualizados'); }
-function showComingSoon(){ predictor.showAlert('info','Próximamente'); }
 
-
-// Almacena la última predicción y habilita botones sin modificar showResults original
-(function(){
-  const btnVer  = () => document.getElementById('btnVerReporte');
-  const btnPDF  = () => document.getElementById('btnDescargarPDF');
-  const btnXLSX = () => document.getElementById('btnDescargarXLSX');
-
-  // Parchear showResults para guardar predicción y habilitar botones
-  const _origShow = StaffPredictionSystem.prototype.showResults;
-  StaffPredictionSystem.prototype.showResults = function(js){
-    _origShow.call(this, js);
-    window.__lastPrediction = js; // disponible global para export
-    if (btnVer())  btnVer().disabled  = false;
-    if (btnPDF())  btnPDF().disabled  = false;
-    if (btnXLSX()) btnXLSX().disabled = false;
-  };
-
-  // Eventos botones 
-  document.addEventListener('DOMContentLoaded', ()=>{
-    btnVer()?.addEventListener('click', openReportModal);
-    btnPDF()?.addEventListener('click', downloadPDF);
-    btnXLSX()?.addEventListener('click', downloadXLSX);
-    document.getElementById('btnPDFModal')?.addEventListener('click', downloadPDF);
-    document.getElementById('btnXLSXModal')?.addEventListener('click', downloadXLSX);
-  });
-
-  let chartModalInstance = null;
-
-  function openReportModal(){
-    const js = window.__lastPrediction; if(!js) return;
-
-    // Resumen textual
-    const resumenHTML = `
-      <p class="mb-1"><strong>Resumen:</strong> ${js.resumen || '—'}</p>
-      <p class="mb-1"><strong>Base:</strong> ${js.mes_base.anio}-${String(js.mes_base.mes).padStart(2,'0')}
-        · Capacidad óptima: ${Number(js.mes_base.capacidad_optima||0).toFixed(2)}</p>
-      <p class="mb-1"><strong>Proyección:</strong> ${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}
-        · Producción ${js.mes_siguiente.produccion_total}
-        · Reales ${js.mes_siguiente.trabajadores_reales}
-        · Necesarios ${js.mes_siguiente.trabajadores_necesarios}</p>
-      <p class="text-muted small"><strong>Regla:</strong> ${js.reporte?.regla || '—'} · <strong>Nota:</strong> ${js.reporte?.notas || '—'}</p>
-    `;
-    document.getElementById('predictionSummary').innerHTML = resumenHTML;
-
-    // Gráfico
-    try{
-      const ctx = document.getElementById('empleadosChartModal').getContext('2d');
-      if(chartModalInstance){ chartModalInstance.destroy(); }
-      chartModalInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: js.serie_empleados?.labels || [],
-          datasets: [
-            { label: 'Trabajadores reales', data: js.serie_empleados?.reales || [], tension: 0.3 },
-            { label: 'Trabajadores necesarios', data: js.serie_empleados?.necesarios || [], tension: 0.3 }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: 'top' } },
-          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
-        }
-      });
-    }catch(e){ console.warn('No se pudo renderizar el gráfico', e); }
-
-    // Mostrar modal
-    const modalEl = document.getElementById('reporteModal');
-    const bsModal = new bootstrap.Modal(modalEl);
-    bsModal.show();
-  }
-
-  function downloadPDF(){
-    const js = window.__lastPrediction; if(!js) return;
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-
-    doc.setFontSize(14);
-    doc.text('Reporte de Predicción de Dotación', 40, 40);
-
-    const txt = [
-      js.resumen || '—',
-      `Base: ${js.mes_base.anio}-${String(js.mes_base.mes).padStart(2,'0')} · Capacidad óptima: ${Number(js.mes_base.capacidad_optima||0).toFixed(2)}`,
-      `Proyección: ${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')} · Producción ${js.mes_siguiente.produccion_total} · Reales ${js.mes_siguiente.trabajadores_reales} · Necesarios ${js.mes_siguiente.trabajadores_necesarios}`,
-      `Regla: ${js.reporte?.regla || '—'} · Nota: ${js.reporte?.notas || '—'}`
-    ].join('\n');
-
-    doc.setFontSize(11);
-    const y0 = 70;
-    const lines = doc.splitTextToSize(txt, 515);
-    doc.text(lines, 40, y0);
-
-    const canvas = document.getElementById('empleadosChartModal');
-    if (canvas) {
-      const dataURL = canvas.toDataURL('image/png', 1.0);
-      doc.addImage(dataURL, 'PNG', 40, y0 + lines.length*14 + 14, 515, 260);
-    }
-
-    const fileName = `reporte_prediccion_${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}.pdf`;
-    doc.save(fileName);
-  }
-
-  function downloadXLSX(){
-    const js = window.__lastPrediction; if(!js) return;
-
-    const rowsResumen = [
-      ['Reporte de Predicción de Dotación', ''],
-      ['Mes base', `${js.mes_base.anio}-${String(js.mes_base.mes).padStart(2,'0')}`],
-      ['Capacidad óptima (base)', Number(js.mes_base.capacidad_optima||0)],
-      ['Mes proyectado', `${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}`],
-      ['Producción esperada', js.mes_siguiente.produccion_total],
-      ['Trabajadores reales', js.mes_siguiente.trabajadores_reales],
-      ['Trabajadores necesarios', js.mes_siguiente.trabajadores_necesarios],
-      ['Estado', js.mes_siguiente.estado_regla || js.mes_siguiente.estado_modelo || ''],
-      ['Regla', js.reporte?.regla || ''],
-      ['Notas', js.reporte?.notas || '']
-    ];
-
-    const header = ['Mes', 'Reales', 'Necesarios'];
-    const tabla = (js.serie_empleados?.labels || []).map((lab, i) => [
-      lab,
-      js.serie_empleados.reales?.[i] ?? null,
-      js.serie_empleados.necesarios?.[i] ?? null
-    ]);
-
-    const wb = XLSX.utils.book_new();
-    const ws1 = XLSX.utils.aoa_to_sheet(rowsResumen);
-    const ws2 = XLSX.utils.aoa_to_sheet([header, ...tabla]);
-
-    XLSX.utils.book_append_sheet(wb, ws1, 'Resumen');
-    XLSX.utils.book_append_sheet(wb, ws2, 'SerieEmpleados');
-
-    const file = `reporte_prediccion_${js.mes_siguiente.anio}-${String(js.mes_siguiente.mes).padStart(2,'0')}.xlsx`;
-    XLSX.writeFile(wb, file);
-  }
-})();
+// Inicialización
+let app;
+document.addEventListener('DOMContentLoaded', () => { app = new StaffPredictionSystem(); });
 </script>
-
-<!-- === Modal de reporte === -->
-<div class="modal fade" id="reporteModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-xl modal-dialog-scrollable">
-    <div class="modal-content bg-dark text-light">
-      <div class="modal-header">
-        <h5 class="modal-title">
-          <i class="fas fa-file-alt me-2"></i>Reporte de predicción
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body">
-        <div class="mb-3">
-          <canvas id="empleadosChartModal" height="140"></canvas>
-        </div>
-        <div id="predictionSummary" class="text-muted"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline-danger" id="btnPDFModal">
-          <i class="fas fa-file-pdf me-1"></i> Descargar PDF
-        </button>
-        <button class="btn btn-outline-success" id="btnXLSXModal">
-          <i class="fas fa-file-excel me-1"></i> Descargar XLSX
-        </button>
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
