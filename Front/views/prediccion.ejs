@@ -260,8 +260,6 @@
     </div>
 
 <script>
-/* ========== LÓGICA JAVASCRIPT ========= */
-
 class StaffPredictionSystem {
   constructor(){
     this.progressSection = document.getElementById('progressSection');
@@ -605,6 +603,46 @@ class StaffPredictionSystem {
 // Inicialización
 let app;
 document.addEventListener('DOMContentLoaded', () => { app = new StaffPredictionSystem(); });
+
+window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/perfil', {
+                    method: 'GET',
+                    credentials: 'include', 
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    const textoError = await response.text();
+                    console.error("Error del servidor:", textoError);
+                    console.warn("El sistema intentó desloguearte por el error de arriba.");
+                    
+                    window.location.href = 'login.html'; 
+                    return;
+                }
+                const usuario = await response.json();
+                if (usuario.nombre && usuario.apellido) {
+                    const welcomeMsg = document.getElementById('welcomeMessage');
+                    if(welcomeMsg) welcomeMsg.innerText = `${usuario.nombre} ${usuario.apellido}`;
+                }
+                if (typeof cargarMandantes === 'function') cargarMandantes();
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+        async function logout() {
+            try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
+            try { sessionStorage.clear(); localStorage.clear(); } catch (e) {}
+            try {
+                document.cookie.split(';').forEach(c => {
+                    const eqPos = c.indexOf('=');
+                    const name = (eqPos > -1 ? c.substring(0, eqPos) : c).trim();
+                    if (name) document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                });
+            } catch (e) {}
+            window.location.replace('login.html');
+        }
 </script>
 
 </body>
