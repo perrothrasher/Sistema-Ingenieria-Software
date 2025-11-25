@@ -141,7 +141,7 @@ async function entrenarModeloInterno(db) {
     fecha_entrenamiento: new Date()
   };
 
-  await query(db, "TRUNCATE TABLE modelo_prediccion");
+  await query(db, "DELETE FROM modelo_prediccion");
   await query(db, "INSERT INTO modelo_prediccion SET ?", [modeloData]);
 
   console.log("[IA] Modelo guardado. Último dato real:", ultimo.anio, ultimo.mes);

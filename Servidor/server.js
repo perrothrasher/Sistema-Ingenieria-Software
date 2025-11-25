@@ -85,7 +85,7 @@ const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesP
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
-const { listarMandantes, registrarMandante, eliminarMandante} = require('./JS Llamadas/mandantes.js');
+const { listarMandantes, registrarMandante, eliminarMandante, editarMandante, recuperarNombreAnterior} = require('./JS Llamadas/mandantes.js');
 const { añadirUsuario, listarUsuarios, eliminarUsuario} = require('./JS Llamadas/usuarios.js');
 const {registrarProduccionMasiva} = require('./JS Llamadas/servicios.js');
 const {obtenerKPIs, obtenerDatosGraficos} = require('./JS Llamadas/dashboard.js');
@@ -185,6 +185,10 @@ app.get('/get-mandantes', listarMandantes);
 app.post('/registrar-mandante', verificarToken, registrarMandante);
 // Ruta para eliminar un mandante
 app.delete('/eliminar-mandante/:id', verificarToken, eliminarMandante);
+// Ruta para editar un mandante
+app.put('/editar-mandante/:id', verificarToken, editarMandante);
+// Ruta para recuperar el nombre anterior de un mandante
+app.get('/recuperar-nombre/:id', verificarToken, recuperarNombreAnterior);
 /////////////////////////////////////////////////
 
 // USUARIOS DE PRENDAS

@@ -233,6 +233,40 @@
             </form>
         </div>
         </div>
+    </div>
+
+    <div class="modal fade" id="modalEditarMandante" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Editar Mandante</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <form id="formEditarMandante">
+                    <div class="modal-body">
+                        <input type="hidden" id="editId">
+                        <input type="hidden" id="editNombreOriginal">
+
+                        <div class="mb-3">
+                            <label for="editNombre" class="form-label fw-bold">Nombre del Cliente</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="editNombre" required>
+                                <button class="btn btn-secondary" type="button" onclick="restaurarDesdeHistorial()" title="Restaurar nombre original">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="btnGuardarEdicion">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         async function logout() {
             try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
@@ -301,7 +335,7 @@
                             </td>
                             <td>
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-action btn-edit" onclick="editarMandante(${mandante.id})" title="Editar">
+                                    <button type="button" class="btn btn-action btn-edit" onclick="editarMandante(${mandante.id}, '${mandante.nombre}')" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button type="button" class="btn btn-action btn-info text-white" onclick="verDetalle(${mandante.id})" title="Ver Detalle" style="background-color: #2C62C7">
@@ -385,6 +419,31 @@
             }
         })
 
+        document.getElementById('formEditarMandante').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editId').value;
+            const nombre = document.getElementById('editNombre').value;
+
+            try {
+                const response = await fetch(`/editar-mandante/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre }),
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    alert('Mandante actualizado');
+                    cargarMandantes(); // Recargar tabla
+                    // Cerrar modal...
+                } else {
+                    alert('Error al actualizar');
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
+
         async function eliminarMandante(id){
             if(confirm("¿Estás seguro de que deseas eliminar este cliente? Esta acción no se puede deshacer.")){
                 try{
@@ -444,6 +503,100 @@
                 console.error('Error:', error);
             }
         });
+
+        function editarMandante(id, nombreActual) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editNombre').value = nombreActual;
+            document.getElementById('editNombreOriginal').value = nombreActual; 
+
+            const modalElement = document.getElementById('modalEditarMandante');
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        }
+
+        document.getElementById('formEditarMandante').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('editId').value;
+            const nuevoNombre = document.getElementById('editNombre').value;
+            const btnGuardar = document.getElementById('btnGuardarEdicion');
+            
+            const textoOriginal = btnGuardar.innerHTML;
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+            try {
+                const response = await fetch(`/editar-mandante/${id}`, { 
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ nombre: nuevoNombre }),
+                    credentials: 'include' 
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    btnGuardar.innerHTML = '<i class="fas fa-check"></i> Guardado';
+                    btnGuardar.classList.remove('btn-primary');
+                    btnGuardar.classList.add('btn-success');
+
+                    setTimeout(() => {
+                        const modalElement = document.getElementById('modalEditarMandante');
+                        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                        if (modalInstance) modalInstance.hide();
+                        cargarMandantes();
+                        btnGuardar.disabled = false;
+                        btnGuardar.innerHTML = 'Guardar Cambios';
+                        btnGuardar.classList.remove('btn-success');
+                        btnGuardar.classList.add('btn-primary');
+                    }, 1000);
+
+                } else {
+                    throw new Error(data.message || "Error al actualizar");
+                }
+
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error al editar: " + error.message);
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = textoOriginal;
+            }
+        });
+
+        async function restaurarDesdeHistorial() {
+            const id = document.getElementById('editId').value;
+            const inputNombre = document.getElementById('editNombre');
+            
+            const originalIcon = inputNombre.nextElementSibling.innerHTML;
+            inputNombre.nextElementSibling.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const response = await fetch(`/recuperar-nombre/${id}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    inputNombre.value = data.nombre;
+                    
+                    inputNombre.style.backgroundColor = "#fff3cd";
+                    setTimeout(() => inputNombre.style.backgroundColor = "", 1000);
+                    
+                } else {
+                    alert(data.message || "No se encontró un nombre anterior.");
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("Error al consultar el historial.");
+            } finally {
+                inputNombre.nextElementSibling.innerHTML = originalIcon;
+            }
+        }
     </script>
 </body>
 </html>
