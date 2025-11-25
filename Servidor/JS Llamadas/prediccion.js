@@ -1,4 +1,3 @@
-// prediccion.js (COMPLETO Y CORREGIDO)
 const { Router } = require('express');
 const PDFDocument = require('pdfkit');
 const router = Router();
@@ -14,6 +13,7 @@ function getDB(reqOrApp) {
   if (reqOrApp.locals) return reqOrApp.locals.db;
   return null;
 }
+
 async function query(db, sql, params = []) {
   const [rows] = await db.query(sql, params);
   return rows;
@@ -34,54 +34,32 @@ function calcularRegresion(puntos) {
   return { m, b };
 }
 
-// Productividad base: promedio por trabajador (solo justificacion_id = 0)
+// --- CORRECCIÓN 1: CÁLCULO DE PRODUCTIVIDAD ROBUSTO ---
+// Usamos un promedio global ponderado en lugar de (Min+Max)/2
 async function calcularProductividadBase(db) {
   try {
+    // Calculamos el promedio de folios por mes, filtrando meses vacíos o justificados
     const sql = `
-      SELECT
-        p.usuarioPrendas_id AS usuario,
-        SUM(p.cantidadFolios) AS total,
-        COUNT(DISTINCT CONCAT(p.anio,'-',LPAD(p.mes,2,'0'))) AS meses_activos,
-        (SUM(p.cantidadFolios) / NULLIF(COUNT(DISTINCT CONCAT(p.anio,'-',LPAD(p.mes,2,'0'))),0)) AS promedio_mensual
-      FROM produccion p
-      WHERE (p.justificacion_id = 0 OR p.justificacion_id IS NULL)
-      GROUP BY p.usuarioPrendas_id
-      HAVING total > 0
+      SELECT AVG(mensual) as promedio_global FROM (
+          SELECT SUM(cantidadFolios) as mensual 
+          FROM produccion 
+          WHERE (justificacion_id = 0 OR justificacion_id IS NULL)
+          GROUP BY usuarioPrendas_id, anio, mes
+          HAVING mensual > 0
+      ) t
     `;
     const rows = await query(db, sql);
-    if (!rows || rows.length === 0) {
-      const r2 = await query(db, `
-        SELECT AVG(total) AS prom FROM (
-          SELECT SUM(cantidadFolios) AS total FROM produccion GROUP BY anio, mes
-        ) tmp
-      `);
-      const fallback = (r2 && r2[0] && r2[0].prom) ? Number(r2[0].prom) : 500;
-      return Math.round(fallback);
+    
+    let base = 500; // Valor fallback conservador
+    if (rows && rows.length > 0 && rows[0].promedio_global) {
+        base = Number(rows[0].promedio_global);
     }
-    let maxVal = -Infinity, minVal = Infinity;
-    for (const r of rows) {
-      const v = Number(r.promedio_mensual || 0);
-      if (v > maxVal) maxVal = v;
-      if (v < minVal) minVal = v;
-    }
-    if (!isFinite(maxVal) || !isFinite(minVal)) {
-      const fallbackAvg = rows.reduce((a,b)=>a+Number(b.promedio_mensual||0),0)/rows.length;
-      return Math.round(fallbackAvg);
-    }
-    const productBase = (maxVal + minVal) / 2;
-    return Math.max(1, Math.round(productBase));
+    
+    // Forzamos un mínimo de 100 para evitar divisiones por cero o números absurdos
+    return Math.max(100, Math.round(base));
   } catch (e) {
-    try {
-      const r2 = await query(db, `
-        SELECT AVG(total) AS prom FROM (
-          SELECT SUM(cantidadFolios) AS total FROM produccion GROUP BY anio, mes
-        ) tmp
-      `);
-      const fallback = (r2 && r2[0] && r2[0].prom) ? Number(r2[0].prom) : 500;
-      return Math.round(fallback);
-    } catch(_) {
-      return 500;
-    }
+    console.error("Error calculando productividad:", e);
+    return 500;
   }
 }
 
@@ -106,9 +84,9 @@ async function getLastRecordedDate(db) {
   return rows[0];
 }
 
-// Entrenar modelo (tendencia y estacionalidad)
+// Entrenar modelo (tendencia y estacionalidad - GLOBAL)
 async function entrenarModeloInterno(db) {
-  console.log("[IA] Entrenando modelo...");
+  console.log("[IA] Entrenando modelo global...");
   const sqlHistoria = `
     SELECT anio, mes, SUM(cantidadFolios) AS produccion_total
     FROM produccion
@@ -158,8 +136,8 @@ async function entrenarModeloInterno(db) {
     factores_json: JSON.stringify(factoresFinales),
     productividad_base: productividad_base,
     ultimo_indice: ultimoX,
-    ultimo_anio: ultimo.anio, // IMPORTANTE: Guarda dónde termina la realidad
-    ultimo_mes: ultimo.mes,   // IMPORTANTE: Guarda dónde termina la realidad
+    ultimo_anio: ultimo.anio,
+    ultimo_mes: ultimo.mes,
     fecha_entrenamiento: new Date()
   };
 
@@ -171,21 +149,23 @@ async function entrenarModeloInterno(db) {
 }
 
 async function getModeloGuardado(db) {
-  const rows = await query(db, `SELECT * FROM modelo_prediccion ORDER BY id_modelo DESC LIMIT 1`);
+  const rows = await query(db, "SELECT * FROM modelo_prediccion ORDER BY id_modelo DESC LIMIT 1");
   return rows && rows.length ? rows[0] : null;
 }
 
 // Polling (Detección de cambios y auto-entrenamiento)
 let lastProductionChecksum = null;
 let pollingStarted = false;
+
 async function computeProductionChecksum(db) {
   // Checksum simple: Cantidad de filas + Fecha máxima + ID máximo
-  const rows = await query(db, `SELECT COUNT(*) AS cnt, MAX(fecha_registro) AS max_date, MAX(id) AS max_id FROM produccion`);
+  const rows = await query(db, "SELECT COUNT(*) AS cnt, MAX(fecha_registro) AS max_date, MAX(id) AS max_id FROM produccion");
   if (!rows || !rows.length) return null;
   const r = rows[0];
   const datePart = r.max_date ? (r.max_date.toISOString ? r.max_date.toISOString() : r.max_date) : '';
   return `${r.cnt}|${datePart}|${r.max_id||0}`;
 }
+
 async function startPollingForChanges(app) {
   if (pollingStarted) return;
   pollingStarted = true;
@@ -238,70 +218,128 @@ router.get('/analizar-mes', async (req, res) => {
   try {
     const mes = Number(req.query.mes);
     const anio = Number(req.query.anio);
-    const rows = await query(db, `SELECT SUM(cantidadFolios) AS total FROM produccion WHERE mes = ? AND anio = ?`, [mes, anio]);
+    const rows = await query(db, "SELECT SUM(cantidadFolios) AS total FROM produccion WHERE mes = ? AND anio = ?", [mes, anio]);
     const total = (rows && rows[0] && rows[0].total) ? Number(rows[0].total) : 0;
     const productividad_base = await calcularProductividadBase(db);
+    
     const dot = productividad_base > 0 ? Math.ceil(total / productividad_base) : 0;
     const exacto = productividad_base > 0 ? (total / productividad_base) : 0;
-    let estado = 'ok';
-    if (dot > exacto * 1.15) estado = 'sobre';
-    else if (dot < exacto * 0.85) estado = 'sub';
+    const desperdicio = dot - exacto;
+
+    let estado = 'ADECUADO';
+    if (dot > 0) {
+        if (exacto > dot) estado = 'SUBDOTACIÓN';
+        else if (desperdicio > 0.6) estado = 'SOBREDOTACIÓN'; 
+    }
+    
     res.json({ ok:true, produccion: total, dotacion: dot, estado });
   } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
 });
 
-// PROYECTAR (CORREGIDO PARA INICIAR DESDE FIN DEL ENTRENAMIENTO)
+// --- CORRECCIÓN 2: PROYECCIÓN DINÁMICA ---
 router.get('/proyectar', async (req, res) => {
   const db = getDB(req);
   if (!db) return res.status(500).json({ ok:false, error: "DB no conectada" });
   try {
-    let mod = await getModeloGuardado(db);
-    if (!mod) {
-      // entrenar si no existe modelo
-      await entrenarModeloInterno(db);
-      mod = await getModeloGuardado(db);
-      if (!mod) return res.status(400).json({ ok:false, error: "Modelo inicializando" });
-    }
-
-    const factores = JSON.parse(mod.factores_json || "{}");
     const nMeses = parseInt(req.query.meses) || 1;
-    const proy = [];
-
-    // --- LÓGICA CORREGIDA ---
-    // Usamos el último año/mes que el modelo "conoce" por su entrenamiento.
-    // Esto evita saltar a fechas futuras basura en la DB.
-    let lastAnio = Number(mod.ultimo_anio);
-    let lastMes = Number(mod.ultimo_mes);
-
-    // Fallback: Si el modelo es muy antiguo y no tiene esos campos, consultamos DB (último recurso)
-    if (!lastAnio || !lastMes) {
-         const ultimoReal = await getLastRecordedDate(db);
-         lastAnio = Number(ultimoReal.anio);
-         lastMes = Number(ultimoReal.mes);
-    }
     
-    // Convertimos a índice lineal X
-    let x = (lastAnio * 12) + lastMes;
-    // ------------------------
+    // 1. Detectar filtros
+    const { mandante, servicio, usuario } = req.query;
+    const tieneFiltros = (mandante || servicio || usuario);
 
-    for (let i=0;i<nMeses;i++) {
-      // avanzar calendario al siguiente mes para proyectar
+    let m = 0, b = 0, productividad_base = 0;
+    let lastAnio = 0, lastMes = 0;
+
+    // A) ESTRATEGIA CON FILTROS (Calculo On-the-fly)
+    if (tieneFiltros) {
+        const where = ["1=1"];
+        const params = [];
+        if (mandante) { where.push("p.cliente_id = ?"); params.push(mandante); }
+        if (servicio) { where.push("p.tipoServicio_id = ?"); params.push(servicio); }
+        if (usuario) {
+            if (/^\d+$/.test(String(usuario))) { where.push("p.usuarioPrendas_id = ?"); params.push(usuario); }
+            else { where.push("(up.primer_nombre LIKE ? OR up.primer_apellido LIKE ?)"); params.push("%"+usuario+"%", "%"+usuario+"%"); }
+        }
+        const needJoinUsu = (usuario && !/^\d+$/.test(String(usuario)));
+        
+        const sqlHist = `
+            SELECT p.anio, p.mes, SUM(p.cantidadFolios) AS total
+            FROM produccion p
+            ${needJoinUsu ? "INNER JOIN usuarioprendas up ON up.id = p.usuarioPrendas_id" : ""}
+            WHERE ${where.join(" AND ")}
+            GROUP BY p.anio, p.mes
+            ORDER BY p.anio ASC, p.mes ASC
+        `;
+        const rows = await query(db, sqlHist, params);
+        
+        if (!rows || rows.length < 2) {
+             return res.json({ ok:true, proyecciones: [] }); // No hay datos suficientes para proyectar filtrado
+        }
+
+        const puntos = rows.map(r => ({ x: (r.anio * 12) + r.mes, y: Number(r.total) }));
+        const reg = calcularRegresion(puntos);
+        m = reg.m;
+        b = reg.b;
+        
+        const ultimo = rows[rows.length - 1];
+        lastAnio = ultimo.anio;
+        lastMes = ultimo.mes;
+        
+        // Productividad base global (mas seguro para decisiones de contratación)
+        productividad_base = await calcularProductividadBase(db);
+
+    } 
+    // B) ESTRATEGIA GLOBAL (Modelo Guardado)
+    else {
+        let mod = await getModeloGuardado(db);
+        if (!mod) {
+          await entrenarModeloInterno(db);
+          mod = await getModeloGuardado(db);
+        }
+        if (!mod) return res.status(400).json({ ok:false, error: "Modelo inicializando" });
+        
+        m = Number(mod.pendiente);
+        b = Number(mod.intercepto);
+        lastAnio = Number(mod.ultimo_anio);
+        lastMes = Number(mod.ultimo_mes);
+        productividad_base = Number(mod.productividad_base);
+        
+        // Fallback si el modelo guardado no tiene fechas (modelos viejos)
+        if (!lastAnio) {
+            const ultimoReal = await getLastRecordedDate(db);
+            lastAnio = Number(ultimoReal.anio);
+            lastMes = Number(ultimoReal.mes);
+        }
+    }
+
+    const proy = [];
+    let x = (lastAnio * 12) + lastMes;
+
+    for (let i=0; i<nMeses; i++) {
       lastMes++;
       if (lastMes > 12) { lastMes = 1; lastAnio++; }
-      x = x + 1;
+      x++;
 
-      // Calcular predicción
-      const tendencia = (mod.pendiente * x) + Number(mod.intercepto);
-      const factor = (factores[lastMes] !== undefined) ? Number(factores[lastMes]) : 1;
-      const estimado = Math.max(0, tendencia * factor);
+      let estimado = (m * x) + b;
+      
+      // Factor estacional (Usamos semilla global)
+      const factorMes = EVENTOS_SEMILLA[lastMes] || 1.0; 
+      estimado = Math.max(0, estimado * factorMes);
 
-      // Calcular dotación sugerida
-      const productividad_base = Number(mod.productividad_base || (await calcularProductividadBase(db)));
+      // --- CORRECCIÓN 3: LÓGICA DE ESTADO ---
       const dot = productividad_base > 0 ? Math.ceil(estimado / productividad_base) : 0;
       const exacto = productividad_base > 0 ? (estimado / productividad_base) : 0;
-      let estado = 'ok';
-      if (dot > exacto * 1.15) estado = 'sobre';
-      else if (dot < exacto * 0.85) estado = 'sub';
+      const desperdicio = dot - exacto;
+
+      let estado = 'ADECUADO';
+      if (dot > 0) {
+          if (exacto > dot) {
+              estado = 'SUBDOTACIÓN';
+          } else if (desperdicio > 0.6) { 
+              // Solo es sobredotación si sobra mas del 60% de una persona
+              estado = 'SOBREDOTACIÓN'; 
+          }
+      }
 
       proy.push({
         anio: lastAnio,
@@ -310,21 +348,25 @@ router.get('/proyectar', async (req, res) => {
         rango_min: Math.round(estimado * 0.9),
         rango_max: Math.round(estimado * 1.1),
         dotacion: dot,
-        factor: factor.toFixed(2),
+        factor: factorMes.toFixed(2),
         estado
       });
     }
 
-    // Guardar historial para auditoría (opcional)
-    if (proy.length) {
-      const resumen = `${proy[0].anio}-${String(proy[0].mes).padStart(2,'0')} → ${proy[proy.length-1].anio}-${String(proy[proy.length-1].mes).padStart(2,'0')}`;
+    // Historial (opcional, solo para global)
+    if (proy.length && !tieneFiltros) {
+      const resumen = `${proy[0].anio}-${String(proy[0].mes).padStart(2,'0')} -> ${proy[proy.length-1].anio}-${String(proy[proy.length-1].mes).padStart(2,'0')}`;
       try {
         await query(db, "INSERT INTO historial_proyecciones (fecha, resumen, json_resultado) VALUES (NOW(), ?, ?)", [resumen, JSON.stringify(proy)]);
-      } catch(e) { /* ignore */ }
+      } catch(e) {}
     }
 
     res.json({ ok:true, proyecciones: proy });
-  } catch(e) { res.status(500).json({ ok:false, error: e.message }); }
+
+  } catch(e) { 
+    console.error(e);
+    res.status(500).json({ ok:false, error: e.message }); 
+  }
 });
 
 // GRAFICO FILTRADO
@@ -359,9 +401,15 @@ router.post('/grafico-filtrado', async (req, res) => {
       const anioN = Number(r.anio), mesN = Number(r.mes), valor = Number(r.valor || 0);
       const dot = productividad_base > 0 ? Math.ceil(valor / productividad_base) : 0;
       const exacto = productividad_base > 0 ? (valor / productividad_base) : 0;
-      let estado = 'ok';
-      if (dot > exacto * 1.15) estado = 'sobre';
-      else if (dot < exacto * 0.85) estado = 'sub';
+      
+      // Misma lógica de estado corregida
+      const desperdicio = dot - exacto;
+      let estado = 'ADECUADO';
+      if (dot > 0) {
+          if (exacto > dot) estado = 'SUBDOTACIÓN';
+          else if (desperdicio > 0.6) estado = 'SOBREDOTACIÓN'; 
+      }
+
       return { etiqueta: r.etiqueta, valor: valor, anio: anioN, mes: mesN, estado };
     });
 
@@ -376,9 +424,9 @@ router.get('/filtros-info', async (req, res) => {
   const db = getDB(req);
   if (!db) return res.json({ mandantes:[], servicios:[], usuarios:[] });
   try {
-    const mandantes = await query(db, `SELECT id, nombre FROM cliente ORDER BY nombre`);
-    const servicios = await query(db, `SELECT id, NombreServicio AS nombre FROM tiposervicio ORDER BY NombreServicio`);
-    const usuarios = await query(db, `SELECT id, CONCAT(primer_nombre, ' ', primer_apellido) AS nombre FROM usuarioprendas ORDER BY primer_nombre, primer_apellido`);
+    const mandantes = await query(db, "SELECT id, nombre FROM cliente ORDER BY nombre");
+    const servicios = await query(db, "SELECT id, NombreServicio AS nombre FROM tiposervicio ORDER BY NombreServicio");
+    const usuarios = await query(db, "SELECT id, CONCAT(primer_nombre, ' ', primer_apellido) AS nombre FROM usuarioprendas ORDER BY primer_nombre, primer_apellido");
     res.json({ mandantes, servicios, usuarios });
   } catch(e) { res.json({ mandantes:[], servicios:[], usuarios:[] }); }
 });
@@ -387,7 +435,7 @@ router.get('/filtros-info', async (req, res) => {
 router.get('/historial', async (req, res) => {
   const db = getDB(req);
   try {
-    const rows = await query(db, `SELECT id, fecha, resumen FROM historial_proyecciones ORDER BY fecha DESC`);
+    const rows = await query(db, "SELECT id, fecha, resumen FROM historial_proyecciones ORDER BY fecha DESC");
     res.json({ ok:true, historial: rows });
   } catch(e){ res.json({ ok:false, error: e.message }); }
 });
@@ -395,7 +443,7 @@ router.get('/historial', async (req, res) => {
 router.get('/historial/pdf/:id', async (req, res) => {
   const db = getDB(req);
   try {
-    const rows = await query(db, `SELECT archivo_pdf FROM historial_proyecciones WHERE id = ?`, [req.params.id]);
+    const rows = await query(db, "SELECT archivo_pdf FROM historial_proyecciones WHERE id = ?", [req.params.id]);
     if (!rows || !rows.length) return res.status(404).send("No encontrado");
     res.setHeader("Content-Type", "application/pdf");
     res.send(rows[0].archivo_pdf);
@@ -403,24 +451,21 @@ router.get('/historial/pdf/:id', async (req, res) => {
 });
 
 // Generar PDF
-// REEMPLAZAR SOLO LA RUTA '/reporte' EN prediccion.js
-
 router.post('/reporte', async (req, res) => {
   try {
     const proyecciones = req.body.proyecciones || [];
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
-    // Configurar respuesta HTTP
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=Informe_Dotacion_${new Date().toISOString().slice(0,10)}.pdf`);
     doc.pipe(res);
 
-    // --- 1. ENCABEZADO ---
+    // 1. ENCABEZADO
     doc.fillColor('#444444').fontSize(20).text('Informe de Proyección de Dotación', { align: 'center' });
     doc.fontSize(10).text(`Generado el: ${new Date().toLocaleString()}`, { align: 'center' });
     doc.moveDown(2);
 
-    // --- 2. RESUMEN EJECUTIVO ---
+    // 2. RESUMEN EJECUTIVO
     doc.fillColor('#000000').fontSize(12).font('Helvetica-Bold').text('Resumen Ejecutivo');
     doc.font('Helvetica').fontSize(10).moveDown(0.5);
     
@@ -433,12 +478,11 @@ router.post('/reporte', async (req, res) => {
              `Se recomienda ajustar los turnos según los rangos mínimos y máximos presentados a continuación para optimizar la productividad.`);
     doc.moveDown(2);
 
-    // --- 3. TABLA DE DATOS ---
+    // 3. TABLA DE DATOS
     doc.font('Helvetica-Bold').fontSize(10);
     
-    // Cabecera Tabla
     const tableTop = doc.y;
-    const colX = [50, 130, 230, 330, 430]; // Posiciones X de las columnas
+    const colX = [50, 130, 230, 330, 430];
     
     doc.text('Periodo', colX[0], tableTop);
     doc.text('Producción Est.', colX[1], tableTop);
@@ -452,7 +496,6 @@ router.post('/reporte', async (req, res) => {
     doc.font('Helvetica').fontSize(10);
 
     proyecciones.forEach(p => {
-        // Fondo alternado para filas
         if (proyecciones.indexOf(p) % 2 === 1) {
             doc.save().fillColor('#f5f5f5').rect(50, y - 5, 500, 20).fill().restore();
         }
@@ -465,22 +508,21 @@ router.post('/reporte', async (req, res) => {
         doc.text(rango, colX[2], y);
         doc.font('Helvetica-Bold').fillColor('#2980b9').text(`${p.dotacion} Pers.`, colX[3], y);
         
-        // Estado con color
         doc.font('Helvetica');
-        let colorEstado = '#27ae60'; // verde
-        if(p.estado === 'sobre') colorEstado = '#c0392b'; // rojo
-        if(p.estado === 'sub') colorEstado = '#d35400'; // naranja
+        let colorEstado = '#27ae60'; // verde (ADECUADO)
+        if(p.estado === 'SOBREDOTACIÓN') colorEstado = '#c0392b'; // rojo
+        if(p.estado === 'SUBDOTACIÓN') colorEstado = '#d35400'; // naranja
         
-        doc.fillColor(colorEstado).text(p.estado.toUpperCase(), colX[4], y);
+        doc.fillColor(colorEstado).text(p.estado, colX[4], y);
         
         y += 20;
     });
 
     doc.moveDown(3);
 
-    // --- 4. GRÁFICA DE DOTACIÓN (DIBUJO VECTORIAL) ---
+    // 4. GRÁFICA (Simplificada)
     if (proyecciones.length > 1) {
-        doc.addPage(); // Nueva página para el gráfico grande
+        doc.addPage(); 
         doc.fillColor('#000000').fontSize(14).font('Helvetica-Bold').text('Gráfica de Tendencia: Dotación Sugerida', { align: 'center' });
         doc.moveDown(2);
 
@@ -490,66 +532,45 @@ router.post('/reporte', async (req, res) => {
         const chartWidth = 450;
         const chartBottom = chartTop + chartHeight;
 
-        // Ejes
         doc.strokeColor('#000000').lineWidth(1)
-           .moveTo(chartLeft, chartTop).lineTo(chartLeft, chartBottom) // Eje Y
-           .lineTo(chartLeft + chartWidth, chartBottom) // Eje X
+           .moveTo(chartLeft, chartTop).lineTo(chartLeft, chartBottom) 
+           .lineTo(chartLeft + chartWidth, chartBottom)
            .stroke();
 
-        // Escalas
-        const maxVal = Math.ceil(Math.max(...proyecciones.map(p => p.dotacion)) * 1.2); // +20% margen arriba
+        const maxVal = Math.ceil(Math.max(...proyecciones.map(p => p.dotacion)) * 1.2); 
         const stepX = chartWidth / (proyecciones.length - 1);
 
-        // Dibujar Eje Y (Etiquetas y líneas guía)
         doc.fontSize(9).fillColor('#666666');
         for (let i = 0; i <= 5; i++) {
             const val = Math.round((maxVal / 5) * i);
             const yPos = chartBottom - ((val / maxVal) * chartHeight);
             doc.text(val.toString(), chartLeft - 25, yPos - 5, { width: 20, align: 'right' });
-            // Línea guía
             doc.strokeColor('#e0e0e0').lineWidth(0.5)
                .moveTo(chartLeft, yPos).lineTo(chartLeft + chartWidth, yPos).stroke();
         }
 
-        // Dibujar Línea de Tendencia
         doc.strokeColor('#2980b9').lineWidth(3).lineCap('round').lineJoin('round');
         
-        let prevX = 0, prevY = 0;
         proyecciones.forEach((p, i) => {
             const x = chartLeft + (i * stepX);
             const y = chartBottom - ((p.dotacion / maxVal) * chartHeight);
-            
-            if (i === 0) {
-                doc.moveTo(x, y);
-            } else {
-                doc.lineTo(x, y);
-            }
-            
-            // Guardar coordenadas para dibujar puntos después
-            p._x = x; 
-            p._y = y;
+            if (i === 0) doc.moveTo(x, y);
+            else doc.lineTo(x, y);
+            p._x = x; p._y = y;
         });
-        doc.stroke(); // Ejecutar trazo de línea
+        doc.stroke(); 
 
-        // Dibujar Puntos y Etiquetas X
         proyecciones.forEach((p, i) => {
-            // Punto
             doc.fillColor('#e74c3c').circle(p._x, p._y, 4).fill();
-            
-            // Etiqueta X (Mes)
             doc.fillColor('#000000').fontSize(8)
                .text(`${p.anio}-${p.mes}`, p._x - 15, chartBottom + 10, { width: 30, align: 'center' });
-            
-            // Etiqueta Valor sobre el punto
             doc.fillColor('#2980b9').fontSize(9).font('Helvetica-Bold')
                .text(p.dotacion.toString(), p._x - 10, p._y - 15, { width: 20, align: 'center' });
         });
     }
 
-    // Pie de página
     doc.fillColor('#999999').fontSize(8)
        .text('Este documento fue generado automáticamente por el sistema de IA.', 50, 750, { align: 'center', width: 500 });
-
     doc.end();
 
   } catch(e) {
@@ -558,7 +579,6 @@ router.post('/reporte', async (req, res) => {
   }
 });
 
-// Inicializador de auto-entrenamiento (exportado)
 function initAutoRetrain(app) {
   const db = getDB(app);
   if (!db) return console.warn("[IA] initAutoRetrain: no db");

@@ -158,7 +158,8 @@
                                 <% } %>
                             </select>
                             <select id="selAnio" class="form-select form-select-custom" style="width:50%">
-                                <% for(let a=2020;a<=2030;a++){ %>
+                                <!-- CAMBIO: Se ajustó el inicio del ciclo a 2023 -->
+                                <% for(let a=2023;a<=2030;a++){ %>
                                   <option value="<%= a %>"><%= a %></option>
                                 <% } %>
                             </select>
@@ -227,7 +228,6 @@
                                     <th class="ps-3">Periodo</th>
                                     <th>Producción Est.</th>
                                     <th>Rango (Min-Max)</th>
-                                    <th>Dotación Sugerida</th>
                                     <th>Factor Evento</th>
                                     <th>Estado</th>
                                 </tr>
@@ -280,7 +280,6 @@ class StaffPredictionSystem {
     this.cargarFiltros();
     this.initChart();
 
-    // Solo listener PDF
     const pdfBtn = document.getElementById('btnDescargarPDF');
     if (pdfBtn) pdfBtn.addEventListener('click', () => this.descargarPDF());
   }
@@ -351,33 +350,11 @@ class StaffPredictionSystem {
           };
         });
 
-        const metaBase = js.meta_base ? Number(js.meta_base) : null;
-        if (!this.lastHistoryData.some(x => x.estado)) {
-          const valores = this.lastHistoryData.map(x => x.valor);
-          const calculados = valores.map((v, i) => {
-             if(metaBase) {
-               const dot = Math.ceil(v / metaBase);
-               const exact = v / metaBase;
-               if (dot > exact * 1.15) return 'sobre';
-               if (dot < exact * 0.85) return 'sub';
-               return 'ok';
-             } else {
-               const windowStart = Math.max(0, i-2);
-               const subset = valores.slice(windowStart, i+1);
-               const avg = subset.reduce((a,b)=>a+b,0)/subset.length;
-               if (v > avg * 1.15) return 'sobre';
-               if (v < avg * 0.85) return 'sub';
-               return 'ok';
-             }
-          });
-          this.lastHistoryData = this.lastHistoryData.map((x, i) => ({ ...x, estado: calculados[i] }));
-        }
-
         const pointColors = this.lastHistoryData.map(x => {
           const s = (x.estado || 'ok').toString().toLowerCase();
-          if (s === 'sobre') return '#ef4444';
-          if (s === 'sub') return '#f59e0b';
-          return '#10b981';
+          if (s.includes('sobre')) return '#ef4444'; 
+          if (s.includes('sub')) return '#f59e0b'; 
+          return '#10b981'; 
         });
 
         const ctx = document.getElementById('mainHistoryChart').getContext('2d');
@@ -432,9 +409,21 @@ class StaffPredictionSystem {
 
   async proyectar() {
     const meses = document.getElementById('mesesInput').value;
+    
+    const mandante = document.getElementById('fMandante').value;
+    const servicio = document.getElementById('fServicio').value;
+    const usuario = document.getElementById('fUsuario').value;
+
     this.showProgress(60);
     try {
-        const r = await fetch(`${this.baseUrl}/prediccion/proyectar?meses=${meses}`);
+        const queryParams = new URLSearchParams({
+            meses: meses,
+            mandante: mandante,
+            servicio: servicio,
+            usuario: usuario
+        });
+
+        const r = await fetch(`${this.baseUrl}/prediccion/proyectar?${queryParams.toString()}`);
         const js = await r.json();
         this.hideProgress();
 
@@ -463,7 +452,6 @@ class StaffPredictionSystem {
           produccion: js.produccion ?? 0,
           rango_min: js.rango_min ?? Math.round((js.produccion||0)*0.9),
           rango_max: js.rango_max ?? Math.round((js.produccion||0)*1.1),
-          dotacion: js.dotacion ?? js.dot ?? '-',
           factor: js.factor ?? '1.00',
           estado: js.estado || 'ok'
         };
@@ -473,7 +461,6 @@ class StaffPredictionSystem {
       }
     } catch(e) { console.warn('analizar-mes error', e); }
 
-    // Fallback historial
     if (!this.lastHistoryData) { alert("No hay datos históricos cargados."); return; }
     const etiqueta = `${anio}-${String(mes).padStart(2,'0')}`;
     const found = this.lastHistoryData.find(d => d.etiqueta === etiqueta);
@@ -484,7 +471,7 @@ class StaffPredictionSystem {
         produccion: found.valor,
         rango_min: Math.round(found.valor*0.9),
         rango_max: Math.round(found.valor*1.1),
-        dotacion: '-', factor: '1.00', estado: found.estado || 'ok'
+        factor: '1.00', estado: found.estado || 'ok'
       };
       this.renderResults([dto]);
       window.__lastPrediction = [dto];
@@ -498,15 +485,15 @@ class StaffPredictionSystem {
     lista.forEach(p => {
         let badge = `<span class="badge-status bg-soft-success">ADECUADO</span>`;
         const estadoNorm = (p.estado || '').toString().toLowerCase();
-        if(estadoNorm === 'sobre') badge = `<span class="badge-status bg-soft-danger">SOBREDOTACIÓN</span>`;
-        if(estadoNorm === 'sub')   badge = `<span class="badge-status bg-soft-warning">SUBDOTACIÓN</span>`;
+        
+        if(estadoNorm.includes('sobredot')) badge = `<span class="badge-status bg-soft-danger">SOBREDOTACIÓN</span>`;
+        else if(estadoNorm.includes('subdot')) badge = `<span class="badge-status bg-soft-warning">SUBDOTACIÓN</span>`;
 
         const tr = `
             <tr>
                 <td class="ps-3 fw-bold text-dark">${p.anio}-${String(p.mes).padStart(2,'0')}</td>
                 <td>${p.produccion}</td>
                 <td class="text-muted small">${p.rango_min} - ${p.rango_max}</td>
-                <td class="text-primary fw-bold">${p.dotacion} Pers.</td>
                 <td><span class="badge bg-light text-dark border">${p.factor}x</span></td>
                 <td>${badge}</td>
             </tr>
@@ -556,7 +543,6 @@ class StaffPredictionSystem {
   }
   hideProgress() { this.progressSection.classList.add('d-none'); }
 
-  /* ========== DESCARGA PDF ========== */
   async descargarPDF(){
     const btn = document.getElementById('btnDescargarPDF');
     const originalText = btn.innerHTML; 
@@ -600,49 +586,48 @@ class StaffPredictionSystem {
   }
 }
 
-// Inicialización
 let app;
 document.addEventListener('DOMContentLoaded', () => { app = new StaffPredictionSystem(); });
 
 window.addEventListener('load', async () => {
-            try {
-                const response = await fetch('/api/perfil', {
-                    method: 'GET',
-                    credentials: 'include', 
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                if (!response.ok) {
-                    const textoError = await response.text();
-                    console.error("Error del servidor:", textoError);
-                    console.warn("El sistema intentó desloguearte por el error de arriba.");
-                    
-                    window.location.href = 'login.html'; 
-                    return;
-                }
-                const usuario = await response.json();
-                if (usuario.nombre && usuario.apellido) {
-                    const welcomeMsg = document.getElementById('welcomeMessage');
-                    if(welcomeMsg) welcomeMsg.innerText = `${usuario.nombre} ${usuario.apellido}`;
-                }
-                if (typeof cargarMandantes === 'function') cargarMandantes();
-
-            } catch (error) {
-                console.error('Error:', error);
-            }
+    try {
+        const response = await fetch('/api/perfil', {
+            method: 'GET',
+            credentials: 'include', 
+            headers: { 'Content-Type': 'application/json' }
         });
-        async function logout() {
-            try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
-            try { sessionStorage.clear(); localStorage.clear(); } catch (e) {}
-            try {
-                document.cookie.split(';').forEach(c => {
-                    const eqPos = c.indexOf('=');
-                    const name = (eqPos > -1 ? c.substring(0, eqPos) : c).trim();
-                    if (name) document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
-                });
-            } catch (e) {}
-            window.location.replace('login.html');
+
+        if (!response.ok) {
+            const textoError = await response.text();
+            console.error("Error del servidor:", textoError);
+            console.warn("El sistema intentó desloguearte por el error de arriba.");
+            
+            window.location.href = 'login.html'; 
+            return;
         }
+        const usuario = await response.json();
+        if (usuario.nombre && usuario.apellido) {
+            const welcomeMsg = document.getElementById('welcomeMessage');
+            if(welcomeMsg) welcomeMsg.innerText = `${usuario.nombre} ${usuario.apellido}`;
+        }
+        if (typeof cargarMandantes === 'function') cargarMandantes();
+
+    } catch (error) {
+        console.error('Error:', error);
+    }
+});
+async function logout() {
+    try { await fetch('/logout', { method: 'POST', credentials: 'include' }); } catch (e) {}
+    try { sessionStorage.clear(); localStorage.clear(); } catch (e) {}
+    try {
+        document.cookie.split(';').forEach(c => {
+            const eqPos = c.indexOf('=');
+            const name = (eqPos > -1 ? c.substring(0, eqPos) : c).trim();
+            if (name) document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+        });
+    } catch (e) {}
+    window.location.replace('login.html');
+}
 </script>
 
 </body>
