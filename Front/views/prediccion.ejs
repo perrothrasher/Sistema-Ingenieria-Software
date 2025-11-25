@@ -117,27 +117,10 @@
             <div class="col-lg-8">
                 <div class="content-box">
                     <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="section-title m-0"><i class="fas fa-chart-area text-primary me-2"></i>Análisis Histórico</h5>
-                        <span class="badge bg-light text-secondary border">Filtros Activos</span>
+                        <h5 class="section-title m-0"><i class="fas fa-chart-area text-primary me-2"></i>Análisis Histórico Global</h5>
                     </div>
 
-                    <div class="row g-2 mb-4">
-                        <div class="col-md-3">
-                            <select id="fMandante" class="form-select form-select-custom"><option value="">Todos Mandantes</option></select>
-                        </div>
-                        <div class="col-md-3">
-                            <select id="fServicio" class="form-select form-select-custom"><option value="">Todos Servicios</option></select>
-                        </div>
-                        <div class="col-md-3">
-                            <input type="text" id="fUsuario" class="form-control form-control-custom" placeholder="Usuario...">
-                        </div>
-                        <div class="col-md-2">
-                            <input type="number" id="fAnio" class="form-control form-control-custom" value="2025">
-                        </div>
-                        <div class="col-md-1">
-                            <button class="btn btn-primary w-100 rounded-3" onclick="app.actualizarGrafico()"><i class="fas fa-search"></i></button>
-                        </div>
-                    </div>
+                    <!-- SECCIÓN DE FILTROS ELIMINADA -->
 
                     <div style="height: 380px;">
                         <canvas id="mainHistoryChart"></canvas>
@@ -158,7 +141,7 @@
                                 <% } %>
                             </select>
                             <select id="selAnio" class="form-select form-select-custom" style="width:50%">
-                                <!-- CAMBIO: Se ajustó el inicio del ciclo a 2023 -->
+                                <!-- INICIO DESDE 2023 -->
                                 <% for(let a=2023;a<=2030;a++){ %>
                                   <option value="<%= a %>"><%= a %></option>
                                 <% } %>
@@ -277,51 +260,24 @@ class StaffPredictionSystem {
 
     this.renderHistory();
     this.updateMetrics();
-    this.cargarFiltros();
+    // this.cargarFiltros(); // Eliminado porque ya no existen los elementos DOM
     this.initChart();
 
     const pdfBtn = document.getElementById('btnDescargarPDF');
     if (pdfBtn) pdfBtn.addEventListener('click', () => this.descargarPDF());
   }
 
-  async cargarFiltros() {
-    try {
-        const r = await fetch(`${this.baseUrl}/prediccion/filtros-info`);
-        const d = await r.json();
-
-        const selMan = document.getElementById('fMandante');
-        const selSer = document.getElementById('fServicio');
-
-        selMan.innerHTML = '<option value="">Todos Mandantes</option>';
-        selSer.innerHTML = '<option value="">Todos Servicios</option>';
-
-        if (d.mandantes && Array.isArray(d.mandantes)) {
-          d.mandantes.forEach(m => {
-            const text = m.nombre || m;
-            const val  = m.id ?? m;
-            selMan.add(new Option(text, val));
-          });
-        }
-        if (d.servicios && Array.isArray(d.servicios)) {
-          d.servicios.forEach(s => {
-            const text = s.nombre || s;
-            const val  = s.id ?? s;
-            selSer.add(new Option(text, val));
-          });
-        }
-    } catch(e) {
-      console.warn("Error cargando filtros:", e);
-    }
-  }
+  // cargarFiltros() ELIMINADO
 
   initChart() { this.actualizarGrafico(); }
 
   async actualizarGrafico() {
+    // Filtros vacíos para traer datos globales
     const filtros = {
-        mandante: document.getElementById('fMandante').value,
-        servicio: document.getElementById('fServicio').value,
-        usuario: document.getElementById('fUsuario').value,
-        anio: document.getElementById('fAnio').value
+        mandante: '',
+        servicio: '',
+        usuario: '',
+        anio: ''
     };
 
     try {
@@ -410,9 +366,10 @@ class StaffPredictionSystem {
   async proyectar() {
     const meses = document.getElementById('mesesInput').value;
     
-    const mandante = document.getElementById('fMandante').value;
-    const servicio = document.getElementById('fServicio').value;
-    const usuario = document.getElementById('fUsuario').value;
+    // Filtros vacíos (ya no se leen del DOM)
+    const mandante = '';
+    const servicio = '';
+    const usuario = '';
 
     this.showProgress(60);
     try {
