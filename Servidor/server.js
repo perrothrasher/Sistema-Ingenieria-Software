@@ -40,9 +40,9 @@ app.use(express.json());
 app.use(cookieParser());
 /////////////////////////////////////////////////
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017'; // ELIMINAR
-const MONGO_DB  = process.env.MONGO_DB  || 'IngenieriaSoftware'; // ELIMINAR
-const PUERTO    = process.env.PORT      || 8090; // ELIMINAR
+const MONGO_URI = process.env.MONGO_URI
+const MONGO_DB  = process.env.MONGO_DB 
+const PUERTO    = process.env.PORT      || 8090; 
 
 // =================================================================
 // 2. CONFIGURACIÓN MYSQL (Para el modelo predictivo)
@@ -57,13 +57,10 @@ const mysqlConfig = {
     queueLimit: 0
 };
 
-// Crear el pool de MySQL
 const dbSql = mysql.createPool(mysqlConfig);
 
-// Inyectarlo en app.locals para que prediccion.js lo encuentre
 app.locals.db = dbSql;
 
-// Prueba rápida de conexión MySQL (solo para log)
 dbSql.getConnection()
     .then(conn => {
         console.log('✅ [MySQL] Conectado correctamente.');
@@ -91,8 +88,20 @@ const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
 const { listarMandantes, registrarMandante, eliminarMandante} = require('./JS Llamadas/mandantes.js');
 const { añadirUsuario, listarUsuarios, eliminarUsuario} = require('./JS Llamadas/usuarios.js');
 const {registrarProduccionMasiva} = require('./JS Llamadas/servicios.js');
+const {obtenerKPIs, obtenerDatosGraficos} = require('./JS Llamadas/dashboard.js');
 const conexion_Mongo = require('./JS Llamadas/mongo_connection.js');
 /////////////////////////////////////////////////
+
+// DASHBOARD Y KPIs
+/////////////////////////////////////////////////
+// vista
+app.get('/dashboard.html', verificarToken, (req, res) => { res.render('dashboard'); });
+// datos
+app.get('/api/dashboard/kpis', verificarToken, obtenerKPIs);
+// grafico
+app.get('/api/dashboard/graficos', verificarToken, obtenerDatosGraficos);
+/////////////////////////////////////////////////
+
 
 // RUTAS PARA GESTIÓN DE ARCHIVOS (SUBIDA Y DESCARGA)
 /////////////////////////////////////////////////
@@ -173,7 +182,7 @@ app.put('/api/trabajadores/:id/contrato', verificarToken, actualizarTipoContrato
 // Ruta para listar mandantes (id, nombre, fecha_ingreso, total_folios)
 app.get('/get-mandantes', listarMandantes);
 // Ruta para registrar un mandante
-app.post('/registrar-mandante', registrarMandante);
+app.post('/registrar-mandante', verificarToken, registrarMandante);
 // Ruta para eliminar un mandante
 app.delete('/eliminar-mandante/:id', verificarToken, eliminarMandante);
 /////////////////////////////////////////////////

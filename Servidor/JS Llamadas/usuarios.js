@@ -76,32 +76,32 @@ async function listarUsuarios(req, res){
 
 async function eliminarUsuario(req, res) {
     const { id } = req.params;
-    //const { id: userId } = req.usuario; // auditoría
+    // auditoria
+    //const { id: userId } = req.usuario;
 
     let conn;
     try {
         conn = await connection.getConnection();
         await conn.beginTransaction();
 
-        // await conn.execute('SET @current_user_id = ?', [userId]);
+        // auditoria
+        //await conn.execute('SET @current_user_id = ?', [userId]);
 
-        const sqlBorrarFolios = "DELETE FROM produccion WHERE usuarioPrendas_id = ?";
-        await conn.execute(sqlBorrarFolios, [id]);
-
-        const sqlBorrarUsuario = "DELETE FROM usuarioprendas WHERE id = ?";
-        const [result] = await conn.execute(sqlBorrarUsuario, [id]);
+        const sql = "UPDATE usuarioprendas SET activo = 0 WHERE id = ?";
+        
+        const [result] = await conn.execute(sql, [id]);
 
         await conn.commit();
 
         if (result.affectedRows > 0) {
-            res.status(200).json({ message: "Usuario y sus registros eliminados correctamente." });
+            res.status(200).json({ message: "Usuario eliminado correctamente." });
         } else {
             res.status(404).json({ message: "Usuario no encontrado." });
         }
 
     } catch (error) {
         if (conn) await conn.rollback();
-        console.error("Error al eliminar:", error);
+        console.error("Error al eliminar usuario:", error);
         res.status(500).json({ message: "Error al eliminar", error: error.message });
     } finally {
         if (conn) conn.release();

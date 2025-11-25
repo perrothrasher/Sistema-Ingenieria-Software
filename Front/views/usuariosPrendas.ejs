@@ -448,6 +448,37 @@
                 submitBtn.style.background = '';
             }
         })
+
+        async function eliminarUsuario(id) {
+            // Confirmación de seguridad
+            if (!confirm("¿Estás seguro de que deseas eliminar este usuario? Esta acción lo ocultará del sistema.")) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/eliminar-usuario/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    // Éxito visual
+                    alert("Usuario eliminado correctamente.");
+                    
+                    cargarUsuarios(); 
+                } else {
+                    const errorData = await response.json();
+                    alert("Error: " + (errorData.message || "No se pudo eliminar el usuario."));
+                }
+
+            } catch (error) {
+                console.error("Error de red:", error);
+                alert("Error de conexión al intentar eliminar.");
+            }
+        }
     </script>
 </body>
 </html>

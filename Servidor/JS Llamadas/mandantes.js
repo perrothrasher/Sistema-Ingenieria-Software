@@ -11,6 +11,7 @@ async function listarMandantes(req, res){
             COALESCE(SUM(p.cantidadfolios), 0) as total_folios
         FROM Cliente m
         LEFT JOIN Produccion p ON m.id = p.cliente_id
+        WHERE activo = 1
         GROUP BY m.id, m.nombre, m.fecha_ingreso
         ORDER BY m.fecha_ingreso DESC
     `;
@@ -26,7 +27,7 @@ async function listarMandantes(req, res){
 
 async function registrarMandante(req, res){
     const { nombre } = req.body;
-    //const {id: userId} = req.usuario;
+    const {id: userId} = req.usuario;
     
     let conn;
     if(!nombre){
@@ -41,8 +42,7 @@ async function registrarMandante(req, res){
         conn = await connection.getConnection();
         await conn.beginTransaction();
 
-        // Establecer el ID del usuario actual para el trigger
-        //await conn.execute('SET @current_user_id = ?', [userId]);
+        await conn.execute('SET @current_user_id = ?', [userId]);
 
         const [results] = await conn.execute(
             sql, [nombre]
