@@ -56,10 +56,11 @@ async function listarUsuarios(req, res){
             up.primer_nombre,
             up.primer_apellido,
             up.fecha_ingreso,
-            CONCAT_WS(' ', up.primer_nombre, up.primer_apellido) as nombre_completo,
+            CONCAT_WS(' ', up.primer_nombre, up.primer_apellido, up.segundo_apellido) as nombre_completo,
             COALESCE(SUM(p.cantidadFolios), 0) as total_folios
-        FROM usuarioprendas up
+        FROM usuarioprendas up 
         LEFT JOIN produccion p ON up.id = p.usuarioPrendas_id
+        WHERE activo = 1
         GROUP BY up.id, up.primer_nombre, up.primer_apellido, up.fecha_ingreso
         ORDER BY up.primer_apellido ASC;
     `;
