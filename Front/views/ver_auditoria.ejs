@@ -292,7 +292,9 @@
                     const welcomeMsg = document.getElementById('welcomeMessage');
                     if(welcomeMsg) welcomeMsg.innerText = `${usuario.nombre} ${usuario.apellido}`;
                 }
-                if (typeof cargarMandantes === 'function') cargarMandantes();
+                if (typeof cargarMandantes === 'function') 
+                    cargarMandantes();
+                    cargarAuditoria();
 
             } catch (error) {
                 console.error('Error:', error);
@@ -331,36 +333,58 @@
             }
 
             const url = `/api/auditoria?${params.toString()}`;
-
+            
             try {
                 const response = await fetch(url);
                 const logs = await response.json();
                 
                 if (!response.ok) throw new Error('No se pudo cargar la auditoría.');
-
                 if (logs.length === 0) {
-                    auditLogBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted p-5">No hay registros para mostrar.</td></tr>';
+                    auditLogBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted p-5">No hay registros para mostrar con los filtros seleccionados.</td></tr>';
                     return;
                 }
 
                 logs.forEach(log => {
                     const tr = document.createElement('tr');
-                    const fecha = new Date(log.timestamp);
-                    const accionFormateada = log.accion.replace(/_/g, ' ').toLowerCase();
+                    
+                    const fechaObj = new Date(log.timestamp);
+                    const fechaStr = !isNaN(fechaObj) ? fechaObj.toLocaleDateString('es-CL') : 'Fecha inválida';
+                    const horaStr = !isNaN(fechaObj) ? fechaObj.toLocaleTimeString('es-CL') : '';
+                    const nombreAccion = log.accion || 'Desconocido'; 
+                    const accionLower = nombreAccion.toLowerCase();
+
+                    let badgeClass = 'bg-secondary';
+                    if (accionLower.includes('creado') || accionLower.includes('creada') || accionLower.includes('inicio')) badgeClass = 'bg-success';
+                    if (accionLower.includes('editado') || accionLower.includes('editada')) badgeClass = 'bg-warning text-dark';
+                    if (accionLower.includes('eliminado') || accionLower.includes('eliminada') || accionLower.includes('cierre')) badgeClass = 'bg-danger';
 
                     tr.innerHTML = `
-                        <td class="ps-4"><strong>${log.nombreUsuario}</strong></td>
-                        <td><span class="badge bg-secondary action-badge">${accionFormateada}</span></td>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 35px; height: 35px;">
+                                    <i class="fas fa-user text-secondary"></i>
+                                </div>
+                                <strong>${log.nombreUsuario}</strong>
+                            </div>
+                        </td>
+                        <td><span class="badge ${badgeClass} action-badge">${log.accion}</span></td>
                         <td>${log.rol || 'N/A'}</td>
-                        <td>${fecha.toLocaleDateString()}</td>
-                        <td>${fecha.toLocaleTimeString()}</td>
-                        <td>${log.direccionIp}</td>
+                        <td>${fechaStr}</td>
+                        <td>${horaStr}</td>
+                        <td><small class="text-muted">${log.direccionIp || 'Sistema'}</small></td>
                     `;
+                    tr.style.cursor = 'pointer';
+                    tr.title = "Click para ver detalles técnicos";
+                    tr.onclick = () => {
+                        console.log("Detalles del cambio:", log.detalles);
+                        alert("Detalles técnicos (ver consola F12):\n" + JSON.stringify(log.detalles, null, 2));
+                    };
+
                     auditLogBody.appendChild(tr);
                 });
-
             } catch (error) {
-                auditLogBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger p-5">${error.message}</td></tr>`;
+                console.error(error);
+                auditLogBody.innerHTML = `<tr><td colspan="6" class="text-center text-danger p-5">Error: ${error.message}</td></tr>`;
             } finally {
                 loadingState.classList.add('d-none');
             }

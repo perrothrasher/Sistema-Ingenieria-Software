@@ -77,11 +77,11 @@ app.use(cors(corsOptions));
 const registrarTrabajador = require('./JS Llamadas/registrar_trabajador.js'); // Registrar trabajador
 const login = require('./JS Llamadas/login.js'); // Iniciar sesión
 const verificarToken = require('./JS Llamadas/authMiddleware.js');
-const { registrarAuditoria } = require('./JS Llamadas/auditoria.js');
+const { registrarAuditoria, obtenerAuditoriaPorUsuario } = require('./JS Llamadas/auditoria.js');
 const auditoriaRoutes = require('./JS Llamadas/auditoria_rutas.js');
-const { registrarCliente, obtenerClientes, editarClientes, eliminarCliente, generarReporteClientes, reestablecerCliente } = require('./JS Llamadas/cliente.js');
+const { registrarCliente, editarClientes, eliminarCliente, generarReporteClientes} = require('./JS Llamadas/cliente.js');
 const { obtenerTrabajadores, editarTrabajadores, eliminarTrabajadores, listarTrabajadores, generarReporteTrabajadores, actualizarTipoContrato } = require('./JS Llamadas/trabajadores.js'); 
-const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion, generarReporteDotacion, eliminarDotacion, reestablecerDotacion } = require('./JS Llamadas/dotacion.js');
+const { registrarDotacion, obtenerDotaciones, editarDotacion, obtenerDotacionesParaEdicion, generarReporteDotacion, eliminarDotacion, reestablecerDotacion, obtenerDatosHistoricos } = require('./JS Llamadas/dotacion.js');
 const { obtenerHistoricos } = require('./JS Llamadas/historicos.js'); 
 const { registrarOperacionHistorica } = require('./JS Llamadas/op_hist_manual.js');
 const { actualizarHistorico } = require('./JS Llamadas/historicos.js');
@@ -223,6 +223,8 @@ app.get('/api/dotacion/reporte', verificarToken, generarReporteDotacion);
 app.delete('/eliminarDotacion/:id', verificarToken, eliminarDotacion);
 // Ruta para reestablecer una dotación eliminada
 app.put('/reestablecerDotacion/:id', verificarToken, reestablecerDotacion);
+// Ruta para obtener datos históricos de dotación
+app.get('/api/historicos/dotacion', obtenerDatosHistoricos);
 /////////////////////////////////////////////////
 
 // HISTÓRICOS 

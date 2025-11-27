@@ -168,7 +168,7 @@
                         <p class="text-muted">Análisis detallado de la dotación de personal y tendencias históricas</p>
                     </div>
                     <div>
-                        <button class="btn btn-outline-primary me-2" onclick="refreshData()">
+                        <button class="btn btn-primary me-2" onclick="refreshData()">
                             <i class="fas fa-sync-alt"></i> Actualizar
                         </button>
                         <div class="dropdown d-inline">
@@ -226,10 +226,12 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">&nbsp;</label>
-                            <div class="d-grid">
-                                <button class="btn btn-primary" onclick="applyFilters()">
+                            <label class="form-label">&nbsp;</label> <div class="d-flex gap-2">
+                                <button class="btn btn-primary flex-grow-1" onclick="applyFilters()">
                                     <i class="fas fa-search"></i> Buscar
+                                </button>
+                                <button class="btn btn-secondary" onclick="resetFilters()" title="Reiniciar filtros">
+                                    <i class="fas fa-undo"></i>
                                 </button>
                             </div>
                         </div>
@@ -435,16 +437,35 @@
             }
         });
 
-        async function logout() {
-            try { await fetch ('/logout', {method: 'POST'}); } catch(e) {}
-            if (isDev()) {
-                console.log('Sesión cerrada (dev), permaneces en la página');
-            } else {
-                window.location.href = 'login.html'
-            }
+        function resetFilters() {
+            // Limpiar los inputs visualmente
+            document.getElementById('filterYear').value = "";
+            document.getElementById('filterMonth').value = "";
+            document.getElementById('filterContract').value = "";
+
+            // Restaurar los datos originales
+            visualization.filteredData = [...visualization.data];
+
+            // Actualizar Tabla
+            visualization.dataTable.clear().rows.add(visualization.filteredData).draw();
+
+            // Actualizar Gráfico Mensual 
+            const monthlyData = visualization.groupDataByMonth();
+            visualization.monthlyChart.data.labels = monthlyData.labels;
+            visualization.monthlyChart.data.datasets[0].data = monthlyData.dataFull;
+            visualization.monthlyChart.data.datasets[1].data = monthlyData.dataPart;
+            visualization.monthlyChart.update();
+            
+            // Actualizar Gráfico de Contratos
+            const contractData = visualization.groupDataByContract();
+            visualization.contractChart.data.labels = contractData.labels;
+            visualization.contractChart.data.datasets[0].data = contractData.data;
+            visualization.contractChart.update();
+
+            // Actualizar Métricas 
+            visualization.updateMetrics();
         }
-        /// Fin autentiacion Y permisos esqueleto
-        
+
         class HistoricalDataVisualization {
             constructor() {
                 this.data = [];
@@ -453,7 +474,6 @@
                 this.contractChart = null;
                 this.dataTable = null;
                 
-                this.init();
                 this.loadData();
             }
             async loadData() {
@@ -475,8 +495,6 @@
                     this.initializeDataTable();
                     this.updateMetrics();
                     
-                    console.log('Datos históricos cargados:', this.data.length, 'registros');
-                    
                 } catch (error) {
                     console.error('Error cargando datos:', error);
                     this.showAlert('error', 'No se pudieron cargar los datos históricos');
@@ -485,43 +503,6 @@
                     this.filteredData = [];
                 } finally {
                     this.showLoading(false);
-                }
-            }
-
-            async init() {
-                try {
-                    console.log('Iniciando sistema...');
-                    
-                    // Verificar autenticación
-                    // if (!localStorage.getItem("auth")) {
-                    //     window.location.href = "login.html";
-                    //     return;
-                    // }
-                    
-                    // Simular datos de usuario para pruebas
-                    localStorage.setItem("auth", "true");
-                    localStorage.setItem("nombre", "Usuario");
-                    localStorage.setItem("apellido", "Demo");
-
-                    // Mostrar nombre de usuario
-                    this.displayUserName();
-                    
-                    // Pequeño delay para asegurar que el DOM esté listo
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    
-                    // Cargar datos
-                    await this.loadData();
-                    
-                    // Inicializar componentes
-                    this.initializeFilters();
-                    await this.initializeCharts();
-                    this.initializeDataTable();
-                    this.updateMetrics();
-                    
-                    console.log('Sistema inicializado exitosamente');
-                } catch (error) {
-                    console.error('Error al inicializar:', error);
-                    this.showAlert('error', 'Error al inicializar el sistema');
                 }
             }
 
@@ -557,20 +538,14 @@
 
             async initializeCharts() {
                 try {
-                    console.log('Inicializando gráficos...');
                     
-                    // Esperar un momento para asegurar que el DOM esté listo
                     await new Promise(resolve => setTimeout(resolve, 200));
                     
-                    // Crear gráficos uno por uno
                     this.createMonthlyChart();
                     
-                    // Pequeña pausa entre gráficos
                     await new Promise(resolve => setTimeout(resolve, 100));
                     
                     this.createContractChart();
-                    
-                    console.log('Gráficos inicializados correctamente');
                 } catch (error) {
                     console.error('Error al inicializar gráficos:', error);
                 }
@@ -579,46 +554,62 @@
             createMonthlyChart() {
                 try {
                     const canvas = document.getElementById('monthlyChart');
-                    if (!canvas) {
-                        console.error('Canvas monthlyChart no encontrado');
-                        return;
-                    }
+                    if (!canvas) return;
                     
                     const ctx = canvas.getContext('2d');
                     
-                    // Destruir gráfico existente si existe
                     if (this.monthlyChart) {
                         this.monthlyChart.destroy();
                     }
                     
-                    // Agrupar datos por mes
                     const monthlyData = this.groupDataByMonth();
-                    
+
                     this.monthlyChart = new Chart(ctx, {
-                        type: 'line',
+                        type: 'bar', 
                         data: {
                             labels: monthlyData.labels,
-                            datasets: [{
-                                label: 'Total Personal',
-                                data: monthlyData.data,
-                                borderColor: 'rgb(75, 192, 192)',
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                tension: 0.4,
-                                fill: true
-                            }]
+                            datasets: [
+                                {
+                                    label: 'Full Time',
+                                    data: monthlyData.dataFull,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.7)', 
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1,
+                                    barPercentage: 0.6,
+                                    categoryPercentage: 0.8
+                                },
+                                {
+                                    label: 'Part Time',
+                                    data: monthlyData.dataPart,
+                                    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    borderWidth: 1,
+                                    barPercentage: 0.6,
+                                    categoryPercentage: 0.8
+                                }
+                            ]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
                             interaction: {
+                                mode: 'index',
                                 intersect: false,
                             },
                             plugins: {
                                 legend: {
                                     position: 'top',
                                 },
-                                title: {
-                                    display: false
+                                tooltip: {
+                                    callbacks: {
+                                        footer: function(tooltipItems) {
+                                            let total = 0;
+                                            tooltipItems.forEach(function(tooltipItem) {
+                                                total += tooltipItem.raw;
+                                            });
+                                            return 'Total: ' + total;
+                                        }
+                                    }
                                 }
                             },
                             scales: {
@@ -627,23 +618,19 @@
                                     title: {
                                         display: true,
                                         text: 'Cantidad de Personal'
-                                    }
+                                    },
+                                    stacked: false 
                                 },
                                 x: {
                                     title: {
                                         display: true,
                                         text: 'Período'
-                                    }
+                                    },
+                                    stacked: false
                                 }
-                            },
-                            // Prevenir scroll automático
-                            onResize: function(chart, size) {
-                                // No hacer nada al redimensionar
                             }
                         }
                     });
-                    
-                    console.log('Gráfico mensual creado exitosamente');
                 } catch (error) {
                     console.error('Error al crear gráfico mensual:', error);
                 }
@@ -699,8 +686,6 @@
                             }
                         }
                     });
-                    
-                    console.log('Gráfico de contratos creado exitosamente');
                 } catch (error) {
                     console.error('Error al crear gráfico de contratos:', error);
                 }
@@ -743,16 +728,32 @@
                 
                 this.filteredData.forEach(item => {
                     const key = `${item.anio}-${item.mes}`;
+                    
                     if (!grouped[key]) {
-                        grouped[key] = 0;
+                        grouped[key] = { fullTime: 0, partTime: 0 };
                     }
-                    grouped[key] += parseInt(item.cantidad_personal) || 0;
+                    
+                    const cantidad = parseInt(item.cantidad_personal) || 0;
+                    const tipo = (item.tipo_contrato || '').toLowerCase();
+
+                    if (tipo.includes('full') || tipo.includes('completo')) {
+                        grouped[key].fullTime += cantidad;
+                    } else {
+                        grouped[key].partTime += cantidad;
+                    }
                 });
 
-                const labels = Object.keys(grouped).sort();
-                const data = labels.map(label => grouped[label]);
+                const labels = Object.keys(grouped).sort((a, b) => {
+                    const [anioA, mesA] = a.split('-');
+                    const [anioB, mesB] = b.split('-');
+                    
+                    if (anioA !== anioB) return anioA - anioB;
+                    return this.getMonthNumber(mesA) - this.getMonthNumber(mesB);
+                });
+                const dataFull = labels.map(label => grouped[label].fullTime);
+                const dataPart = labels.map(label => grouped[label].partTime);
 
-                return { labels, data };
+                return { labels, dataFull, dataPart };
             }
 
             groupDataByContract() {
@@ -855,7 +856,6 @@
             if (!initialized) {
                 initialized = true;
                 visualization = new HistoricalDataVisualization();
-                console.log('Sistema inicializado correctamente');
             }
         });
 
@@ -1022,82 +1022,73 @@
             visualization.showAlert('info', 'Esta funcionalidad estará disponible próximamente');
         }
     </script>
-<script>
-  // === CU19: usar el botón "editar" existente de la tabla ===
-  // Mapea nombre de mes a número
-  const MES_NUM = {
-    'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,
-    'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12
-  };
-  const NUM_MES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    <script>
+    const MES_NUM = {
+        'Enero':1,'Febrero':2,'Marzo':3,'Abril':4,'Mayo':5,'Junio':6,
+        'Julio':7,'Agosto':8,'Septiembre':9,'Octubre':10,'Noviembre':11,'Diciembre':12
+    };
+    const NUM_MES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-  async function editRecord(id) {
-    try {
-      // 1) tomar registro actual desde los datos ya cargados en pantalla
-      const row = visualization.data.find(r => String(r.id) === String(id));
-      if (!row) { visualization.showAlert('error','No se encontró el registro'); return; }
-
-      // 2) precargar en modal
-      document.getElementById('ed_id').value = id;
-      document.getElementById('ed_anio').value = row.anio;
-      document.getElementById('ed_mes').value = MES_NUM[row.mes] || 1;
-      document.getElementById('ed_tipo').value = row.tipo_contrato;
-      document.getElementById('ed_cantidad').value = row.cantidad_personal;
-
-      document.getElementById('ed_alert').className = 'alert d-none';
-      const modal = new bootstrap.Modal(document.getElementById('modalEditarDotacion'));
-      modal.show();
-
-      // 3) guardar cambios → PUT /historicos/dotacion/:id
-      const onSave = async (e) => {
-        e.preventDefault();
-        const payload = {
-          anio: parseInt(document.getElementById('ed_anio').value,10),
-          mes: parseInt(document.getElementById('ed_mes').value,10),
-          area: document.getElementById('ed_tipo').value.trim(),          // mapeo: tipo_contrato -> area
-          cantidad: parseInt(document.getElementById('ed_cantidad').value,10)
-        };
-
+    async function editRecord(id) {
         try {
-          const r = await fetch(`${URL_BASE}/historicos/dotacion/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type':'application/json' },
-            body: JSON.stringify(payload)
-          });
-          const json = await r.json();
-          if (!r.ok) throw new Error(json.message || 'Error al actualizar');
+        const row = visualization.data.find(r => String(r.id) === String(id));
+        if (!row) { visualization.showAlert('error','No se encontró el registro'); return; }
 
-          // 4) actualizar los datos en memoria y en la tabla
-          row.anio = payload.anio;
-          row.mes = NUM_MES[payload.mes] || row.mes;
-          row.tipo_contrato = payload.area;
-          row.cantidad_personal = payload.cantidad;
+        document.getElementById('ed_id').value = id;
+        document.getElementById('ed_anio').value = row.anio;
+        document.getElementById('ed_mes').value = MES_NUM[row.mes] || 1;
+        document.getElementById('ed_tipo').value = row.tipo_contrato;
+        document.getElementById('ed_cantidad').value = row.cantidad_personal;
 
-          // refrescar DataTable sin perder estado
-          visualization.dataTable
-            .rows((idx, data) => String(data.id) === String(id))
-            .every(function(){ this.data(row); });
-          visualization.dataTable.draw(false);
+        document.getElementById('ed_alert').className = 'alert d-none';
+        const modal = new bootstrap.Modal(document.getElementById('modalEditarDotacion'));
+        modal.show();
 
-          visualization.updateMetrics();
-          visualization.showAlert('success', json.message || 'Registro actualizado');
-          modal.hide();
+        const onSave = async (e) => {
+            e.preventDefault();
+            const payload = {
+            anio: parseInt(document.getElementById('ed_anio').value,10),
+            mes: parseInt(document.getElementById('ed_mes').value,10),
+            area: document.getElementById('ed_tipo').value.trim(),   
+            cantidad: parseInt(document.getElementById('ed_cantidad').value,10)
+            };
+
+            try {
+            const r = await fetch(`${URL_BASE}/historicos/dotacion/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type':'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const json = await r.json();
+            if (!r.ok) throw new Error(json.message || 'Error al actualizar');
+
+            row.anio = payload.anio;
+            row.mes = NUM_MES[payload.mes] || row.mes;
+            row.tipo_contrato = payload.area;
+            row.cantidad_personal = payload.cantidad;
+
+            visualization.dataTable
+                .rows((idx, data) => String(data.id) === String(id))
+                .every(function(){ this.data(row); });
+            visualization.dataTable.draw(false);
+
+            visualization.updateMetrics();
+            visualization.showAlert('success', json.message || 'Registro actualizado');
+            modal.hide();
+            } catch (err) {
+            const alert = document.getElementById('ed_alert');
+            alert.className = 'alert alert-danger';
+            alert.textContent = err.message;
+            }
+        };
+        const btn = document.getElementById('btnGuardarEdicion');
+        btn.replaceWith(btn.cloneNode(true));
+        document.getElementById('btnGuardarEdicion').addEventListener('click', onSave);
+
         } catch (err) {
-          const alert = document.getElementById('ed_alert');
-          alert.className = 'alert alert-danger';
-          alert.textContent = err.message;
+        visualization.showAlert('error', err.message);
         }
-      };
-
-      // evitar múltiples listeners si abre varias veces
-      const btn = document.getElementById('btnGuardarEdicion');
-      btn.replaceWith(btn.cloneNode(true));
-      document.getElementById('btnGuardarEdicion').addEventListener('click', onSave);
-
-    } catch (err) {
-      visualization.showAlert('error', err.message);
     }
-  }
 </script>
 
 </body>
