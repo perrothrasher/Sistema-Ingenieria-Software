@@ -120,8 +120,6 @@
                         <h5 class="section-title m-0"><i class="fas fa-chart-area text-primary me-2"></i>Análisis Histórico Global</h5>
                     </div>
 
-                    <!-- SECCIÓN DE FILTROS ELIMINADA -->
-
                     <div style="height: 380px;">
                         <canvas id="mainHistoryChart"></canvas>
                     </div>
@@ -141,7 +139,6 @@
                                 <% } %>
                             </select>
                             <select id="selAnio" class="form-select form-select-custom" style="width:50%">
-                                <!-- INICIO DESDE 2023 -->
                                 <% for(let a=2023;a<=2030;a++){ %>
                                   <option value="<%= a %>"><%= a %></option>
                                 <% } %>
@@ -210,8 +207,8 @@
                                 <tr>
                                     <th class="ps-3">Periodo</th>
                                     <th>Producción Est.</th>
-                                    <th>Rango (Min-Max)</th>
-                                    <th>Factor Evento</th>
+                                    <th>Dotación (Actual / Ideal)</th>
+                                    <th>Acción Sugerida</th>
                                     <th>Estado</th>
                                 </tr>
                             </thead>
@@ -260,19 +257,15 @@ class StaffPredictionSystem {
 
     this.renderHistory();
     this.updateMetrics();
-    // this.cargarFiltros(); // Eliminado porque ya no existen los elementos DOM
     this.initChart();
 
     const pdfBtn = document.getElementById('btnDescargarPDF');
     if (pdfBtn) pdfBtn.addEventListener('click', () => this.descargarPDF());
   }
 
-  // cargarFiltros() ELIMINADO
-
   initChart() { this.actualizarGrafico(); }
 
   async actualizarGrafico() {
-    // Filtros vacíos para traer datos globales
     const filtros = {
         mandante: '',
         servicio: '',
@@ -366,7 +359,6 @@ class StaffPredictionSystem {
   async proyectar() {
     const meses = document.getElementById('mesesInput').value;
     
-    // Filtros vacíos (ya no se leen del DOM)
     const mandante = '';
     const servicio = '';
     const usuario = '';
@@ -404,12 +396,23 @@ class StaffPredictionSystem {
       const r = await fetch(`${this.baseUrl}/prediccion/analizar-mes?mes=${mes}&anio=${anio}`);
       const js = await r.json();
       if (js.ok) {
+        const dotReal = js.debug ? js.debug.real : '-';
+        const dotIdeal = js.debug ? js.debug.ideal : '-';
+        
+        // Calculamos mensaje extra básico para historial si no viene
+        let msgExtra = '-';
+        if(js.estado === 'SOBREDOTACIÓN') msgExtra = `Reducir: -${dotReal - dotIdeal}`;
+        if(js.estado === 'SUBDOTACIÓN') msgExtra = `Contratar: +${dotIdeal - dotReal}`;
+
         const dto = {
           anio, mes,
           produccion: js.produccion ?? 0,
-          rango_min: js.rango_min ?? Math.round((js.produccion||0)*0.9),
-          rango_max: js.rango_max ?? Math.round((js.produccion||0)*1.1),
-          factor: js.factor ?? '1.00',
+          rango_min: '-', // No relevante para analisis histórico puntual
+          rango_max: '-',
+          dotacion_actual: dotReal,
+          dotacion_sugerida: dotIdeal,
+          mensaje_extra: msgExtra,
+          factor: '1.00',
           estado: js.estado || 'ok'
         };
         this.renderResults([dto]);
@@ -428,6 +431,9 @@ class StaffPredictionSystem {
         produccion: found.valor,
         rango_min: Math.round(found.valor*0.9),
         rango_max: Math.round(found.valor*1.1),
+        dotacion_actual: '-',
+        dotacion_sugerida: '-',
+        mensaje_extra: '-',
         factor: '1.00', estado: found.estado || 'ok'
       };
       this.renderResults([dto]);
@@ -446,12 +452,17 @@ class StaffPredictionSystem {
         if(estadoNorm.includes('sobredot')) badge = `<span class="badge-status bg-soft-danger">SOBREDOTACIÓN</span>`;
         else if(estadoNorm.includes('subdot')) badge = `<span class="badge-status bg-soft-warning">SUBDOTACIÓN</span>`;
 
+        // Estilo para la acción sugerida
+        let actionClass = 'text-muted';
+        if(p.mensaje_extra && p.mensaje_extra.includes('+')) actionClass = 'text-warning fw-bold'; // Contratar
+        if(p.mensaje_extra && p.mensaje_extra.includes('-')) actionClass = 'text-danger fw-bold';  // Reducir
+
         const tr = `
             <tr>
                 <td class="ps-3 fw-bold text-dark">${p.anio}-${String(p.mes).padStart(2,'0')}</td>
                 <td>${p.produccion}</td>
-                <td class="text-muted small">${p.rango_min} - ${p.rango_max}</td>
-                <td><span class="badge bg-light text-dark border">${p.factor}x</span></td>
+                <td class="text-center text-secondary">${p.dotacion_actual || '?'} <span class="mx-1 text-muted">/</span> <strong>${p.dotacion_sugerida || '?'}</strong></td>
+                <td class="${actionClass}">${p.mensaje_extra || '-'}</td>
                 <td>${badge}</td>
             </tr>
         `;
