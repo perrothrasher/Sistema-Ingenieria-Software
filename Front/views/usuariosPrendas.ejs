@@ -306,7 +306,6 @@
             window.location.replace('login.html');
         }
 
-        // Cargar los usuarios desde el backend
         async function cargarUsuarios() {
             const loadingSpinner = document.getElementById('loadingSpinner');
             const usuariosTable = document.getElementById('usuariosTable');
@@ -336,7 +335,6 @@
                     const usuariosBody = document.getElementById('usuariosBody');
                     usuariosBody.innerHTML = ''; 
 
-                    // Iterar sobre los datos de los usuarios y mostrarlos en la tabla
                     data.usuarios.forEach((usuario, index) => {
                         const tr = document.createElement('tr');
                         tr.style.animationDelay = `${index * 0.1}s`;
@@ -410,7 +408,6 @@
             };
 
             try{
-                //enviar datos al servidor
                 const response = await fetch(`${URL_BASE}/registrar-usuario`, {
                     method: 'POST',
                     headers: {
@@ -421,7 +418,6 @@
 
                 const result = await response.json();
                 if (response.ok) {
-                    // Mostrar mensaje de éxito con estilo
                     submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>¡Usuario creado!';
                     submitBtn.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
                     
@@ -450,7 +446,6 @@
         })
 
         async function eliminarUsuario(id) {
-            // Confirmación de seguridad
             if (!confirm("¿Estás seguro de que deseas eliminar este usuario? Esta acción lo ocultará del sistema.")) {
                 return;
             }
@@ -465,7 +460,6 @@
                 });
 
                 if (response.ok) {
-                    // Éxito visual
                     alert("Usuario eliminado correctamente.");
                     
                     cargarUsuarios(); 

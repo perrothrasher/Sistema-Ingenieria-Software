@@ -404,27 +404,24 @@
         validarFormulario();
     }
 
-    // 3. Guardar Todo (Actualizado para leer Justificación)
     async function guardarTodo() {
         const filas = document.querySelectorAll('#cuerpoTabla tr');
         const datosParaEnviar = [];
 
         filas.forEach(tr => {
-            // Obtenemos valores
             const usuario = tr.querySelector('[name="usuario"]').value;
             const servicio = tr.querySelector('[name="servicio"]').value;
             const cantidad = tr.querySelector('[name="cantidad"]').value;
             const mandante = tr.querySelector('[name="mandante"]').value;
             const mes = tr.querySelector('[name="mes"]').value;
             const anio = tr.querySelector('[name="anio"]').value;
-            const justificacion = tr.querySelector('[name="justificacion"]').value; // Nuevo
+            const justificacion = tr.querySelector('[name="justificacion"]').value;
 
-            // Validamos que lo esencial esté lleno
             if (usuario && servicio && mandante) {
                 datosParaEnviar.push({
                     id_usuario: usuario,
                     id_tipo_servicio: servicio,
-                    cantidad: cantidad || 0, // Si está vacío pone 0
+                    cantidad: cantidad || 0, 
                     id_mandante: mandante,
                     mes: mes,
                     anio: anio,
