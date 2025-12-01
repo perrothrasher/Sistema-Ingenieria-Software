@@ -362,6 +362,32 @@ async function generarReporteDotacion(req, res){
     }
 };
 
+async function obtenerDatosHistoricos(req, res){
+    const sql = `
+        SELECT
+            d.id,
+            d.anio, 
+            m.nombre AS mes, 
+            t.nombre AS tipo_contrato, 
+            d.cantidad_personal, 
+            d.carga_horaria
+        FROM DotacionPersonal d
+        JOIN TipoContrato t ON d.TipoContrato_id = t.id
+        JOIN Mes m ON d.mes_id = m.id
+        -- Ordenamos cronológicamente para que el gráfico de línea tenga sentido
+        ORDER BY d.anio ASC, m.id ASC
+    `;
+
+    try {
+        const [results] = await connection.query(sql);
+        res.status(200).json(results);
+    } catch (err) {
+        console.error('Error al obtener históricos:', err);
+        res.status(500).json({ message: 'Error al cargar datos' });
+    }
+};
+
+
 module.exports = {
     registrarDotacion,
     obtenerDotaciones,
@@ -369,5 +395,6 @@ module.exports = {
     obtenerDotacionesParaEdicion,
     generarReporteDotacion,
     eliminarDotacion,
-    reestablecerDotacion
+    reestablecerDotacion,
+    obtenerDatosHistoricos
     };

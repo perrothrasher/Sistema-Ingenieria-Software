@@ -153,7 +153,7 @@
             </p>
         </div>
         <div class="col-md-4 text-end">
-            <button type="button" class="btn btn-success btn-lg shadow-sm" onclick="guardarTodo()">
+            <button id="btnGuardar" type="button" class="btn btn-success btn-lg shadow-sm" onclick="guardarTodo()" disabled>
                 <i class="fas fa-save me-2"></i> Guardar Registros
             </button>
         </div>
@@ -281,51 +281,68 @@
             }
         });
 
-        function agregarFilaVacia() {
+        
+
+    function validarFormulario() {
+        const filas = document.querySelectorAll('#cuerpoTabla tr');
+        const btnGuardar = document.getElementById('btnGuardar');
+        let todoCompleto = true;
+        let hayFilas = filas.length > 0;
+
+        if (!hayFilas) {
+            btnGuardar.disabled = true;
+            return;
+        }
+
+        filas.forEach(tr => {
+            const usuario = tr.querySelector('[name="usuario"]').value;
+            const servicio = tr.querySelector('[name="servicio"]').value;
+            const cantidad = tr.querySelector('[name="cantidad"]').value;
+            const mandante = tr.querySelector('[name="mandante"]').value;
+            const mes = tr.querySelector('[name="mes"]').value;
+            const anio = tr.querySelector('[name="anio"]').value;
+
+
+            if (!usuario || !servicio || !cantidad || !mandante || !mes || !anio) {
+                todoCompleto = false;
+            }
+        });
+        btnGuardar.disabled = !todoCompleto;
+    }
+
+    function agregarFilaVacia() {
         contador++;
         const tbody = document.getElementById('cuerpoTabla');
         const tr = document.createElement('tr');
         tr.id = `fila_${contador}`;
         
-        // A) Generar opciones de Usuario (SOLO Primer Nombre + Primer Apellido)
-        const optsUsers = listaUsuarios.map(u => 
-            `<option value="${u.id}">${u.primer_nombre} ${u.primer_apellido}</option>`
-        ).join('');
+        const optsUsers = listaUsuarios.map(u => `<option value="${u.id}">${u.primer_nombre} ${u.primer_apellido}</option>`).join('');
+        const optsMandantes = listaMandantes.map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+        const optsServs = listaServicios.map(s => `<option value="${s.id}">${s.nombre}</option>`).join('');
 
-        // B) Generar opciones de Mandantes
-        const optsMandantes = listaMandantes.map(m => 
-            `<option value="${m.id}">${m.nombre}</option>`
-        ).join('');
-
-        // C) Generar opciones de Servicios
-        const optsServs = listaServicios.map(s => 
-            `<option value="${s.id}">${s.nombre}</option>`
-        ).join('');
-
-        // D) HTML de la Fila
         tr.innerHTML = `
             <td class="text-center bg-light text-muted">${contador}</td>
             
             <td class="p-0">
-                <select class="form-select input-celda border-0" name="usuario">
+                <select class="form-select input-celda border-0" name="usuario" onchange="validarFormulario()">
                     <option value="" selected disabled>- Seleccionar -</option>
                     ${optsUsers}
                 </select>
             </td>
             
             <td class="p-0">
-                <select class="form-select input-celda border-0" name="servicio">
+                <select class="form-select input-celda border-0" name="servicio" onchange="validarFormulario()">
                     <option value="" selected disabled>- Seleccionar -</option>
                     ${optsServs}
                 </select>
             </td>
 
             <td class="p-0">
-                <input type="number" class="form-control input-celda border-0 text-center" placeholder="0" min="0" name="cantidad">
+                <input type="number" class="form-control input-celda border-0 text-center" placeholder="0" min="0" name="cantidad" oninput="validarFormulario()">
             </td>
 
             <td class="p-0">
-                <select class="form-select input-celda border-0" name="mandante">
+                <select class="form-select input-celda border-0" name="mandante" onchange="validarFormulario()">
                     <option value="" selected disabled>- Seleccionar -</option>
                     ${optsMandantes}
                 </select>
@@ -333,7 +350,7 @@
 
             <td class="p-0">
                 <div class="d-flex">
-                    <select class="form-select input-celda border-0" style="width: 60%;" name="mes">
+                    <select class="form-select input-celda border-0" style="width: 60%;" name="mes" onchange="validarFormulario()">
                         <option value="" selected disabled>-mes-</option>
                         <option value="1">Ene</option>
                         <option value="2">Feb</option>
@@ -347,8 +364,8 @@
                         <option value="10">Oct</option>
                         <option value="11">Nov</option>
                         <option value="12">Dic</option>
-                        </select>
-                    <select class="form-select input-celda border-0 border-start" style="width: 40%;" name="anio">
+                    </select>
+                    <select class="form-select input-celda border-0 border-start" style="width: 40%;" name="anio" onchange="validarFormulario()">
                         <option value="" selected disabled>-año-</option>
                         <option value="2020">2020</option>
                         <option value="2021">2021</option>
@@ -377,34 +394,34 @@
             </td>
         `;
         tbody.appendChild(tr);
+        
+        validarFormulario();
     }
 
     function eliminarFila(id) {
         const fila = document.getElementById(`fila_${id}`);
         if(fila) fila.remove();
+        validarFormulario();
     }
 
-    // 3. Guardar Todo (Actualizado para leer Justificación)
     async function guardarTodo() {
         const filas = document.querySelectorAll('#cuerpoTabla tr');
         const datosParaEnviar = [];
 
         filas.forEach(tr => {
-            // Obtenemos valores
             const usuario = tr.querySelector('[name="usuario"]').value;
             const servicio = tr.querySelector('[name="servicio"]').value;
             const cantidad = tr.querySelector('[name="cantidad"]').value;
             const mandante = tr.querySelector('[name="mandante"]').value;
             const mes = tr.querySelector('[name="mes"]').value;
             const anio = tr.querySelector('[name="anio"]').value;
-            const justificacion = tr.querySelector('[name="justificacion"]').value; // Nuevo
+            const justificacion = tr.querySelector('[name="justificacion"]').value;
 
-            // Validamos que lo esencial esté lleno
             if (usuario && servicio && mandante) {
                 datosParaEnviar.push({
                     id_usuario: usuario,
                     id_tipo_servicio: servicio,
-                    cantidad: cantidad || 0, // Si está vacío pone 0
+                    cantidad: cantidad || 0, 
                     id_mandante: mandante,
                     mes: mes,
                     anio: anio,

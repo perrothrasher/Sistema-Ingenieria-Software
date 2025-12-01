@@ -4,7 +4,6 @@ const { registrarAuditoria } = require('./auditoria.js');
 const PDFDocument = require('pdfkit');
 const path = require('path');
 
-// Ruta para obtener todos los trabajadores.
 async function obtenerTrabajadores(req, res){
     const id = req.query.id;
     const sql = `
@@ -54,16 +53,14 @@ async function obtenerTrabajadores(req, res){
     }
 };
 
-// Ruta para editar un trabajador
 async function editarTrabajadores(req, res){
     const { id: trabajadorId } = req.params; 
     const { nombre, apellido, contrasena, rut, direccion, ciudad,  correo, telefono, rol_id, region_id, postal, tipo_contrato_id } = req.body;
     const { id: userId } = req.usuario;
 
-    // Si la contraseña se ha proporcionado, encriptarla antes de actualizarla
     let hashedPassword = null;
     if (contrasena) {
-        hashedPassword = await bcrypt.hash(contrasena, 10);  // Encriptar la contraseña
+        hashedPassword = await bcrypt.hash(contrasena, 10); 
     }
 
     const sql = `
@@ -116,7 +113,6 @@ async function editarTrabajadores(req, res){
     }
 };
 
-// Ruta para eliminar un trabajador
 async function eliminarTrabajadores(req, res){
     const { id: trabajadorId } = req.params;
     const { id: userId } = req.usuario;
@@ -213,21 +209,16 @@ async function generarReporteTrabajadores(req,res){
         `);
     const trabajadores = rows;
 
-    // Crear un nuevo documento PDF
     const doc = new PDFDocument({ margin: 50 });
 
-    // Configurar la respuesta del navegador para descargar el PDF
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=reporte-trabajadores.pdf');
     doc.pipe(res);
     
-    // Logo de la empresa
     const LogoPath = path.join(__dirname, '..', '..', 'Front', 'assets', 'totalcheck-logo.png');
 
-    // Dibujar el logo
     doc.image(LogoPath, 50, 45, { width: 100 });
     
-    // Información de la empresa
     doc.fontSize(10)
            .text(
                 `Fanor Velasco 85, Piso 3\n` +
@@ -237,11 +228,9 @@ async function generarReporteTrabajadores(req,res){
            );   
     doc.moveDown(4);
 
-    // Contenido del PDF
     doc.fontSize(25).text('Reporte de Trabajadores Contratados', {align: 'center'});
     doc.moveDown(0.5);
 
-    // Linea divisoria
     doc.strokeColor("#aaaaaa")
            .lineWidth(1)
            .moveTo(50, doc.y)
@@ -249,7 +238,6 @@ async function generarReporteTrabajadores(req,res){
            .stroke();
     doc.moveDown();
 
-    // Iterar sobre los trabajadores y agregarlos al PDF
     trabajadores.forEach((trabajador, index) =>{
       doc.fontSize(14).text(`${index + 1}. ${trabajador.nombre} ${trabajador.apellido}`, { underline: true });
       doc.fontSize(10).text(`RUT: ${trabajador.rut}`);
@@ -260,10 +248,8 @@ async function generarReporteTrabajadores(req,res){
       doc.fontSize(10).text(`Ciudad: ${trabajador.ciudad}`);
       doc.moveDown();
     });
-    // --- Finalización del contenido del PDF ---
     doc.end();
 
-    // Registrar evento en la auditoría
     const {id: userId, nombre: userNombre, apellido: userApellido, rol} = req.usuario;
     const ip = req.ip || req.connection.remoteAddress;
     registrarAuditoria(
